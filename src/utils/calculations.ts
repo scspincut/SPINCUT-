@@ -205,6 +205,9 @@ export function calculate(params: CalculatorParams): CalcResult {
   if (aluMaterials.includes(material)) {
     alerts.push({ type: 'warning', message: "Aluminium sans lubrification = risque colmatage et casse outil immédiate. Microlubrification OBLIGATOIRE." });
   }
+  if (aluMaterials.includes(material) && (coating === 'tialn' || coating === 'altin')) {
+    alerts.push({ type: 'danger', message: "TiAlN/AlTiN INTERDIT sur aluminium — le coating réagit avec la matière et provoque un rechargement immédiat. Utiliser DLC, ZrN ou sans revêtement." });
+  }
   if (material === 'bois_exotique') {
     alerts.push({ type: 'warning', message: 'Bois exotique : poussières toxiques — aspiration et protection respiratoire OBLIGATOIRES.' });
   }

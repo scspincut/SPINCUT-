@@ -46,9 +46,9 @@ export const MACHINE_TYPE_LABELS: Record<string, string> = {
 
 export const COATING_LABELS: Record<string, string> = {
   none:  'Aucun revêtement',
-  tin:   'TiN (doré) — ×1.20',
-  tialn: 'TiAlN (violet) — ×1.50',
-  altin: 'AlTiN — ×1.40',
+  tin:   'TiN (doré) — ×1.25',
+  tialn: 'TiAlN (violet) — ×1.50 ⚠ pas alu',
+  altin: 'AlTiN — ×1.40 ⚠ pas alu',
   dlc:   'DLC (noir) — ×1.30',
   zrn:   'ZrN — ×1.25 (idéal alu)',
 };
@@ -92,13 +92,13 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     mdf:           [180, 320],
     ctp:           [200, 380],
     melamine:      [150, 280],
-    alu_2017:      [150, 250],
+    alu_2017:      [150, 300],
     alu_7075:      [100, 200],
     alu_6060:      [200, 350],
     alu_coule:     [100, 180],
-    pvc_expanse:   [100, 200],
+    pvc_expanse:   [150, 300],
     pvc_massif:    [80,  180],
-    pmma:          [100, 200],
+    pmma:          [120, 250],
     pc:            [80,  160],
     abs_pom:       [100, 200],
   },
@@ -210,8 +210,8 @@ export const OPERATION_PARAMS: Record<string, OpParams> = {
     isFinition: true, noRctf: false,
   },
   rainurage: {
-    apFactor: 0.30, aeFactor: 1.00,
-    apLabel: '0.3×D (rainurage)',
+    apFactor: 0.50, aeFactor: 1.00,
+    apLabel: '0.5×D (rainurage)',
     aeLabel: '1×D (pleine fraise)',
     isFinition: false, noRctf: true,
   },
@@ -245,7 +245,7 @@ export const OPERATION_PARAMS: Record<string, OpParams> = {
 
 export const COATING_COEFF: Record<string, number> = {
   none:  1.00,
-  tin:   1.20,
+  tin:   1.25,
   tialn: 1.50,
   altin: 1.40,
   dlc:   1.30,
