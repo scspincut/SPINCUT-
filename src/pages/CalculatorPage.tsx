@@ -100,7 +100,6 @@ export default function CalculatorPage() {
   const [nMax, setNMax] = useState('');
   const [vfMax, setVfMax] = useState('');
   const [thickness, setThickness] = useState('');
-  const [apOv, setApOv] = useState('');
   const [showConseils, setShowConseils] = useState(true);
   const [showDiag, setShowDiag] = useState(false);
 
@@ -121,12 +120,12 @@ export default function CalculatorPage() {
     nMax: nMax ? parseFloat(nMax) : null,
     vfMax: vfMax ? parseFloat(vfMax) : null,
     materialThickness: thickness ? parseFloat(thickness) : null,
-    apOverride: apOv ? parseFloat(apOv) : null,
+    apOverride: null,
   };
 
   const result = useMemo(() => calculate(params), [
     toolType, notation, safeMat, operation, safeDiam, zTeeth,
-    nMax, vfMax, thickness, apOv,
+    nMax, vfMax, thickness,
   ]);
 
   const handleToolChange = (t: string) => {
@@ -159,11 +158,12 @@ export default function CalculatorPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold flex items-center justify-center gap-2">
-            🧮 Calculateur CNC Pro
-          </h1>
-          <p className="text-[#555] text-sm mt-1">Sources : CncFraises.fr · CPRP Béziers · Siderméca · LeBearCNC</p>
+        <div className="text-center py-2">
+          <div className="flex justify-center mb-3">
+            <SpincutLogo size="lg" />
+          </div>
+          <h1 className="text-xl font-bold text-white">Calculateur CNC Pro</h1>
+          <p className="text-[#d4780f] text-[10px] tracking-[0.2em] mt-1 font-medium">DONNÉES PROPRIÉTAIRES SPINCUT</p>
         </div>
 
         {/* Parameters */}
@@ -223,7 +223,6 @@ export default function CalculatorPage() {
             <NumberField label="n max broche (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" />
             <NumberField label="Vf max machine (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" />
             <NumberField label="Épaisseur matière (mm)" value={thickness} onChange={setThickness} placeholder="Ex: 18" hint="pour calcul N passes" />
-            <NumberField label="Profondeur de passe ap (mm)" value={apOv} onChange={setApOv} placeholder="Laisser vide = recommandé" hint="optionnel" />
           </div>
         </div>
 
@@ -276,7 +275,7 @@ export default function CalculatorPage() {
               <ResultCard label="ap recommandé" value={result.ap.toFixed(1)} unit="mm" sub={result.apLabel} />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <ResultCard label="ae recommandé" value={result.ae.toFixed(2)} unit="mm" sub={result.aeLabel} />
               <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
                 <p className="text-[#888] text-xs mb-1">Plongée Z (Vf_Z)</p>
@@ -288,7 +287,6 @@ export default function CalculatorPage() {
                   : 'bg-[#1a0f00] text-[#f59e0b]'
                 }`}>{result.modeEntree}</span>
               </div>
-              <ResultCard label="Débit matière (MRR)" value={result.mrr.toFixed(2)} unit="cm³/min" />
             </div>
 
             {result.nPasses !== null && (
@@ -372,8 +370,7 @@ export default function CalculatorPage() {
         </div>
 
         <p className="text-center text-[#333] text-xs pb-4">
-          © SPINCUT — Ces valeurs sont des recommandations standards. Un test avant production est conseillé.<br />
-          Sources : CncFraises.fr · CPRP TP Production Béziers · Siderméca · LeBearCNC · FSWizard · HSMAdvisor
+          © SPINCUT — Ces valeurs sont des recommandations standards. Un test avant production est conseillé.
         </p>
       </div>
     </div>

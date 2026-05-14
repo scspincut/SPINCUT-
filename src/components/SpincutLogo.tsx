@@ -3,51 +3,81 @@ interface SpincutLogoProps {
 }
 
 export default function SpincutLogo({ size = 'md' }: SpincutLogoProps) {
-  const iconSize = size === 'sm' ? 32 : size === 'md' ? 44 : 56
-  const titleSize = size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl'
-  const subtitleSize = size === 'sm' ? 'text-xs' : 'text-xs'
+  const iconW = size === 'sm' ? 26 : size === 'md' ? 36 : 50
+  const iconH = size === 'sm' ? 30 : size === 'md' ? 42 : 58
+  const titleClass = size === 'sm' ? 'text-base' : size === 'md' ? 'text-xl' : 'text-3xl'
+  const subtitleClass = size === 'lg' ? 'text-[11px]' : 'text-[9px]'
+  const gapClass = size === 'lg' ? 'gap-4' : 'gap-2.5'
 
   return (
-    <div className="flex items-center gap-3">
-      {/* Icon: stylized cutting blade / gear */}
-      <div
-        className="rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{
-          width: iconSize,
-          height: iconSize,
-          background: '#111',
-          border: '1px solid #2a2a2a',
-        }}
-      >
-        <svg
-          width={iconSize * 0.65}
-          height={iconSize * 0.65}
-          viewBox="0 0 28 28"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Circular gear/blade shape */}
-          <circle cx="14" cy="14" r="10" stroke="#d4780f" strokeWidth="1.5" fill="none" />
-          <circle cx="14" cy="14" r="3.5" fill="#d4780f" />
-          {/* Blade teeth */}
-          <path d="M14 4 L15.5 8 L12.5 8 Z" fill="#d4780f" />
-          <path d="M24 14 L20 15.5 L20 12.5 Z" fill="#d4780f" />
-          <path d="M14 24 L12.5 20 L15.5 20 Z" fill="#d4780f" />
-          <path d="M4 14 L8 12.5 L8 15.5 Z" fill="#d4780f" />
-          {/* Diagonal teeth */}
-          <path d="M21.07 6.93 L18.54 10.25 L16.61 8.32 Z" fill="#d4780f" />
-          <path d="M21.07 21.07 L17.75 18.54 L19.68 16.61 Z" fill="#d4780f" />
-          <path d="M6.93 21.07 L9.46 17.75 L11.39 19.68 Z" fill="#d4780f" />
-          <path d="M6.93 6.93 L10.25 9.46 L8.32 11.39 Z" fill="#d4780f" />
-        </svg>
-      </div>
+    <div className={`flex items-center ${gapClass}`}>
+      {/* S icon — chrome + gold swoosh matching real SPINCUT logo */}
+      <svg width={iconW} height={iconH} viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="spGold" x1="4" y1="44" x2="38" y2="6" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#5c2600"/>
+            <stop offset="35%"  stopColor="#c4650a"/>
+            <stop offset="70%"  stopColor="#f0a020"/>
+            <stop offset="100%" stopColor="#ffd060"/>
+          </linearGradient>
+          <linearGradient id="spTopArc" x1="30" y1="4" x2="8" y2="26" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#f4f4f4"/>
+            <stop offset="30%"  stopColor="#c8c8c8"/>
+            <stop offset="70%"  stopColor="#808080"/>
+            <stop offset="100%" stopColor="#404040"/>
+          </linearGradient>
+          <linearGradient id="spBotArc" x1="12" y1="24" x2="34" y2="46" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#d0d0d0"/>
+            <stop offset="50%"  stopColor="#707070"/>
+            <stop offset="100%" stopColor="#282828"/>
+          </linearGradient>
+        </defs>
 
-      {/* Text */}
+        {/* Upper lobe of S (chrome) */}
+        <path
+          d="M 29 5 C 37 5 41 10 41 17 C 41 24 35 27 26 27 L 16 27"
+          stroke="url(#spTopArc)" strokeWidth="6" strokeLinecap="round" fill="none"
+        />
+        {/* Lower lobe of S (chrome) */}
+        <path
+          d="M 26 27 L 16 27 C 7 27 1 30 1 37 C 1 44 6 49 14 49"
+          stroke="url(#spBotArc)" strokeWidth="6" strokeLinecap="round" fill="none"
+        />
+        {/* Chrome highlight — upper lobe */}
+        <path
+          d="M 31 6 C 37 7.5 40 12 40 17"
+          stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" fill="none"
+        />
+        {/* Gold diagonal swoosh */}
+        <path
+          d="M 4 44 Q 13 36 21 27 Q 30 19 38 10"
+          stroke="url(#spGold)" strokeWidth="4" strokeLinecap="round" fill="none"
+        />
+        {/* Gold shimmer highlight */}
+        <path
+          d="M 8 46 Q 17 38 25 29 Q 33 21 40 13"
+          stroke="rgba(255,185,40,0.22)" strokeWidth="2.5" strokeLinecap="round" fill="none"
+        />
+      </svg>
+
+      {/* Text block */}
       <div className="flex flex-col leading-none">
-        <span className={`font-bold tracking-widest text-white ${titleSize}`}>SPINCUT</span>
-        <span className={`tracking-widest font-medium ${subtitleSize}`} style={{ color: '#8a8a8a' }}>
-          OUTILS CNC
+        <span
+          className={`font-black text-white ${titleClass}`}
+          style={{ letterSpacing: '0.14em', fontStretch: 'condensed' }}
+        >
+          SPINCUT
         </span>
+        <div className={`flex items-center gap-1 mt-0.5 ${subtitleClass}`}>
+          <span style={{ color: '#d4780f', opacity: 0.6 }}>—</span>
+          <span className="tracking-[0.22em] font-medium" style={{ color: '#888' }}>OUTILS CNC</span>
+          <span style={{ color: '#d4780f', opacity: 0.6 }}>—</span>
+        </div>
+        {size === 'lg' && (
+          <p className="text-[9px] tracking-[0.14em] mt-1.5" style={{ color: '#d4780f' }}>
+            PRÉCISION · PERFORMANCE · INNOVATION
+          </p>
+        )}
       </div>
     </div>
   )
