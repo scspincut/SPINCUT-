@@ -4,7 +4,6 @@ import { CalculatorParams, ToolNotation } from '../types';
 import { calculate } from '../utils/calculations';
 import {
   TOOL_TYPE_LABELS, MATERIAL_LABELS, OPERATION_LABELS,
-  MACHINE_TYPE_LABELS, COATING_LABELS,
   TOOL_MATERIALS, DIAMETER_OPTIONS, TEETH_OPTIONS,
   CONSEILS_OUTIL, CONSEILS_MATIERE, DIAGNOSTIC,
 } from '../utils/cncData';
@@ -98,8 +97,6 @@ export default function CalculatorPage() {
   const [operation, setOperation] = useState<CalculatorParams['operation']>('detourage');
   const [diameter, setDiameter] = useState(6);
   const [zTeeth, setZTeeth] = useState(2);
-  const [machineType, setMachineType] = useState<CalculatorParams['machineType']>('pro_portique');
-  const [coating, setCoating] = useState<CalculatorParams['coating']>('none');
   const [nMax, setNMax] = useState('');
   const [vfMax, setVfMax] = useState('');
   const [thickness, setThickness] = useState('');
@@ -120,7 +117,7 @@ export default function CalculatorPage() {
 
   const params: CalculatorParams = {
     toolType, notation, material: safeMat, operation,
-    diameter: safeDiam, zTeeth, machineType, coating,
+    diameter: safeDiam, zTeeth, machineType: 'pro_portique', coating: 'none',
     nMax: nMax ? parseFloat(nMax) : null,
     vfMax: vfMax ? parseFloat(vfMax) : null,
     materialThickness: thickness ? parseFloat(thickness) : null,
@@ -128,7 +125,7 @@ export default function CalculatorPage() {
   };
 
   const result = useMemo(() => calculate(params), [
-    toolType, notation, safeMat, operation, safeDiam, zTeeth, machineType, coating,
+    toolType, notation, safeMat, operation, safeDiam, zTeeth,
     nMax, vfMax, thickness, apOv,
   ]);
 
@@ -219,17 +216,6 @@ export default function CalculatorPage() {
               </SelectField>
             )}
 
-            <SelectField label="Type de machine" value={machineType} onChange={v => setMachineType(v as CalculatorParams['machineType'])}>
-              {Object.entries(MACHINE_TYPE_LABELS).map(([k, l]) => (
-                <option key={k} value={k}>{l}</option>
-              ))}
-            </SelectField>
-
-            <SelectField label="Revêtement outil" value={coating} onChange={v => setCoating(v as CalculatorParams['coating'])} hint="optionnel">
-              {Object.entries(COATING_LABELS).map(([k, l]) => (
-                <option key={k} value={k}>{l}</option>
-              ))}
-            </SelectField>
           </div>
 
           {/* Machine limits */}
