@@ -86,11 +86,7 @@ export default function CalculatorPage() {
   const { isAuthenticated, logout } = useClientAuth();
   const isAdmin = localStorage.getItem('spincut_admin_session') === 'true';
 
-  if (!isAuthenticated) {
-    navigate('/');
-    return null;
-  }
-
+  // All hooks must be called unconditionally before any early return
   const [toolType, setToolType] = useState<CalculatorParams['toolType']>('carbure_monobloc');
   const [notation, setNotation] = useState<ToolNotation>('2+2');
   const [material, setMaterial] = useState<CalculatorParams['material']>('mdf');
@@ -102,6 +98,11 @@ export default function CalculatorPage() {
   const [thickness, setThickness] = useState('');
   const [showConseils, setShowConseils] = useState(true);
   const [showDiag, setShowDiag] = useState(false);
+
+  if (!isAuthenticated) {
+    navigate('/');
+    return null;
+  }
 
   const availableMaterials = TOOL_MATERIALS[toolType];
   const safeMat = availableMaterials.includes(material) ? material : availableMaterials[0];
