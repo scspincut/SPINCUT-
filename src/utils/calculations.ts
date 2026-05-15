@@ -118,105 +118,46 @@ export function calculate(params: CalculatorParams): CalcResult {
   // ─── Alerts ────────────────────────────────────────────────────────────────
   const alerts: Alert[] = [];
 
-  // RCTF applied
-  if (rctf !== null) {
-    alerts.push({
-      type: 'info',
-      message: `Chip Thinning appliqué (RCTF = ${rctf.toFixed(2)}) — ae < D/2, fz compensé pour éviter que l'outil racle.`,
-    });
-  }
-
-  // n capped
+  // Broche plafonnée
   if (nLimited) {
     alerts.push({
       type: 'warning',
-      message: `RPM théorique dépassé (${Math.round(nTheo).toLocaleString('fr-FR')} tr/min) — plafonné à n_max. Vc réelle recalculée automatiquement.`,
+      message: `Broche à la limite de ta machine — résultats calculés à ${nMax!.toLocaleString('fr-FR')} tr/min.`,
     });
   }
 
-  // Vf capped
+  // Avance plafonnée
   if (vfLimited) {
     alerts.push({
       type: 'warning',
-      message: `Avance théorique dépassée — plafonnée à Vf_max. fz réel recalculé.`,
+      message: `Avance à la limite de ta machine — résultats calculés à ${vfMax!.toLocaleString('fr-FR')} mm/min.`,
     });
   }
 
-  // fz_réel very low
-  if (fzReel < 0.005) {
-    alerts.push({
-      type: 'warning',
-      message: `Avance par dent très faible (${fzReel.toFixed(4)} mm/dent < 0.005) — risque brûlure ou vibration. Augmenter Vf ou réduire n.`,
-    });
-  }
-
-  // ap > D
+  // ap > D : danger casse outil
   if (apUsed > diameter) {
     alerts.push({
       type: 'danger',
-      message: `Profondeur de passe supérieure au diamètre (ap=${apUsed.toFixed(1)} mm > D=${diameter} mm) — risque casse outil. Réduire ap.`,
-    });
-  } else if (apUsed > 0.6 * diameter && toolType !== 'ravageuse') {
-    // ap > 0.6D and not ravageuse
-    alerts.push({
-      type: 'warning',
-      message: `Profondeur élevée (ap = ${apUsed.toFixed(1)} mm > 0.6×D) pour cet outil. Réduire ap ou utiliser une ravageuse en ébauche.`,
+      message: `Profondeur de passe (${apUsed.toFixed(1)} mm) supérieure au diamètre — risque de casse outil. Réduire ap.`,
     });
   }
 
-  // Compression ap < 4mm
-  if (toolType === 'compression' && apUsed < 4) {
-    alerts.push({
-      type: 'warning',
-      message: `ap possiblement insuffisante pour activer la zone de compression. Vérifier la fiche outil.`,
-    });
-  }
-
-  // Vc_réelle > Vc_max × 1.5
-  const vcMaxCoated = vcMax * coatingMult;
-  if (vcReelle > vcMaxCoated * 1.5) {
-    alerts.push({
-      type: 'warning',
-      message: `Vitesse de coupe très élevée (Vc=${Math.round(vcReelle)} m/min > 1.5×Vc_max) — surveiller usure outil et chaleur.`,
-    });
-  }
-
-  // fz_réel > fzBase × 1.5
-  if (fzReel > fzBase * 1.5 && fzBase > 0) {
-    alerts.push({
-      type: 'warning',
-      message: `Avance par dent élevée — risque de casse ou vibrations.`,
-    });
-  }
-
-  // N_passes > 10
-  if (nPasses !== null && nPasses > 10) {
-    alerts.push({
-      type: 'warning',
-      message: `Nombre de passes élevé (${nPasses} passes) — envisager une ravageuse en ébauche pour gagner du temps.`,
-    });
-  }
-
-  // Material-specific alerts
-  if (material === 'mdf') {
-    alerts.push({ type: 'info', message: 'MDF : ASPIRATION PUISSANTE + masque FFP2 minimum. Poussières silice + formaldéhyde.' });
-  }
+  // Securite matiere
   const aluMaterials: string[] = ['alu_2017','alu_7075','alu_6060','alu_coule'];
-  if (aluMaterials.includes(material)) {
-    alerts.push({ type: 'warning', message: "Aluminium sans lubrification = risque colmatage et casse outil immédiate. Microlubrification OBLIGATOIRE." });
-  }
-  if (aluMaterials.includes(material) && (coating === 'tialn' || coating === 'altin')) {
-    alerts.push({ type: 'danger', message: "TiAlN/AlTiN INTERDIT sur aluminium — le coating réagit avec la matière et provoque un rechargement immédiat. Utiliser DLC, ZrN ou sans revêtement." });
+  if (material === 'mdf') {
+    alerts.push({ type: 'info', message: 'MDF : aspiration puissante + masque FFP2 obligatoire (poussières silice + formaldéhyde).' });
   }
   if (material === 'bois_exotique') {
-    alerts.push({ type: 'warning', message: 'Bois exotique : poussières toxiques — aspiration et protection respiratoire OBLIGATOIRES.' });
+    alerts.push({ type: 'warning', message: 'Bois exotique : poussières toxiques — aspiration et masque respiratoire obligatoires.' });
+  }
+  if (aluMaterials.includes(material)) {
+    alerts.push({ type: 'warning', message: "Aluminium : microlubrification obligatoire — sans lubrifiant, l'outil colle et casse immédiatement." });
   }
   if (toolType === 'hss' && (material === 'mdf' || material === 'melamine')) {
-    alerts.push({ type: 'warning', message: 'HSS sur MDF/mélaminé : usure critique en quelques secondes. Utiliser carbure ou diamant.' });
+    alerts.push({ type: 'danger', message: 'Fraise HSS sur MDF/mélaminé : usure en quelques secondes. Utiliser un outil carbure.' });
   }
-  if (toolType === 'ravageuse') {
-    alerts.push({ type: 'info', message: 'Ravageuse : toujours prévoir une passe de finition avec outil lisse (stries résiduelles).' });
-  }
+
+  const vcMaxCoated = vcMax * coatingMult;
 
   return {
     forbidden: false,
