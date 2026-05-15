@@ -102,6 +102,7 @@ export default function CalculatorPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [savedThisCalc, setSavedThisCalc] = useState(false);
+  const [showMailMenu, setShowMailMenu] = useState(false);
 
   // Derived values needed by useMemo below
   const availableMaterials = TOOL_MATERIALS[toolType];
@@ -479,6 +480,64 @@ export default function CalculatorPage() {
         </p>
       </div>
 
+      {/* Mail app chooser */}
+      {showMailMenu && (
+        <div
+          className="fixed inset-0 z-30 flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.7)' }}
+          onClick={() => setShowMailMenu(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-2xl p-5 space-y-3"
+            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="text-center text-[#888] text-xs tracking-widest uppercase mb-4">Envoyer un mail à SPINCUT</p>
+
+            <a href="mailto:scspincut@gmail.com"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+              </svg>
+              Apple Mail
+            </a>
+
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA4335" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+              </svg>
+              Gmail
+            </a>
+
+            <a href="ms-outlook://compose?to=scspincut@gmail.com"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0078D4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+              </svg>
+              Outlook
+            </a>
+
+            <button
+              onClick={() => setShowMailMenu(false)}
+              className="w-full py-3 rounded-xl text-sm text-[#666]"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Barre de contact fixe en bas */}
       <div className="fixed bottom-0 left-0 right-0 z-20 bg-[#0d0d0d]/95 backdrop-blur border-t border-[#1e1e1e] px-4 py-3">
         <div className="max-w-4xl mx-auto flex gap-3">
@@ -498,8 +557,8 @@ export default function CalculatorPage() {
           </a>
 
           {/* Email */}
-          <a
-            href="mailto:scspincut@gmail.com"
+          <button
+            onClick={() => setShowMailMenu(true)}
             className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors"
             style={{ background: '#1e1200', borderColor: '#d4780f44', color: '#d4780f' }}
           >
@@ -508,7 +567,7 @@ export default function CalculatorPage() {
               <path d="M2 7l10 7 10-7"/>
             </svg>
             Mail
-          </a>
+          </button>
 
         </div>
       </div>
