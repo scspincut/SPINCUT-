@@ -152,6 +152,80 @@ export default function CalculatorPage() {
     setSavedThisCalc(true);
   };
 
+  const exportPDF = () => {
+    if (result.forbidden) return;
+    const now = new Date();
+    const date = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Fiche réglage — SPINCUT</title><style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:-apple-system,Arial,sans-serif;color:#1a1a1a;padding:32px;max-width:720px;margin:auto}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #d4780f}
+      .brand{font-size:24px;font-weight:900;letter-spacing:3px}.brand span{color:#d4780f}
+      .subtitle{font-size:11px;color:#888;margin-top:3px;letter-spacing:1px;text-transform:uppercase}
+      .date{font-size:11px;color:#888;text-align:right}
+      h2{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#d4780f;margin:20px 0 10px}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .field{padding:10px 14px;background:#f7f7f7;border-radius:8px;border-left:3px solid #e5e5e5}
+      .label{font-size:10px;color:#888;margin-bottom:3px}
+      .val{font-size:15px;font-weight:700;color:#1a1a1a}
+      .unit{font-size:10px;color:#999;margin-top:1px}
+      .main-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+      .big{padding:16px;background:#fff7ed;border:2px solid #fed7aa;border-radius:10px;text-align:center}
+      .big .val{font-size:30px;color:#d4780f}
+      .big .label{font-size:12px;color:#b45309;font-weight:600;margin-bottom:4px}
+      .big .unit{font-size:12px;color:#d4780f;margin-top:2px}
+      .highlight{margin-top:20px;padding:14px 18px;border:2px dashed #d4780f;border-radius:10px}
+      .highlight p{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+      .highlight .vals{font-size:17px;font-weight:800;color:#d4780f}
+      .alert{padding:8px 12px;border-radius:6px;font-size:11px;margin-bottom:6px}
+      .warning{background:#fffbeb;border:1px solid #fbbf24;color:#92400e}
+      .danger{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+      .info{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+      .footer{margin-top:28px;padding-top:12px;border-top:1px solid #e5e5e5;font-size:10px;color:#bbb;display:flex;justify-content:space-between}
+    </style></head><body>
+      <div class="header">
+        <div><div class="brand">SPIN<span>CUT</span></div><div class="subtitle">Outils CNC — Fiche de réglage</div></div>
+        <div class="date">Généré le ${date}</div>
+      </div>
+      <h2>Paramètres</h2>
+      <div class="grid">
+        <div class="field"><div class="label">Type d'outil</div><div class="val">${TOOL_TYPE_LABELS[toolType]}</div></div>
+        <div class="field"><div class="label">Matériau</div><div class="val">${MATERIAL_LABELS[safeMat]}</div></div>
+        <div class="field"><div class="label">Opération</div><div class="val">${OPERATION_LABELS[operation]}</div></div>
+        <div class="field"><div class="label">Diamètre</div><div class="val">Ø ${safeDiam} mm</div></div>
+        ${toolType !== 'diamant_coupe' && toolType !== 'compression'
+          ? `<div class="field"><div class="label">Nombre de dents</div><div class="val">${zTeeth} dent${zTeeth > 1 ? 's' : ''}</div></div>`
+          : `<div class="field"><div class="label">Géométrie</div><div class="val">${notation}</div></div>`}
+        ${thickness ? `<div class="field"><div class="label">Épaisseur matière</div><div class="val">${thickness} mm</div></div>` : ''}
+      </div>
+      <h2>Résultats</h2>
+      <div class="main-results">
+        <div class="big"><div class="label">Vitesse broche (n)</div><div class="val">${result.n.toLocaleString('fr-FR')}</div><div class="unit">tr/min</div></div>
+        <div class="big"><div class="label">Avance XY (Vf)</div><div class="val">${result.vf.toLocaleString('fr-FR')}</div><div class="unit">mm/min</div></div>
+      </div>
+      <div class="grid">
+        <div class="field"><div class="label">Vitesse de coupe (Vc)</div><div class="val">${result.vc} m/min</div><div class="unit">plage : ${result.vcMin}–${result.vcMax} m/min</div></div>
+        <div class="field"><div class="label">Avance/dent (fz)</div><div class="val">${result.fzCorrige.toFixed(3)} mm/dent</div></div>
+        <div class="field"><div class="label">Prof. de passe (ap)</div><div class="val">${result.ap.toFixed(1)} mm</div><div class="unit">${result.apLabel}</div></div>
+        <div class="field"><div class="label">Largeur de coupe (ae)</div><div class="val">${result.ae.toFixed(2)} mm</div><div class="unit">${result.aeLabel}</div></div>
+        <div class="field"><div class="label">Vitesse descente Z</div><div class="val">${result.vfZ.toLocaleString('fr-FR')} mm/min</div><div class="unit">${result.modeEntree}</div></div>
+        ${result.nPasses !== null ? `<div class="field"><div class="label">Passes Z</div><div class="val">${result.nPasses} passes</div><div class="unit">${result.apReel.toFixed(2)} mm / passe</div></div>` : ''}
+      </div>
+      ${result.alerts.length > 0 ? `<h2>Points d'attention</h2>${result.alerts.map(a => `<div class="alert ${a.type}">${a.message}</div>`).join('')}` : ''}
+      <div class="highlight">
+        <p>À entrer dans votre machine</p>
+        <div class="vals">n = ${result.n.toLocaleString('fr-FR')} tr/min &nbsp;·&nbsp; Vf = ${result.vf.toLocaleString('fr-FR')} mm/min &nbsp;·&nbsp; ap = ${result.ap.toFixed(1)} mm</div>
+      </div>
+      <div class="footer">
+        <span>© SPINCUT — Ces valeurs sont des recommandations. Un test avant production est conseillé.</span>
+        <span>spincut-bn2y.vercel.app</span>
+      </div>
+      <script>window.onload=()=>{window.print()}<\/script>
+    </body></html>`;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+  };
+
   const reloadEntry = (entry: HistoryEntry) => {
     setToolType(entry.params.toolType);
     setNotation(entry.params.notation);
@@ -339,17 +413,25 @@ export default function CalculatorPage() {
               </div>
             )}
 
-            <button
-              onClick={handleSave}
-              disabled={savedThisCalc}
-              className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                savedThisCalc
-                  ? 'bg-[#0a2010] border-green-800 text-green-400 cursor-default'
-                  : 'bg-[#1e1e1e] border-[#d4780f]/40 text-[#d4780f] hover:bg-[#d4780f]/10 active:scale-95'
-              }`}
-            >
-              {savedThisCalc ? '✓ Calcul sauvegardé dans l\'historique' : '💾 Sauvegarder ce calcul'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSave}
+                disabled={savedThisCalc}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                  savedThisCalc
+                    ? 'bg-[#0a2010] border-green-800 text-green-400 cursor-default'
+                    : 'bg-[#1e1e1e] border-[#d4780f]/40 text-[#d4780f] hover:bg-[#d4780f]/10 active:scale-95'
+                }`}
+              >
+                {savedThisCalc ? '✓ Sauvegardé' : '💾 Sauvegarder'}
+              </button>
+              <button
+                onClick={exportPDF}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:text-white hover:border-[#aaa] active:scale-95"
+              >
+                📄 Exporter PDF
+              </button>
+            </div>
           </div>
         )}
 
