@@ -21,7 +21,7 @@ export default function LoginPage() {
     if (ok) {
       navigate('/calculator')
     } else {
-      setError('Code invalide ou inactif. Contactez SPINCUT pour obtenir un accès.')
+      setError('Code invalide. Contactez SPINCUT pour obtenir votre accès.')
     }
   }
 

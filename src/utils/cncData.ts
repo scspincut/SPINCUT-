@@ -454,6 +454,5 @@ export const DIAGNOSTIC = [
   { symptome: 'Arrachement sur compression',     cause: 'ap < longueur zone upcut',                 solution: 'Augmenter ap ou changer outil' },
   { symptome: 'Surface striée après ravageuse',   cause: 'Normal — denture festonnée',               solution: 'Passe de finition outil lisse obligatoire' },
   { symptome: 'Fissures PMMA',                    cause: 'Vf trop élevée ou outil émoussé',          solution: 'Réduire Vf, changer outil' },
-  { symptome: 'Outil qui racle en finition',      cause: 'Chip thinning ignoré (ae trop faible)',    solution: 'RCTF appliqué auto — vérifier fz' },
   { symptome: 'Arrachement mélaminé',            cause: 'fz trop élevé ou outil inadapté',          solution: 'Réduire fz de 15%, utiliser compression' },
 ];

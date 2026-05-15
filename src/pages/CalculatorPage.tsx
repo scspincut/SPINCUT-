@@ -97,7 +97,7 @@ export default function CalculatorPage() {
   const [nMax, setNMax] = useState('');
   const [vfMax, setVfMax] = useState('');
   const [thickness, setThickness] = useState('');
-  const [showConseils, setShowConseils] = useState(true);
+  const [showConseils, setShowConseils] = useState(false);
   const [showDiag, setShowDiag] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
@@ -195,12 +195,9 @@ export default function CalculatorPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <div className="text-center py-2">
-          <div className="flex justify-center mb-3">
-            <SpincutLogo size="lg" />
-          </div>
-          <h1 className="text-xl font-bold text-white">Calculateur CNC Pro</h1>
-          <p className="text-[#d4780f] text-[10px] tracking-[0.2em] mt-1 font-medium">DONNÉES PROPRIÉTAIRES SPINCUT</p>
+        <div className="pt-1 pb-2">
+          <h1 className="text-lg font-bold text-white">Calculateur CNC Pro</h1>
+          <p className="text-[#555] text-xs mt-0.5">Paramètres optimisés pour votre outillage SPINCUT</p>
         </div>
 
         {/* Parameters */}
@@ -299,23 +296,23 @@ export default function CalculatorPage() {
               <BigResultCard label="Vitesse broche (n)" value={result.n.toLocaleString('fr-FR')} unit="tr/min" />
               <BigResultCard label="Avance XY (Vf)" value={result.vf.toLocaleString('fr-FR')} unit="mm/min" />
             </div>
+            <p className="text-center text-[#444] text-xs -mt-1">↑ Ces 2 valeurs sont à entrer dans votre machine</p>
 
             <div className="grid grid-cols-3 gap-3">
-              <ResultCard label="Vc" value={String(result.vc)} unit="m/min" sub={`(${result.vcMin}–${result.vcMax})`} />
+              <ResultCard label="Vitesse de coupe (Vc)" value={String(result.vc)} unit="m/min" sub={`plage : ${result.vcMin}–${result.vcMax}`} />
               <ResultCard
-                label="fz"
+                label="Avance/dent (fz)"
                 value={result.fzCorrige.toFixed(3)}
                 unit="mm/dent"
-                badge={result.rctf !== null ? `RCTF ×${result.rctf.toFixed(2)}` : undefined}
-                sub={`base: ${result.fzTable.toFixed(3)}`}
+                badge={result.rctf !== null ? `×${result.rctf.toFixed(2)} chip thinning` : undefined}
               />
-              <ResultCard label="ap recommandé" value={result.ap.toFixed(1)} unit="mm" sub={result.apLabel} />
+              <ResultCard label="Prof. de passe (ap)" value={result.ap.toFixed(1)} unit="mm" sub={result.apLabel} />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <ResultCard label="ae recommandé" value={result.ae.toFixed(2)} unit="mm" sub={result.aeLabel} />
+              <ResultCard label="Largeur de coupe (ae)" value={result.ae.toFixed(2)} unit="mm" sub={result.aeLabel} />
               <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-                <p className="text-[#888] text-xs mb-1">Plongée Z (Vf_Z)</p>
+                <p className="text-[#888] text-xs mb-1">Vitesse descente Z</p>
                 <p className="text-[#d4780f] font-bold text-2xl">{result.vfZ.toLocaleString('fr-FR')}</p>
                 <p className="text-[#666] text-xs mt-0.5">mm/min</p>
                 <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
@@ -340,12 +337,6 @@ export default function CalculatorPage() {
                   }`}>{result.modeEntree}</span>
                 </div>
               </div>
-            )}
-
-            {(toolType === 'diamant_coupe' || toolType === 'compression') && (
-              <p className="text-[#555] text-xs">
-                Z calcul = {result.zCalc} arêtes ({notation}) — correction géométrie ×{notation === '1+1' ? '1.00' : notation === '2+2' ? '0.90' : '0.80'}
-              </p>
             )}
 
             <button
@@ -449,7 +440,7 @@ export default function CalculatorPage() {
         {/* Diagnostic */}
         <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
           <button onClick={() => setShowDiag(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
-            <h2 className="text-[#d4780f] font-semibold text-base">🔩 Diagnostic des problèmes courants</h2>
+            <h2 className="text-[#d4780f] font-semibold text-base">🔩 Diagnostic</h2>
             <svg className={`w-5 h-5 text-[#555] transition-transform ${showDiag ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
