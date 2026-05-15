@@ -101,12 +101,9 @@ export default function CalculatorPage() {
   const [showDiag, setShowDiag] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [savedThisCalc, setSavedThisCalc] = useState(false);
 
-  if (!isAuthenticated) {
-    navigate('/');
-    return null;
-  }
-
+  // Derived values needed by useMemo below
   const availableMaterials = TOOL_MATERIALS[toolType];
   const safeMat = availableMaterials.includes(material) ? material : availableMaterials[0];
 
@@ -127,15 +124,19 @@ export default function CalculatorPage() {
     apOverride: null,
   };
 
+  // useMemo + useEffect MUST stay above the auth guard (Rules of Hooks)
   const result = useMemo(() => calculate(params), [
     toolType, notation, safeMat, operation, safeDiam, zTeeth,
     nMax, vfMax, thickness,
   ]);
 
-  const [savedThisCalc, setSavedThisCalc] = useState(false);
-
-  // Reset saved flag whenever the result changes
   useEffect(() => { setSavedThisCalc(false); }, [result]);
+
+  // Auth guard — after every hook
+  if (!isAuthenticated) {
+    navigate('/');
+    return null;
+  }
 
   const handleSave = () => {
     if (result.forbidden) return;
