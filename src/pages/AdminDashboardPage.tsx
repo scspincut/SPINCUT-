@@ -10,6 +10,14 @@ export default function AdminDashboardPage() {
   const [codes, setCodes] = useState<AccessCode[]>([])
   const [newCode, setNewCode] = useState('')
   const [createError, setCreateError] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const copyLink = (code: string) => {
+    const url = `${window.location.origin}/?activate=${code}`
+    navigator.clipboard.writeText(url)
+    setCopiedId(code)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
 
   useEffect(() => {
     if (!isAdmin) {
@@ -217,7 +225,14 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="py-3 pr-4" style={{ color: '#8a8a8a' }}>{c.createdAt}</td>
                       <td className="py-3">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                          <button
+                            onClick={() => copyLink(c.code)}
+                            className="text-xs px-3 py-1 rounded transition-colors"
+                            style={{ background: '#0a1628', color: copiedId === c.code ? '#4ade80' : '#60a5fa', border: `1px solid ${copiedId === c.code ? '#166534' : '#1e3a5f'}` }}
+                          >
+                            {copiedId === c.code ? '✓ Copié !' : '🔗 Lien client'}
+                          </button>
                           <button
                             onClick={() => toggleActive(c.id)}
                             className="text-xs px-3 py-1 rounded transition-colors"
