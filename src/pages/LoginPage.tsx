@@ -6,12 +6,30 @@ import SpincutLogo from '../components/SpincutLogo'
 export default function LoginPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
+  const [showProspect, setShowProspect] = useState(false)
+  const [prospectName, setProspectName] = useState('')
+  const [prospectPhone, setProspectPhone] = useState('')
+  const [prospectEmail, setProspectEmail] = useState('')
+  const [prospectCompany, setProspectCompany] = useState('')
   const { isAuthenticated, login } = useClientAuth()
   const navigate = useNavigate()
 
   if (isAuthenticated) {
     navigate('/calculator', { replace: true })
     return null
+  }
+
+  const handleProspect = () => {
+    if (!prospectName.trim() || !prospectPhone.trim()) return
+    const lines = [
+      `🆕 Nouvelle demande d'accès SPINCUT`,
+      ``,
+      `Nom : ${prospectName.trim()}`,
+      `Téléphone : ${prospectPhone.trim()}`,
+      prospectEmail.trim() ? `Email : ${prospectEmail.trim()}` : '',
+      prospectCompany.trim() ? `Société : ${prospectCompany.trim()}` : '',
+    ].filter(Boolean).join('\n')
+    window.open(`https://wa.me/33767739561?text=${encodeURIComponent(lines)}`, '_blank')
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -121,6 +139,61 @@ export default function LoginPage() {
               Pas de code ? Contactez SPINCUT
             </a>
           </div>
+        </div>
+
+        {/* Prospect — pas encore client */}
+        <div
+          className="w-full rounded-xl border overflow-hidden"
+          style={{ background: '#161616', border: '1px solid #2a2a2a' }}
+        >
+          <button
+            onClick={() => setShowProspect(s => !s)}
+            className="w-full px-5 py-3.5 flex items-center justify-between text-sm transition-colors hover:bg-[#1a1a1a]"
+          >
+            <span style={{ color: '#8a8a8a' }}>Pas encore client ?</span>
+            <span style={{ color: '#d4780f' }} className="text-xs font-semibold flex items-center gap-1">
+              Demander un accès
+              <svg className={`w-3.5 h-3.5 transition-transform ${showProspect ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </button>
+
+          {showProspect && (
+            <div className="px-5 pb-5 space-y-3 border-t" style={{ borderColor: '#2a2a2a' }}>
+              <p className="text-xs pt-3" style={{ color: '#8a8a8a' }}>
+                Remplissez ce formulaire — vous recevrez votre code d'accès par WhatsApp.
+              </p>
+              {[
+                { label: 'Nom complet *', value: prospectName, set: setProspectName, placeholder: 'Jean Dupont' },
+                { label: 'Téléphone *', value: prospectPhone, set: setProspectPhone, placeholder: '06 12 34 56 78' },
+                { label: 'Email', value: prospectEmail, set: setProspectEmail, placeholder: 'jean@exemple.com' },
+                { label: 'Société', value: prospectCompany, set: setProspectCompany, placeholder: 'Dupont SARL' },
+              ].map(f => (
+                <div key={f.label}>
+                  <label className="block text-xs mb-1" style={{ color: '#8a8a8a' }}>{f.label}</label>
+                  <input
+                    type="text"
+                    value={f.value}
+                    onChange={e => f.set(e.target.value)}
+                    placeholder={f.placeholder}
+                    className="w-full px-3 py-2.5 rounded-lg text-white text-sm outline-none"
+                    style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                    onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                    onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+                  />
+                </div>
+              ))}
+              <button
+                onClick={handleProspect}
+                disabled={!prospectName.trim() || !prospectPhone.trim()}
+                className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-40"
+                style={{ background: '#25D366' }}
+              >
+                Envoyer ma demande sur WhatsApp
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Admin link */}

@@ -17,15 +17,20 @@ export function saveAccessCodes(codes: AccessCode[]): void {
   localStorage.setItem(CODES_KEY, JSON.stringify(codes));
 }
 
+export function getClientCode(): string | null {
+  const val = localStorage.getItem(CLIENT_SESSION_KEY);
+  return val && val !== 'true' ? val : null;
+}
+
 export function useClientAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(
-    () => localStorage.getItem(CLIENT_SESSION_KEY) === 'true'
+    () => !!localStorage.getItem(CLIENT_SESSION_KEY)
   );
 
   const login = (code: string): boolean => {
     const normalized = code.trim().toUpperCase();
     const valid = getAccessCodes().some(c => c.code === normalized && c.active);
-    if (valid) { localStorage.setItem(CLIENT_SESSION_KEY, 'true'); setIsAuthenticated(true); }
+    if (valid) { localStorage.setItem(CLIENT_SESSION_KEY, normalized); setIsAuthenticated(true); }
     return valid;
   };
 

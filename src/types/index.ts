@@ -72,4 +72,6 @@ export interface AccessCode {
   code: string;
   active: boolean;
   createdAt: string;
+  clientName?: string;
+  clientPhone?: string;
 }

@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import CalculatorPage from './pages/CalculatorPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import OrderPage from './pages/OrderPage'
 import { getAccessCodes, saveAccessCodes } from './hooks/useAuth'
 
 // Activate a code from ?activate=XXX URL param
@@ -35,6 +36,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/calculator" element={<CalculatorPage />} />
+        <Route path="/commande" element={<OrderPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

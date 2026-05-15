@@ -9,6 +9,8 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate()
   const [codes, setCodes] = useState<AccessCode[]>([])
   const [newCode, setNewCode] = useState('')
+  const [newClientName, setNewClientName] = useState('')
+  const [newClientPhone, setNewClientPhone] = useState('')
   const [createError, setCreateError] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -55,11 +57,15 @@ export default function AdminDashboardPage() {
       code: normalized,
       active: true,
       createdAt: `${day}/${month}/${year}`,
+      clientName: newClientName.trim() || undefined,
+      clientPhone: newClientPhone.trim() || undefined,
     }
     const updated = [...existing, newEntry]
     saveAccessCodes(updated)
     setCodes(updated)
     setNewCode('')
+    setNewClientName('')
+    setNewClientPhone('')
   }
 
   const toggleActive = (id: string) => {
@@ -123,39 +129,54 @@ export default function AdminDashboardPage() {
           className="rounded-xl p-5"
           style={{ background: '#161616', border: '1px solid #2a2a2a' }}
         >
-          <h2 className="text-base font-semibold text-white mb-4">Créer un nouveau code</h2>
-          <form onSubmit={handleCreate} className="flex gap-3">
-            <div className="flex-1">
+          <h2 className="text-base font-semibold text-white mb-4">Créer un nouveau code client</h2>
+          <form onSubmit={handleCreate} className="space-y-3">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={newCode}
+                  onChange={e => { setNewCode(e.target.value.toUpperCase()); setCreateError('') }}
+                  placeholder="CODE (ex: DUPONT)"
+                  className="w-full px-4 py-2.5 rounded-lg text-white placeholder-gray-600 font-mono text-sm tracking-widest outline-none"
+                  style={{ background: '#1e1e1e', border: createError ? '1px solid #ef4444' : '1px solid #2a2a2a' }}
+                  onFocus={e => { if (!createError) e.currentTarget.style.border = '1px solid #d4780f' }}
+                  onBlur={e => { if (!createError) e.currentTarget.style.border = '1px solid #2a2a2a' }}
+                />
+                {createError && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{createError}</p>}
+              </div>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-lg font-semibold text-white transition-colors flex-shrink-0"
+                style={{ background: '#d4780f' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#b86400')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#d4780f')}
+              >
+                Créer
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <input
                 type="text"
-                value={newCode}
-                onChange={e => { setNewCode(e.target.value.toUpperCase()); setCreateError('') }}
-                placeholder="EX: CLIENT2024"
-                className="w-full px-4 py-2.5 rounded-lg text-white placeholder-gray-600 font-mono text-sm tracking-widest outline-none"
-                style={{
-                  background: '#1e1e1e',
-                  border: createError ? '1px solid #ef4444' : '1px solid #2a2a2a',
-                }}
-                onFocus={e => {
-                  if (!createError) e.currentTarget.style.border = '1px solid #d4780f'
-                }}
-                onBlur={e => {
-                  if (!createError) e.currentTarget.style.border = '1px solid #2a2a2a'
-                }}
+                value={newClientName}
+                onChange={e => setNewClientName(e.target.value)}
+                placeholder="Nom du client (optionnel)"
+                className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
               />
-              {createError && (
-                <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{createError}</p>
-              )}
+              <input
+                type="text"
+                value={newClientPhone}
+                onChange={e => setNewClientPhone(e.target.value)}
+                placeholder="Téléphone (optionnel)"
+                className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+              />
             </div>
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-lg font-semibold text-white transition-colors flex-shrink-0"
-              style={{ background: '#d4780f' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#b86400')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#d4780f')}
-            >
-              Créer
-            </button>
           </form>
         </div>
 
@@ -200,6 +221,7 @@ export default function AdminDashboardPage() {
                 <thead>
                   <tr style={{ borderBottom: '1px solid #2a2a2a' }}>
                     <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Code</th>
+                    <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Client</th>
                     <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Statut</th>
                     <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Créé le</th>
                     <th className="text-right pb-3 font-medium" style={{ color: '#8a8a8a' }}>Actions</th>
@@ -210,6 +232,15 @@ export default function AdminDashboardPage() {
                     <tr key={c.id} style={{ borderBottom: '1px solid #1a1a1a' }}>
                       <td className="py-3 pr-4">
                         <span className="font-mono font-semibold text-white tracking-wider">{c.code}</span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {c.clientName
+                          ? <div>
+                              <p className="text-white text-xs font-medium">{c.clientName}</p>
+                              {c.clientPhone && <p className="text-xs" style={{ color: '#8a8a8a' }}>{c.clientPhone}</p>}
+                            </div>
+                          : <span className="text-xs" style={{ color: '#3a3a3a' }}>—</span>
+                        }
                       </td>
                       <td className="py-3 pr-4">
                         <span
