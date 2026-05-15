@@ -485,7 +485,7 @@ export default function CalculatorPage() {
 
           {/* WhatsApp */}
           <a
-            href="https://wa.me/33767739561?text=Bonjour%20SPINCUT%2C%20j%27ai%20une%20question%20sur%20vos%20outils%20CNC."
+            href="https://wa.me/33767739561"
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-colors"
