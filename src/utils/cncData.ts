@@ -115,7 +115,7 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     bois_dur:    [160, 300],
     mdf:         [200, 380],
     ctp:         [220, 420],
-    melamine:    [180, 360],
+    melamine:    [380, 520],
   },
   ravageuse: {
     bois_tendre: [180, 320],
