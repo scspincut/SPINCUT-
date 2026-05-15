@@ -255,9 +255,9 @@ export default function CalculatorPage() {
 
           {/* Machine limits */}
           <div className="pt-2 border-t border-[#1e1e1e] grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <NumberField label="n max broche (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" />
-            <NumberField label="Vf max machine (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" />
             <NumberField label="Épaisseur matière (mm)" value={thickness} onChange={setThickness} placeholder="Ex: 18" hint="pour calcul N passes" />
+            <NumberField label="Vitesse broche max (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" hint="facultatif" />
+            <NumberField label="Vitesse d'avance max (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" hint="facultatif" />
           </div>
         </div>
 
