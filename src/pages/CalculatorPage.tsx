@@ -132,20 +132,22 @@ export default function CalculatorPage() {
     nMax, vfMax, thickness,
   ]);
 
-  // Auto-save to history 1.5s after params settle
-  useEffect(() => {
+  const [savedThisCalc, setSavedThisCalc] = useState(false);
+
+  // Reset saved flag whenever the result changes
+  useEffect(() => { setSavedThisCalc(false); }, [result]);
+
+  const handleSave = () => {
     if (result.forbidden) return;
-    const timer = setTimeout(() => {
-      const entry: HistoryEntry = {
-        id: Date.now().toString(),
-        timestamp: Date.now(),
-        params: { toolType, notation, material: safeMat, operation, diameter: safeDiam, zTeeth, nMax, vfMax, thickness },
-        result: { n: result.n, vf: result.vf, vc: result.vc },
-      };
-      setHistory(pushToHistory(entry));
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [toolType, notation, safeMat, operation, safeDiam, zTeeth, result]);
+    const entry: HistoryEntry = {
+      id: Date.now().toString(),
+      timestamp: Date.now(),
+      params: { toolType, notation, material: safeMat, operation, diameter: safeDiam, zTeeth, nMax, vfMax, thickness },
+      result: { n: result.n, vf: result.vf, vc: result.vc },
+    };
+    setHistory(pushToHistory(entry));
+    setSavedThisCalc(true);
+  };
 
   const reloadEntry = (entry: HistoryEntry) => {
     setToolType(entry.params.toolType);
@@ -342,6 +344,18 @@ export default function CalculatorPage() {
                 Z calcul = {result.zCalc} arêtes ({notation}) — correction géométrie ×{notation === '1+1' ? '1.00' : notation === '2+2' ? '0.90' : '0.80'}
               </p>
             )}
+
+            <button
+              onClick={handleSave}
+              disabled={savedThisCalc}
+              className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                savedThisCalc
+                  ? 'bg-[#0a2010] border-green-800 text-green-400 cursor-default'
+                  : 'bg-[#1e1e1e] border-[#d4780f]/40 text-[#d4780f] hover:bg-[#d4780f]/10 active:scale-95'
+              }`}
+            >
+              {savedThisCalc ? '✓ Calcul sauvegardé dans l\'historique' : '💾 Sauvegarder ce calcul'}
+            </button>
           </div>
         )}
 
@@ -357,6 +371,7 @@ export default function CalculatorPage() {
                 <span className="bg-[#d4780f]/20 text-[#d4780f] text-xs px-2 py-0.5 rounded-full font-normal">
                   {history.length}
                 </span>
+                <span className="text-[#333] text-xs font-normal">/ 20 max</span>
               </h2>
               <svg className={`w-5 h-5 text-[#555] transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
