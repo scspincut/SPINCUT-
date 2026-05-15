@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalculatorParams, ToolNotation } from '../types';
 import { calculate } from '../utils/calculations';
@@ -9,6 +9,7 @@ import {
 } from '../utils/cncData';
 import SpincutLogo from '../components/SpincutLogo';
 import { useClientAuth } from '../hooks/useAuth';
+import { HistoryEntry, loadHistory, pushToHistory, groupByDay } from '../utils/history';
 
 const SEL = "w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4780f] appearance-none cursor-pointer";
 const INP = "w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4780f] placeholder-[#555]";
@@ -98,6 +99,8 @@ export default function CalculatorPage() {
   const [thickness, setThickness] = useState('');
   const [showConseils, setShowConseils] = useState(true);
   const [showDiag, setShowDiag] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
 
   if (!isAuthenticated) {
     navigate('/');
@@ -128,6 +131,34 @@ export default function CalculatorPage() {
     toolType, notation, safeMat, operation, safeDiam, zTeeth,
     nMax, vfMax, thickness,
   ]);
+
+  // Auto-save to history 1.5s after params settle
+  useEffect(() => {
+    if (result.forbidden) return;
+    const timer = setTimeout(() => {
+      const entry: HistoryEntry = {
+        id: Date.now().toString(),
+        timestamp: Date.now(),
+        params: { toolType, notation, material: safeMat, operation, diameter: safeDiam, zTeeth, nMax, vfMax, thickness },
+        result: { n: result.n, vf: result.vf, vc: result.vc },
+      };
+      setHistory(pushToHistory(entry));
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [toolType, notation, safeMat, operation, safeDiam, zTeeth, result]);
+
+  const reloadEntry = (entry: HistoryEntry) => {
+    setToolType(entry.params.toolType);
+    setNotation(entry.params.notation);
+    setMaterial(entry.params.material);
+    setOperation(entry.params.operation);
+    setDiameter(entry.params.diameter);
+    setZTeeth(entry.params.zTeeth);
+    setNMax(entry.params.nMax);
+    setVfMax(entry.params.vfMax);
+    setThickness(entry.params.thickness);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleToolChange = (t: string) => {
     const tt = t as CalculatorParams['toolType'];
@@ -310,6 +341,63 @@ export default function CalculatorPage() {
               <p className="text-[#555] text-xs">
                 Z calcul = {result.zCalc} arêtes ({notation}) — correction géométrie ×{notation === '1+1' ? '1.00' : notation === '2+2' ? '0.90' : '0.80'}
               </p>
+            )}
+          </div>
+        )}
+
+        {/* History */}
+        {history.length > 0 && (
+          <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+            <button
+              onClick={() => setShowHistory(s => !s)}
+              className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
+            >
+              <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">
+                🕐 Historique
+                <span className="bg-[#d4780f]/20 text-[#d4780f] text-xs px-2 py-0.5 rounded-full font-normal">
+                  {history.length}
+                </span>
+              </h2>
+              <svg className={`w-5 h-5 text-[#555] transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showHistory && (
+              <div className="px-5 pb-5 space-y-5">
+                {groupByDay(history).map(([dayLabel, entries]) => (
+                  <div key={dayLabel}>
+                    <p className="text-[#444] text-[10px] font-semibold tracking-[0.2em] uppercase mb-2">
+                      {dayLabel}
+                    </p>
+                    <div className="space-y-2">
+                      {entries.map(entry => (
+                        <div
+                          key={entry.id}
+                          className="bg-[#1a1a1a] rounded-xl p-3 border border-[#2a2a2a] flex items-center justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-white text-sm font-medium truncate">
+                              {TOOL_TYPE_LABELS[entry.params.toolType]} Ø{entry.params.diameter} · {MATERIAL_LABELS[entry.params.material]}
+                            </p>
+                            <p className="text-[#666] text-xs mt-0.5">
+                              {OPERATION_LABELS[entry.params.operation]} &nbsp;·&nbsp;
+                              <span className="text-[#d4780f]">n {entry.result.n.toLocaleString('fr-FR')} tr/min</span>
+                              &nbsp;·&nbsp; Vf {entry.result.vf.toLocaleString('fr-FR')} mm/min
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => reloadEntry(entry)}
+                            className="flex-shrink-0 text-xs text-[#d4780f] border border-[#d4780f]/30 px-2.5 py-1.5 rounded-lg hover:bg-[#d4780f]/10 transition-colors"
+                          >
+                            ↩ Recharger
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
