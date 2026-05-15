@@ -103,6 +103,7 @@ export default function CalculatorPage() {
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [savedThisCalc, setSavedThisCalc] = useState(false);
   const [showMailMenu, setShowMailMenu] = useState(false);
+  const [showGlossaire, setShowGlossaire] = useState(false);
 
   // Derived values needed by useMemo below
   const availableMaterials = TOOL_MATERIALS[toolType];
@@ -469,6 +470,52 @@ export default function CalculatorPage() {
                       <td className="py-2 text-[#d4780f]">{d.solution}</td>
                     </tr>
                   ))}</tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Glossaire */}
+        <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+          <button onClick={() => setShowGlossaire(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
+            <h2 className="text-[#d4780f] font-semibold text-base">📖 C'est quoi tous ces termes ?</h2>
+            <svg className={`w-5 h-5 text-[#555] transition-transform ${showGlossaire ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showGlossaire && (
+            <div className="px-5 pb-5">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[#2a2a2a]">
+                      <th className="text-left text-[#d4780f] font-semibold py-2 pr-6 w-16">Terme</th>
+                      <th className="text-left text-[#888] font-medium py-2 pr-6">Nom complet</th>
+                      <th className="text-left text-[#888] font-medium py-2">En clair</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1a1a1a]">
+                    {[
+                      { term: 'n', full: 'Vitesse de rotation (tr/min)', plain: 'Combien de tours par minute tourne la fraise' },
+                      { term: 'Vf', full: 'Vitesse d\'avance (mm/min)', plain: 'À quelle vitesse la machine se déplace sur la pièce' },
+                      { term: 'Vc', full: 'Vitesse de coupe (m/min)', plain: 'La vitesse réelle du tranchant de la fraise dans la matière' },
+                      { term: 'fz', full: 'Avance par dent (mm/dent)', plain: 'L\'épaisseur de copeau coupé par chaque arête à chaque tour' },
+                      { term: 'ap', full: 'Profondeur de passe axiale (mm)', plain: 'À quelle profondeur la fraise plonge en Z à chaque passe' },
+                      { term: 'ae', full: 'Profondeur de passe radiale (mm)', plain: 'Quelle largeur de matière la fraise enlève latéralement' },
+                      { term: 'Z', full: 'Nombre de dents', plain: 'Le nombre de tranchants sur la fraise' },
+                      { term: 'Vf_Z', full: 'Vitesse de plongée Z (mm/min)', plain: 'La vitesse à utiliser quand la fraise descend dans la matière' },
+                      { term: 'RCTF', full: 'Correction de charge par dent', plain: 'Un coefficient qui augmente la charge quand on n\'utilise qu\'une partie de la fraise' },
+                    ].map(({ term, full, plain }) => (
+                      <tr key={term}>
+                        <td className="py-3 pr-6">
+                          <span className="font-mono font-bold text-white text-base">{term}</span>
+                        </td>
+                        <td className="py-3 pr-6 text-[#aaa]">{full}</td>
+                        <td className="py-3 text-[#666]">{plain}</td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
             </div>
