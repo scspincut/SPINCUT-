@@ -94,7 +94,7 @@ export default function CalculatorPage() {
   const [operation, setOperation] = useState<CalculatorParams['operation']>('detourage');
   const [diameter, setDiameter] = useState(6);
   const [zTeeth, setZTeeth] = useState(2);
-  const [nMax, setNMax] = useState('');
+  const [nMax, setNMax] = useState('20000');
   const [vfMax, setVfMax] = useState('');
   const [thickness, setThickness] = useState('');
   const [showConseils, setShowConseils] = useState(false);
