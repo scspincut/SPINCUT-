@@ -7,92 +7,76 @@ interface Product {
   ref: string
   designation: string
   queue: string
+  diameter: number
+  cuttingLength: number
   price: number
-}
-
-interface SubCategory {
-  id: string
-  label: string
-  products: Product[]
 }
 
 interface Category {
   id: string
   label: string
   description: string
-  subCategories: SubCategory[]
+  products: Product[]
   comingSoon?: boolean
 }
 
 const CATEGORIES: Category[] = [
   {
+    id: 'classique',
+    label: 'Fraise Classique',
+    description: 'Bois massif, MDF, contreplaqué, PVC, PMMA, aluminium',
+    products: [],
+    comingSoon: true,
+  },
+  {
     id: 'compression',
     label: 'Fraise Compression',
     description: '2 faces nettes — mélaminé, contreplaqué, MDF, stratifié HPL/CPL',
-    subCategories: [
-      {
-        id: 'compression_lc22',
-        label: 'LC22 — Longueur de coupe 22 mm',
-        products: [
-          { ref: '10363122', designation: 'Ø3,175 LC22 LT50 Z2+2', queue: 'Q3,175', price: 17.90 },
-          { ref: '10360422', designation: 'Ø4 LC22 LT50 Z2+2',     queue: 'Q4',     price: 16.90 },
-          { ref: '10360522', designation: 'Ø5 LC22 LT50 Z2+2',     queue: 'Q5',     price: 26.90 },
-          { ref: '10380622', designation: 'Ø6 LC22 LT50 Z3+3',     queue: 'Q6',     price: 27.90 },
-          { ref: '10380822', designation: 'Ø8 LC22 LT60 Z3+3',     queue: 'Q8',     price: 49.90 },
-        ],
-      },
-      {
-        id: 'compression_lc32',
-        label: 'LC32 — Longueur de coupe 32 mm',
-        products: [
-          { ref: '10380632', designation: 'Ø6 LC32 LT70 Z3+3', queue: 'Q6', price: 34.90 },
-          { ref: '10380832', designation: 'Ø8 LC32 LT70 Z3+3', queue: 'Q8', price: 64.90 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'carbure',
-    label: 'Fraise Classique',
-    description: 'Bois massif, MDF, contreplaqué, PVC, PMMA, aluminium',
-    comingSoon: true,
-    subCategories: [
-      { id: 'carbure_1d', label: '1 Dent', products: [] },
-      { id: 'carbure_2d', label: '2 Dents', products: [] },
-      { id: 'carbure_3d', label: '3 Dents', products: [] },
+    products: [
+      { ref: '10363122', designation: 'Ø3,175 LC22 LT50 Z2+2', queue: 'Q3,175', diameter: 3.175, cuttingLength: 22, price: 17.90 },
+      { ref: '10360422', designation: 'Ø4 LC22 LT50 Z2+2',     queue: 'Q4',     diameter: 4,     cuttingLength: 22, price: 16.90 },
+      { ref: '10360522', designation: 'Ø5 LC22 LT50 Z2+2',     queue: 'Q5',     diameter: 5,     cuttingLength: 22, price: 26.90 },
+      { ref: '10380622', designation: 'Ø6 LC22 LT50 Z3+3',     queue: 'Q6',     diameter: 6,     cuttingLength: 22, price: 27.90 },
+      { ref: '10380822', designation: 'Ø8 LC22 LT60 Z3+3',     queue: 'Q8',     diameter: 8,     cuttingLength: 22, price: 49.90 },
+      { ref: '10380632', designation: 'Ø6 LC32 LT70 Z3+3',     queue: 'Q6',     diameter: 6,     cuttingLength: 32, price: 34.90 },
+      { ref: '10380832', designation: 'Ø8 LC32 LT70 Z3+3',     queue: 'Q8',     diameter: 8,     cuttingLength: 32, price: 64.90 },
     ],
   },
   {
     id: 'diamant',
     label: 'Diamant (PCD)',
     description: 'Longévité maximale — MDF, HDF, mélaminé, aggloméré, composites, Trespa',
+    products: [],
     comingSoon: true,
-    subCategories: [
-      { id: 'diamant_droite', label: 'Droite', products: [] },
-      { id: 'diamant_compression', label: 'Compression', products: [] },
-    ],
   },
   {
     id: 'ravageuse',
     label: 'Ravageuse',
     description: 'Ébauche rapide — bois massif tendre et dur, panneaux épais',
+    products: [],
     comingSoon: true,
-    subCategories: [
-      { id: 'ravageuse_std', label: 'Standard', products: [] },
-    ],
+  },
+  {
+    id: 'percage',
+    label: 'Perçage',
+    description: 'Mèches et outils de perçage — bois, panneaux, plastiques',
+    products: [],
+    comingSoon: true,
   },
 ]
 
-const ALL_PRODUCTS = CATEGORIES.flatMap(c => c.subCategories.flatMap(s => s.products))
+const ALL_PRODUCTS = CATEGORIES.flatMap(c => c.products)
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
+function fmtD(d: number) { return d === 3.175 ? '3,175' : String(d) }
 
 export default function OrderPage() {
   const navigate = useNavigate()
   const { isAuthenticated } = useClientAuth()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({ compression: true })
-  const [openSubs, setOpenSubs] = useState<Record<string, boolean>>({ compression_lc22: true })
+  const [filterDiam, setFilterDiam] = useState<Record<string, number | null>>({})
+  const [filterLC, setFilterLC] = useState<Record<string, number | null>>({})
 
   const clientCode = getClientCode()
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
@@ -105,7 +89,12 @@ export default function OrderPage() {
     setQuantities(prev => ({ ...prev, [ref]: Math.max(0, parseInt(val) || 0) }))
 
   const toggleCat = (id: string) => setOpenCats(prev => ({ ...prev, [id]: !prev[id] }))
-  const toggleSub = (id: string) => setOpenSubs(prev => ({ ...prev, [id]: !prev[id] }))
+
+  const toggleDiam = (catId: string, d: number) =>
+    setFilterDiam(prev => ({ ...prev, [catId]: prev[catId] === d ? null : d }))
+
+  const toggleLC = (catId: string, lc: number) =>
+    setFilterLC(prev => ({ ...prev, [catId]: prev[catId] === lc ? null : lc }))
 
   const total = ALL_PRODUCTS.reduce((s, item) => s + (quantities[item.ref] || 0) * item.price, 0)
   const hasItems = ALL_PRODUCTS.some(item => (quantities[item.ref] || 0) > 0)
@@ -147,14 +136,24 @@ export default function OrderPage() {
 
         {CATEGORIES.map(cat => {
           const isOpen = openCats[cat.id] ?? false
-          const catProducts = cat.subCategories.flatMap(s => s.products)
-          const catCount = catProducts.reduce((s, item) => s + (quantities[item.ref] || 0), 0)
-          const catTotal = catProducts.reduce((s, item) => s + (quantities[item.ref] || 0) * item.price, 0)
+          const activeDiam = filterDiam[cat.id] ?? null
+          const activeLC = filterLC[cat.id] ?? null
+
+          const diameters = [...new Set(cat.products.map(p => p.diameter))].sort((a, b) => a - b)
+          const lengths = [...new Set(cat.products.map(p => p.cuttingLength))].sort((a, b) => a - b)
+
+          const filtered = cat.products.filter(p =>
+            (activeDiam === null || p.diameter === activeDiam) &&
+            (activeLC === null || p.cuttingLength === activeLC)
+          )
+
+          const catCount = cat.products.reduce((s, item) => s + (quantities[item.ref] || 0), 0)
+          const catTotal = cat.products.reduce((s, item) => s + (quantities[item.ref] || 0) * item.price, 0)
 
           return (
             <div key={cat.id} className="rounded-2xl border border-[#1e1e1e] overflow-hidden">
 
-              {/* Catégorie header */}
+              {/* Header catégorie */}
               <button
                 onClick={() => !cat.comingSoon && toggleCat(cat.id)}
                 className={`w-full px-4 py-3.5 flex items-center justify-between bg-[#111] transition-colors ${cat.comingSoon ? 'cursor-default' : 'hover:bg-[#161616]'}`}
@@ -183,83 +182,93 @@ export default function OrderPage() {
                 )}
               </button>
 
-              {/* Sous-catégories */}
+              {/* Contenu */}
               {isOpen && !cat.comingSoon && (
                 <div className="border-t border-[#1e1e1e]">
-                  {cat.subCategories.map(sub => {
-                    const isSubOpen = openSubs[sub.id] ?? false
-                    const subCount = sub.products.reduce((s, item) => s + (quantities[item.ref] || 0), 0)
 
-                    return (
-                      <div key={sub.id} className="border-b border-[#1a1a1a] last:border-b-0">
+                  {/* Filtres */}
+                  {(diameters.length > 1 || lengths.length > 1) && (
+                    <div className="px-4 py-3 space-y-2 bg-[#0f0f0f] border-b border-[#1a1a1a]">
+                      {diameters.length > 1 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[#555] text-[10px] font-semibold uppercase tracking-wider w-8">Ø</span>
+                          {diameters.map(d => (
+                            <button key={d} onClick={() => toggleDiam(cat.id, d)}
+                              className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${
+                                activeDiam === d
+                                  ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                                  : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
+                              }`}
+                            >
+                              Ø {fmtD(d)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {lengths.length > 1 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[#555] text-[10px] font-semibold uppercase tracking-wider w-8">LC</span>
+                          {lengths.map(lc => (
+                            <button key={lc} onClick={() => toggleLC(cat.id, lc)}
+                              className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${
+                                activeLC === lc
+                                  ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                                  : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
+                              }`}
+                            >
+                              LC {lc}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                        {/* Sous-catégorie header */}
-                        <button
-                          onClick={() => toggleSub(sub.id)}
-                          className="w-full px-4 py-2.5 flex items-center justify-between bg-[#0f0f0f] hover:bg-[#161616] transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-[#aaa] text-xs font-semibold">{sub.label}</span>
-                            {subCount > 0 && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#d4780f]/20 text-[#d4780f] font-bold">
-                                {subCount}
-                              </span>
-                            )}
+                  {/* Produits */}
+                  <div className="divide-y divide-[#1a1a1a]">
+                    {filtered.length === 0 ? (
+                      <p className="px-4 py-6 text-xs text-[#444] text-center">Aucun produit pour ces filtres</p>
+                    ) : (
+                      filtered.map(item => {
+                        const qty = quantities[item.ref] || 0
+                        const selected = qty > 0
+                        return (
+                          <div key={item.ref}
+                            className={`px-4 py-3 flex items-center gap-3 transition-colors ${selected ? 'bg-[#1a1200]' : 'bg-[#0d0d0d]'}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <span className="font-mono text-[10px] text-[#555] bg-[#1e1e1e] px-1.5 py-0.5 rounded">{item.ref}</span>
+                              <p className="text-white text-sm font-medium mt-1">
+                                {item.designation} <span className="text-[#555]">{item.queue}</span>
+                              </p>
+                              {selected && (
+                                <p className="text-[#d4780f] text-xs mt-0.5">Sous-total : {fmt(qty * item.price)}€ HT</p>
+                              )}
+                            </div>
+                            <div className="flex-shrink-0 flex items-center gap-2">
+                              <span className="text-[#d4780f] font-bold text-sm w-14 text-right">{fmt(item.price)}€</span>
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => setQty(item.ref, -1)}
+                                  className="w-7 h-7 rounded-lg bg-[#1e1e1e] border border-[#2a2a2a] text-[#888] hover:text-white hover:border-[#d4780f] transition-colors flex items-center justify-center font-bold text-base leading-none"
+                                >−</button>
+                                <input type="number" min={0}
+                                  value={qty === 0 ? '' : qty}
+                                  onChange={e => setQtyDirect(item.ref, e.target.value)}
+                                  placeholder="0"
+                                  className={`w-9 text-center bg-[#1e1e1e] border rounded-lg text-sm font-bold py-1 outline-none transition-colors ${
+                                    selected ? 'border-[#d4780f] text-[#d4780f]' : 'border-[#2a2a2a] text-[#555]'
+                                  }`}
+                                />
+                                <button onClick={() => setQty(item.ref, +1)}
+                                  className="w-7 h-7 rounded-lg bg-[#1e1e1e] border border-[#2a2a2a] text-[#888] hover:text-white hover:border-[#d4780f] transition-colors flex items-center justify-center font-bold text-base leading-none"
+                                >+</button>
+                              </div>
+                            </div>
                           </div>
-                          <svg className={`w-3.5 h-3.5 text-[#444] transition-transform ${isSubOpen ? 'rotate-180' : ''}`}
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-
-                        {/* Produits */}
-                        {isSubOpen && (
-                          <div className="divide-y divide-[#1a1a1a]">
-                            {sub.products.length === 0 ? (
-                              <p className="px-4 py-3 text-xs text-[#444] italic">Références à venir</p>
-                            ) : (
-                              sub.products.map(item => {
-                                const qty = quantities[item.ref] || 0
-                                const selected = qty > 0
-                                return (
-                                  <div key={item.ref}
-                                    className={`px-4 py-3 flex items-center gap-3 transition-colors ${selected ? 'bg-[#1a1200]' : 'bg-[#0d0d0d]'}`}
-                                  >
-                                    <div className="flex-1 min-w-0">
-                                      <span className="font-mono text-[10px] text-[#555] bg-[#1e1e1e] px-1.5 py-0.5 rounded">{item.ref}</span>
-                                      <p className="text-white text-sm font-medium mt-1">
-                                        {item.designation} <span className="text-[#555]">{item.queue}</span>
-                                      </p>
-                                      {selected && (
-                                        <p className="text-[#d4780f] text-xs mt-0.5">Sous-total : {fmt(qty * item.price)}€ HT</p>
-                                      )}
-                                    </div>
-                                    <div className="flex-shrink-0 flex items-center gap-2">
-                                      <span className="text-[#d4780f] font-bold text-sm w-14 text-right">{fmt(item.price)}€</span>
-                                      <div className="flex items-center gap-1">
-                                        <button onClick={() => setQty(item.ref, -1)}
-                                          className="w-7 h-7 rounded-lg bg-[#1e1e1e] border border-[#2a2a2a] text-[#888] hover:text-white hover:border-[#d4780f] transition-colors flex items-center justify-center font-bold text-base leading-none"
-                                        >−</button>
-                                        <input type="number" min={0}
-                                          value={qty === 0 ? '' : qty}
-                                          onChange={e => setQtyDirect(item.ref, e.target.value)}
-                                          placeholder="0"
-                                          className={`w-9 text-center bg-[#1e1e1e] border rounded-lg text-sm font-bold py-1 outline-none transition-colors ${selected ? 'border-[#d4780f] text-[#d4780f]' : 'border-[#2a2a2a] text-[#555]'}`}
-                                        />
-                                        <button onClick={() => setQty(item.ref, +1)}
-                                          className="w-7 h-7 rounded-lg bg-[#1e1e1e] border border-[#2a2a2a] text-[#888] hover:text-white hover:border-[#d4780f] transition-colors flex items-center justify-center font-bold text-base leading-none"
-                                        >+</button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )
-                              })
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                        )
+                      })
+                    )}
+                  </div>
                 </div>
               )}
             </div>
