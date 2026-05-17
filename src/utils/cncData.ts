@@ -100,13 +100,15 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     alu_7075:      [100, 280],   // plus dur que 2017 — 75-85% Vc du 6061
     alu_6060:      [200, 480],   // 6060/6082 profilé — souple, Vc plus élevée possible
     alu_coule:     [100, 260],   // AS7/AS9 — Si abrasif, carbure grain fin
-    // Plastiques — sources: ACRYLITE routing guide, Onsrud PC/soft plastics data,
-    // Amana Spektra O-Flute speed chart, Onsrud soft plastic PDF
-    pvc_expanse:   [150, 400],   // Ø6 @ 18k RPM = 339 m/min — borne haute relevée
-    pvc_massif:    [100, 320],   // Ø8 @ 12k RPM = 302 m/min déjà > 220 ancienne borne
-    pmma:          [100, 450],   // ACRYLITE recommande jusqu'à 457 m/min (1500 SFM)
-    pc:            [80,  280],   // Onsrud PC : Ø6 @ 10k = 188 m/min > ancienne borne 180
-    abs_pom:       [100, 320],   // ABS/POM machinables — Ø8 @ 12k = 302 m/min
+    // Plastiques — sources: Onsrud Routing Plastics, Onsrud PC routing guide,
+    // Carbide3D forum, ChiefDelphi, HPL Machining, Cancam.ca
+    // NOTE: Onsrud PMMA = 300-700 SFM = 91-213 m/min (carbure 2 dents, pas O-flute)
+    // Vc élevée sur thermoplastiques = fusion irréversible → conservateur = correct
+    pvc_expanse:   [150, 400],   // OK — Carbide3D/Onsrud plastics ✓
+    pvc_massif:    [150, 350],   // Vc_cible=250 → n Ø8=9 947 (min 150 : en-dessous = mauvaise coupe)
+    pmma:          [100, 220],   // Onsrud PMMA max 700 SFM = 213 m/min ← CORRIGÉ (était 450, TROP HAUT)
+    pc:            [80,  250],   // Onsrud PC : 80-250 m/min (max 280 = légère surchauffe possible)
+    abs_pom:       [100, 320],   // ABS 400-800 SFM, POM 600-1000 SFM — OK
   },
   // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250, Onsrud MDF data,
   // Wirutex, Smarter Production nesting guide, zydiamondtools guide
@@ -202,8 +204,8 @@ export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
     bois_dur:    [0.090, 0.125, 0.150, 0.182, 0.228, 0.275],
     mdf:         [0.100, 0.138, 0.170, 0.205, 0.252, 0.300],
     ctp:         [0.115, 0.160, 0.195, 0.230, 0.285, 0.340],
-    alu_2017:    [0.035, 0.055, 0.075, 0.095, 0.125, 0.155],
-    alu_6060:    [0.048, 0.075, 0.095, 0.115, 0.148, 0.178],
+    alu_2017:    [0.035, 0.065, 0.075, 0.095, 0.125, 0.155],   // Ø8: 0.055→0.065 (PracticalMachinist: fz trop bas = friction)
+    alu_6060:    [0.048, 0.085, 0.095, 0.115, 0.148, 0.178],   // Ø8: 0.075→0.085 (PracticalMachinist: 6060 souple = fz + élevé)
   },
   // HSS — steps [3,6,8,10,12]
   // HSS moins rigide que carbure → fz conservateur pour éviter chatter/casse
