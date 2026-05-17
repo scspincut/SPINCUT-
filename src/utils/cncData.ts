@@ -85,14 +85,17 @@ export const TEETH_OPTIONS = [1, 2, 3, 4, 6];
 type VcEntry = [number, number];
 
 export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
-  // Carbure monobloc — sources: Onsrud, Vortex Tool, CMT, Leuco, Harvey Performance
+  // Carbure monobloc — sources: Onsrud, Vortex Tool, Amana Tool, Leuco, Harvey Performance
+  // VALIDATION: Vc_cible = (min+max)/2 → n = Vc×1000/(π×D)
+  // Ø8mm @ 18 000 tr/min = Vc 452 m/min → Vc_cible doit être ~450-480 pour bois courant
+  // Référence étalon terrain confirmé: compression mélaminé [380,530] → Vc_cible 455 → n Ø8 = 18 112 ✓
   carbure_monobloc: {
-    bois_tendre:   [200, 400],   // pin/sapin/épicéa — 200-400 m/min standard carbure
-    bois_dur:      [150, 300],   // chêne/hêtre — plus dur, Vc -15% vs tendre
-    bois_exotique: [100, 220],   // ipé/ébène/wengé — très dur et abrasif
-    mdf:           [180, 350],   // abrasif (silice+résine), outil use vite
-    ctp:           [200, 400],   // colles abrasives, même ordre que bois tendre
-    melamine:      [150, 300],   // revêtement corindon très abrasif
+    bois_tendre:   [300, 650],   // Vc_cible=475 → n Ø8=18 900, Ø6=20 000 (plafonné) ✓
+    bois_dur:      [250, 550],   // Vc_cible=400 → n Ø8=15 900 (bois dur = Vc -15%)
+    bois_exotique: [150, 350],   // Vc_cible=250 → n Ø8=9 950 (ipé/ébène très dur, carbure seulement)
+    mdf:           [280, 600],   // Vc_cible=440 → n Ø8=17 500 ✓ (abrasif mais coupe à grande Vc)
+    ctp:           [300, 650],   // Vc_cible=475 → n Ø8=18 900 ✓ (similaire bois tendre)
+    melamine:      [260, 520],   // Vc_cible=390 → n Ø8=15 500 (corindon abrasif, carbure use vite)
     alu_2017:      [150, 350],   // 2017A/2024 dural — Harvey: 150-300 m/min router
     alu_7075:      [100, 280],   // plus dur que 2017 — 75-85% Vc du 6061
     alu_6060:      [200, 480],   // 6060/6082 profilé — souple, Vc plus élevée possible
@@ -116,21 +119,22 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     ctp:           [400, 900],   // CTP — similaire MDF, Vc élevée possible
     melamine:      [380, 750],   // mélaminé abrasif — Ø12 @ 18k = 679 m/min inclus
   },
-  // Compression — validé par Vortex Tool, Amana Tool, confirmé terrain (Jeremy MAGGIO)
+  // Compression — Vortex Tool, Amana Tool, confirmé terrain Jeremy MAGGIO (18 000 RPM mélaminé Ø8)
   compression: {
-    bois_tendre: [200, 450],   // Amana Tool recommande 20 000-21 000 tr/min
-    bois_dur:    [160, 350],   // Vc légèrement inférieure au tendre
-    mdf:         [200, 420],   // même ordre que carbure standard
-    ctp:         [220, 450],   // CTP — compression = outil idéal
-    melamine:    [380, 530],   // CONFIRMÉ: 18 000 tr/min min sur Ø8 = 452 m/min (Jeremy MAGGIO)
+    bois_tendre: [350, 600],   // Vc_cible=475 → n Ø8=18 900 ✓ (plus souple que mélaminé)
+    bois_dur:    [280, 540],   // Vc_cible=410 → n Ø8=16 300
+    mdf:         [300, 560],   // Vc_cible=430 → n Ø8=17 100
+    ctp:         [350, 600],   // Vc_cible=475 → n Ø8=18 900 ✓
+    melamine:    [380, 530],   // Vc_cible=455 → n Ø8=18 112 ✓ CONFIRMÉ TERRAIN (Jeremy MAGGIO)
   },
-  // Ravageuse — sources: Amana Tool chipbreaker, forum Woodweb, Practical Machinist
+  // Ravageuse — Amana chipbreaker recommande 20 000-21 000 RPM
+  // Vc_cible ~460 → n Ø8 ≈ 18 300 ✓
   ravageuse: {
-    bois_tendre: [180, 380],   // corncob — Amana 20 000-21 000 RPM recommandé
-    bois_dur:    [140, 300],   // Vc -20% vs tendre
-    mdf:         [160, 320],   // abrasif, surveiller usure
-    ctp:         [180, 380],   // similaire bois tendre
-    alu_2017:    [100, 220],   // aluminium sans refroidissement — conservative
+    bois_tendre: [320, 600],   // Vc_cible=460 → n Ø8=18 300 ✓
+    bois_dur:    [260, 500],   // Vc_cible=380 → n Ø8=15 100
+    mdf:         [280, 540],   // Vc_cible=410 → n Ø8=16 300
+    ctp:         [320, 600],   // Vc_cible=460 → n Ø8=18 300 ✓
+    alu_2017:    [100, 220],   // aluminium sans refroidissement
     alu_6060:    [150, 280],   // 6060 plus tendre que 2017
   },
   // HSS — sources: Practical Machinist, STEPCRAFT, Drill-Service.co.uk
