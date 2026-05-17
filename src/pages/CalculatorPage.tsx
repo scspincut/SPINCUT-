@@ -235,8 +235,8 @@ export default function CalculatorPage() {
             </SelectField>
 
             <SelectField label="Type d'opération" value={operation} onChange={v => setOperation(v as CalculatorParams['operation'])}>
-              {Object.entries(OPERATION_LABELS).map(([k, l]) => (
-                <option key={k} value={k}>{l}</option>
+              {(['decoupe', 'rainure', 'poche', 'gravure'] as const).map(k => (
+                <option key={k} value={k}>{OPERATION_LABELS[k]}</option>
               ))}
             </SelectField>
 
