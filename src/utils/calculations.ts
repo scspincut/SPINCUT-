@@ -126,12 +126,11 @@ export function calculate(params: CalculatorParams): CalcResult {
     });
   }
 
-  // n théorique élevé — suggérer d'entrer nMax machine
-  if (!nLimited && nMax === null && nTheo > 24000) {
-    const vcEffectif = Math.round((Math.PI * diameter * 24000) / 1000);
+  // n théorique élevé — vérifier capacité machine
+  if (!nLimited && nTheo > 20000) {
     alerts.push({
       type: 'warning',
-      message: `n calculé = ${Math.round(nTheo).toLocaleString('fr-FR')} tr/min — la plupart des machines sont limitées à 18 000–24 000 tr/min. Entrez votre n max dans les paramètres pour recalculer (ex : 24 000 → Vc effective ${vcEffectif} m/min).`,
+      message: `Vitesse calculée : ${Math.round(nTheo).toLocaleString('fr-FR')} tr/min — vérifiez que votre machine peut atteindre cette vitesse avant d'usiner.`,
     });
   }
 

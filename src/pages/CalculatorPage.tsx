@@ -94,7 +94,7 @@ export default function CalculatorPage() {
   const [operation, setOperation] = useState<CalculatorParams['operation']>('decoupe');
   const [diameter, setDiameter] = useState(6);
   const [zTeeth, setZTeeth] = useState(2);
-  const [nMax, setNMax] = useState('20000');
+  const [nMax, setNMax] = useState('');
   const [vfMax, setVfMax] = useState('');
   const [thickness, setThickness] = useState('');
   const [showConseils, setShowConseils] = useState(false);
