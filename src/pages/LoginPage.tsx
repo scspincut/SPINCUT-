@@ -132,15 +132,14 @@ export default function LoginPage() {
           {/* Accroche */}
           <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid #2a2a2a' }}>
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
-            <p className="text-sm mt-2" style={{ color: '#8a8a8a' }}>
-              Le calculateur SPINCUT est réservé à nos clients — paramètres de coupe professionnels,
-              zéro casse outil, données vérifiées sur les meilleurs fabricants.
+            <p className="text-sm mt-1.5" style={{ color: '#8a8a8a' }}>
+              Devenez client SPINCUT et obtenez votre code d'accès gratuitement
             </p>
             <div className="mt-3 space-y-1.5">
               {[
-                'Devenez client SPINCUT et obtenez votre code d\'accès gratuitement',
                 'Paramètres optimisés pour chaque matériau',
                 'Mis à jour en continu par SPINCUT',
+                'Exploitez votre machine à 100% — vitesses et avances au maximum sans casse',
               ].map(txt => (
                 <div key={txt} className="flex items-start gap-2">
                   <span style={{ color: '#d4780f' }} className="mt-0.5 text-sm">✓</span>
