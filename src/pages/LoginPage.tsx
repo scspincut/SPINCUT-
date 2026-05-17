@@ -19,14 +19,14 @@ export default function LoginPage() {
   }
 
   const handleProspect = () => {
-    if (!prospectName.trim() || !prospectPhone.trim()) return
+    if (!prospectName.trim() || !prospectEmail.trim()) return
     const lines = [
       `🆕 Nouvelle demande d'accès SPINCUT`,
       ``,
       `Nom : ${prospectName.trim()}`,
-      `Téléphone : ${prospectPhone.trim()}`,
-      prospectEmail.trim() ? `Email : ${prospectEmail.trim()}` : '',
       prospectCompany.trim() ? `Société : ${prospectCompany.trim()}` : '',
+      `Email : ${prospectEmail.trim()}`,
+      prospectPhone.trim() ? `Téléphone : ${prospectPhone.trim()}` : '',
     ].filter(Boolean).join('\n')
     window.open(`https://wa.me/33767739561?text=${encodeURIComponent(lines)}`, '_blank')
   }
@@ -126,43 +126,64 @@ export default function LoginPage() {
 
         {/* Prospect — pas encore client */}
         <div
-          className="w-full rounded-xl p-5 space-y-3"
+          className="w-full rounded-xl overflow-hidden"
           style={{ background: '#161616', border: '1px solid #2a2a2a' }}
         >
-          <div>
-            <p className="text-sm font-semibold text-white">Pas encore client ?</p>
-            <p className="text-xs mt-0.5" style={{ color: '#8a8a8a' }}>
-              Remplissez ce formulaire — vous recevrez votre code d'accès par WhatsApp.
+          {/* Accroche */}
+          <div className="px-5 pt-5 pb-4" style={{ borderBottom: '1px solid #2a2a2a' }}>
+            <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
+            <p className="text-sm mt-2" style={{ color: '#8a8a8a' }}>
+              Le calculateur SPINCUT est réservé à nos clients — paramètres de coupe professionnels,
+              zéro casse outil, données vérifiées sur les meilleurs fabricants.
             </p>
-          </div>
-          {[
-            { label: 'Nom complet *', value: prospectName, set: setProspectName, placeholder: 'Jean Dupont' },
-            { label: 'Société', value: prospectCompany, set: setProspectCompany, placeholder: 'Dupont SARL' },
-            { label: 'Email', value: prospectEmail, set: setProspectEmail, placeholder: 'jean@exemple.com' },
-            { label: 'Téléphone *', value: prospectPhone, set: setProspectPhone, placeholder: '06 12 34 56 78' },
-          ].map(f => (
-            <div key={f.label}>
-              <label className="block text-xs mb-1" style={{ color: '#8a8a8a' }}>{f.label}</label>
-              <input
-                type="text"
-                value={f.value}
-                onChange={e => f.set(e.target.value)}
-                placeholder={f.placeholder}
-                className="w-full px-3 py-2.5 rounded-lg text-white text-sm outline-none"
-                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
-                onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
-                onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
-              />
+            <div className="mt-3 space-y-1.5">
+              {[
+                'Accès gratuit — offert avec votre première commande',
+                'Paramètres optimisés pour chaque matériau',
+                'Mis à jour en continu par SPINCUT',
+              ].map(txt => (
+                <div key={txt} className="flex items-start gap-2">
+                  <span style={{ color: '#d4780f' }} className="mt-0.5 text-sm">✓</span>
+                  <span className="text-xs" style={{ color: '#aaa' }}>{txt}</span>
+                </div>
+              ))}
             </div>
-          ))}
-          <button
-            onClick={handleProspect}
-            disabled={!prospectName.trim() || !prospectPhone.trim()}
-            className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-40"
-            style={{ background: '#25D366' }}
-          >
-            Envoyer ma demande sur WhatsApp
-          </button>
+          </div>
+
+          {/* Formulaire */}
+          <div className="px-5 py-4 space-y-3">
+            <p className="text-xs font-semibold" style={{ color: '#d4780f' }}>
+              Laissez vos coordonnées — je vous contacte sous 24h
+            </p>
+            {[
+              { label: 'Nom complet *', value: prospectName, set: setProspectName, placeholder: 'Jean Dupont' },
+              { label: 'Société *', value: prospectCompany, set: setProspectCompany, placeholder: 'Dupont SARL' },
+              { label: 'Email *', value: prospectEmail, set: setProspectEmail, placeholder: 'jean@exemple.com' },
+              { label: 'Téléphone', value: prospectPhone, set: setProspectPhone, placeholder: '06 12 34 56 78 (optionnel)' },
+            ].map(f => (
+              <div key={f.label}>
+                <label className="block text-xs mb-1" style={{ color: '#8a8a8a' }}>{f.label}</label>
+                <input
+                  type="text"
+                  value={f.value}
+                  onChange={e => f.set(e.target.value)}
+                  placeholder={f.placeholder}
+                  className="w-full px-3 py-2.5 rounded-lg text-white text-sm outline-none"
+                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                  onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                  onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+                />
+              </div>
+            ))}
+            <button
+              onClick={handleProspect}
+              disabled={!prospectName.trim() || !prospectEmail.trim()}
+              className="w-full py-3 rounded-lg text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-40"
+              style={{ background: '#d4780f' }}
+            >
+              Demander mon accès gratuit →
+            </button>
+          </div>
         </div>
 
         {/* Admin link */}
