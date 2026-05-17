@@ -138,7 +138,7 @@ export default function LoginPage() {
             </p>
             <div className="mt-3 space-y-1.5">
               {[
-                'Accès gratuit — offert avec votre première commande',
+                'Devenez client SPINCUT et obtenez votre code d\'accès gratuitement',
                 'Paramètres optimisés pour chaque matériau',
                 'Mis à jour en continu par SPINCUT',
               ].map(txt => (
