@@ -104,11 +104,16 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     // Carbide3D forum, ChiefDelphi, HPL Machining, Cancam.ca
     // NOTE: Onsrud PMMA = 300-700 SFM = 91-213 m/min (carbure 2 dents, pas O-flute)
     // Vc élevée sur thermoplastiques = fusion irréversible → conservateur = correct
+    // Sources vérifiées : Onsrud CNC Production Routing Guide, ACRYLITE (Röhm),
+    // Techno CNC Chip Load Data, JustPolycarbonate, Cancam.ca
     pvc_expanse:   [150, 400],   // OK — Carbide3D/Onsrud plastics ✓
-    pvc_massif:    [150, 350],   // Vc_cible=250 → n Ø8=9 947 (min 150 : en-dessous = mauvaise coupe)
-    pmma:          [100, 220],   // Onsrud PMMA max 700 SFM = 213 m/min ← CORRIGÉ (était 450, TROP HAUT)
-    pc:            [80,  250],   // Onsrud PC : 80-250 m/min (max 280 = légère surchauffe possible)
-    abs_pom:       [100, 320],   // ABS 400-800 SFM, POM 600-1000 SFM — OK
+    pvc_massif:    [150, 350],   // min 150 (Cancam) → Vc_cible=250 → n Ø8=9 947 ✓
+    pmma:          [150, 460],   // Onsrud acrylic 500-1500 SFM = 152-457 m/min courant
+                                 // ACRYLITE (Röhm) : 1000-1500 SFM pour routing CNC
+                                 // → Vc_cible=305 → n Ø8=12 134 tr/min ✓
+    pc:            [150, 380],   // JustPolycarbonate : 8 000-15 000 RPM Ø8 recommandé
+                                 // Onsrud PC chipload 0.004-0.012 IPT → Vc_cible=265 → n Ø8=10 544 ✓
+    abs_pom:       [100, 320],   // ABS 400-800 SFM, POM 600-1000 SFM — OK ✓
   },
   // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250, Onsrud MDF data,
   // Wirutex, Smarter Production nesting guide, zydiamondtools guide
