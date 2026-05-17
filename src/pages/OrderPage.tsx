@@ -54,7 +54,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'carbure',
     label: 'Fraise Carbure',
-    description: 'Bois massif, MDF, panneaux, PVC, PMMA, aluminium',
+    description: 'Bois massif, MDF, contreplaqué, PVC, PMMA, aluminium',
     comingSoon: true,
     subCategories: [
       { id: 'carbure_1d', label: '1 Dent', products: [] },
@@ -65,7 +65,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'diamant',
     label: 'Diamant (PCD)',
-    description: 'Usage intensif — MDF, HDF, mélaminé, aggloméré, composites (pas bois massif)',
+    description: 'Longévité maximale — MDF, HDF, mélaminé, aggloméré, composites, Trespa',
     comingSoon: true,
     subCategories: [
       { id: 'diamant_droite', label: 'Droite', products: [] },
