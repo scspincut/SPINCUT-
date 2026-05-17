@@ -97,21 +97,24 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     alu_7075:      [100, 280],   // plus dur que 2017 — 75-85% Vc du 6061
     alu_6060:      [200, 480],   // 6060/6082 profilé — souple, Vc plus élevée possible
     alu_coule:     [100, 260],   // AS7/AS9 — Si abrasif, carbure grain fin
-    pvc_expanse:   [150, 320],   // Forex/Sintra — risque fusion si trop vite
-    pvc_massif:    [100, 220],   // PVC rigide — plus dur, fz élevé essentiel
-    pmma:          [100, 250],   // acrylique — risque microfissures à Vf trop haute
-    pc:            [80,  180],   // polycarbonate — ductile, copeaux filants
-    abs_pom:       [100, 220],   // POM (Delrin) excellent, ABS risque fusion
+    // Plastiques — sources: ACRYLITE routing guide, Onsrud PC/soft plastics data,
+    // Amana Spektra O-Flute speed chart, Onsrud soft plastic PDF
+    pvc_expanse:   [150, 400],   // Ø6 @ 18k RPM = 339 m/min — borne haute relevée
+    pvc_massif:    [100, 320],   // Ø8 @ 12k RPM = 302 m/min déjà > 220 ancienne borne
+    pmma:          [100, 450],   // ACRYLITE recommande jusqu'à 457 m/min (1500 SFM)
+    pc:            [80,  280],   // Onsrud PC : Ø6 @ 10k = 188 m/min > ancienne borne 180
+    abs_pom:       [100, 320],   // ABS/POM machinables — Ø8 @ 12k = 302 m/min
   },
-  // Diamant PCD — sources: Leuco, Leitz, Amana Tool PCD, Vortex Tool
-  // PCD opère à Vc bien supérieure au carbure — 18 000-24 000 tr/min standard pro
+  // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250, Onsrud MDF data,
+  // Wirutex, Smarter Production nesting guide, zydiamondtools guide
+  // NOTE: Ø12mm @ 18 000 tr/min = 679 m/min → les bornes max doivent l'inclure
   diamant_coupe: {
-    bois_tendre:   [400, 700],   // pin/sapin — PCD tourne à haute Vc, géométrie faite pour ça
-    bois_dur:      [350, 600],   // chêne/hêtre — légèrement inférieur au tendre
-    bois_exotique: [300, 500],   // ipé/wengé — dense, Vc réduite mais toujours > carbure
-    mdf:           [400, 650],   // MDF très abrasif mais PCD résiste bien
-    ctp:           [400, 700],   // CTP — Vc élevée possible, PCD résiste aux colles
-    melamine:      [380, 600],   // mélaminé — PCD = outil recommandé, Vc haute
+    bois_tendre:   [400, 900],   // Ø12 @ 24k RPM = 905 m/min — bornes larges pour couvrir tous Ø
+    bois_dur:      [350, 700],   // chêne/hêtre — Ø12 @ 18k = 679 m/min dans la plage
+    bois_exotique: [300, 600],   // ipé/wengé — dense, Ø10 @ 18k = 565 m/min inclus
+    mdf:           [400, 900],   // MDF = application principale PCD, Smarter Production confirme
+    ctp:           [400, 900],   // CTP — similaire MDF, Vc élevée possible
+    melamine:      [380, 750],   // mélaminé abrasif — Ø12 @ 18k = 679 m/min inclus
   },
   // Compression — validé par Vortex Tool, Amana Tool, confirmé terrain (Jeremy MAGGIO)
   compression: {
@@ -160,11 +163,14 @@ export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
     alu_6060:      [0.008, 0.012, 0.016, 0.028, 0.040, 0.055, 0.065, 0.085, 0.105],
     alu_coule:     [0.005, 0.008, 0.011, 0.018, 0.024, 0.030, 0.038, 0.048, 0.058],
     // Plastiques — fz élevé = moins de chaleur = pas de fusion
-    pvc_expanse:   [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
-    pvc_massif:    [0.035, 0.050, 0.065, 0.095, 0.120, 0.155, 0.185, 0.230, 0.275],
-    pmma:          [0.030, 0.042, 0.058, 0.085, 0.110, 0.140, 0.170, 0.210, 0.255],
-    pc:            [0.030, 0.042, 0.058, 0.085, 0.108, 0.140, 0.165, 0.200, 0.240],
-    abs_pom:       [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
+    // Plastiques — Onsrud PC 0.004-0.012 IPT, ACRYLITE 0.004-0.015 IPT
+    // Amana Spektra Ø6mm = 0.008-0.012 IPT (0.20-0.30 mm/dent, 1 dent O-flute)
+    // fz MIN critique : trop bas → frottement → FUSION. fz élevé = bons copeaux.
+    pvc_expanse:   [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],   // OK
+    pvc_massif:    [0.044, 0.063, 0.081, 0.120, 0.150, 0.190, 0.228, 0.283, 0.338],   // +25%
+    pmma:          [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.201, 0.248, 0.301],   // +24%
+    pc:            [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.195, 0.236, 0.283],   // +24%
+    abs_pom:       [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],   // OK
   },
   // Diamant PCD — steps [3,6,8,10,12,16,20]
   // Vc bien plus élevée qu'en carbure → fz reste dans les mêmes ordres de grandeur
