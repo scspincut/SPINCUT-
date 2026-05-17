@@ -118,11 +118,20 @@ export function calculate(params: CalculatorParams): CalcResult {
   // ─── Alerts ────────────────────────────────────────────────────────────────
   const alerts: Alert[] = [];
 
-  // Broche plafonnée
+  // Broche plafonnée par nMax utilisateur
   if (nLimited) {
     alerts.push({
       type: 'warning',
       message: `Broche à la limite de ta machine — résultats calculés à ${nMax!.toLocaleString('fr-FR')} tr/min.`,
+    });
+  }
+
+  // n théorique élevé — suggérer d'entrer nMax machine
+  if (!nLimited && nMax === null && nTheo > 24000) {
+    const vcEffectif = Math.round((Math.PI * diameter * 24000) / 1000);
+    alerts.push({
+      type: 'warning',
+      message: `n calculé = ${Math.round(nTheo).toLocaleString('fr-FR')} tr/min — la plupart des machines sont limitées à 18 000–24 000 tr/min. Entrez votre n max dans les paramètres pour recalculer (ex : 24 000 → Vc effective ${vcEffectif} m/min).`,
     });
   }
 

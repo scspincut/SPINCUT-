@@ -85,109 +85,124 @@ export const TEETH_OPTIONS = [1, 2, 3, 4, 6];
 type VcEntry = [number, number];
 
 export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
+  // Carbure monobloc — sources: Onsrud, Vortex Tool, CMT, Leuco, Harvey Performance
   carbure_monobloc: {
-    bois_tendre:   [200, 350],
-    bois_dur:      [150, 280],
-    bois_exotique: [100, 200],
-    mdf:           [180, 320],
-    ctp:           [200, 380],
-    melamine:      [150, 280],
-    alu_2017:      [150, 300],
-    alu_7075:      [100, 200],
-    alu_6060:      [200, 350],
-    alu_coule:     [100, 180],
-    pvc_expanse:   [150, 300],
-    pvc_massif:    [80,  180],
-    pmma:          [120, 250],
-    pc:            [80,  160],
-    abs_pom:       [100, 200],
+    bois_tendre:   [200, 400],   // pin/sapin/épicéa — 200-400 m/min standard carbure
+    bois_dur:      [150, 300],   // chêne/hêtre — plus dur, Vc -15% vs tendre
+    bois_exotique: [100, 220],   // ipé/ébène/wengé — très dur et abrasif
+    mdf:           [180, 350],   // abrasif (silice+résine), outil use vite
+    ctp:           [200, 400],   // colles abrasives, même ordre que bois tendre
+    melamine:      [150, 300],   // revêtement corindon très abrasif
+    alu_2017:      [150, 350],   // 2017A/2024 dural — Harvey: 150-300 m/min router
+    alu_7075:      [100, 280],   // plus dur que 2017 — 75-85% Vc du 6061
+    alu_6060:      [200, 480],   // 6060/6082 profilé — souple, Vc plus élevée possible
+    alu_coule:     [100, 260],   // AS7/AS9 — Si abrasif, carbure grain fin
+    pvc_expanse:   [150, 320],   // Forex/Sintra — risque fusion si trop vite
+    pvc_massif:    [100, 220],   // PVC rigide — plus dur, fz élevé essentiel
+    pmma:          [100, 250],   // acrylique — risque microfissures à Vf trop haute
+    pc:            [80,  180],   // polycarbonate — ductile, copeaux filants
+    abs_pom:       [100, 220],   // POM (Delrin) excellent, ABS risque fusion
   },
+  // Diamant PCD — sources: Leuco, Leitz, Amana Tool PCD, Vortex Tool
+  // PCD opère à Vc bien supérieure au carbure — 18 000-24 000 tr/min standard pro
   diamant_coupe: {
-    bois_tendre:   [300, 500],
-    bois_dur:      [250, 450],
-    bois_exotique: [200, 350],
-    mdf:           [300, 500],
-    ctp:           [300, 500],
-    melamine:      [250, 450],
+    bois_tendre:   [400, 700],   // pin/sapin — PCD tourne à haute Vc, géométrie faite pour ça
+    bois_dur:      [350, 600],   // chêne/hêtre — légèrement inférieur au tendre
+    bois_exotique: [300, 500],   // ipé/wengé — dense, Vc réduite mais toujours > carbure
+    mdf:           [400, 650],   // MDF très abrasif mais PCD résiste bien
+    ctp:           [400, 700],   // CTP — Vc élevée possible, PCD résiste aux colles
+    melamine:      [380, 600],   // mélaminé — PCD = outil recommandé, Vc haute
   },
+  // Compression — validé par Vortex Tool, Amana Tool, confirmé terrain (Jeremy MAGGIO)
   compression: {
-    bois_tendre: [200, 400],
-    bois_dur:    [160, 300],
-    mdf:         [200, 380],
-    ctp:         [220, 420],
-    melamine:    [380, 520],
+    bois_tendre: [200, 450],   // Amana Tool recommande 20 000-21 000 tr/min
+    bois_dur:    [160, 350],   // Vc légèrement inférieure au tendre
+    mdf:         [200, 420],   // même ordre que carbure standard
+    ctp:         [220, 450],   // CTP — compression = outil idéal
+    melamine:    [380, 530],   // CONFIRMÉ: 18 000 tr/min min sur Ø8 = 452 m/min (Jeremy MAGGIO)
   },
+  // Ravageuse — sources: Amana Tool chipbreaker, forum Woodweb, Practical Machinist
   ravageuse: {
-    bois_tendre: [180, 320],
-    bois_dur:    [130, 250],
-    mdf:         [160, 300],
-    ctp:         [180, 350],
-    alu_2017:    [100, 180],
-    alu_6060:    [150, 250],
+    bois_tendre: [180, 380],   // corncob — Amana 20 000-21 000 RPM recommandé
+    bois_dur:    [140, 300],   // Vc -20% vs tendre
+    mdf:         [160, 320],   // abrasif, surveiller usure
+    ctp:         [180, 380],   // similaire bois tendre
+    alu_2017:    [100, 220],   // aluminium sans refroidissement — conservative
+    alu_6060:    [150, 280],   // 6060 plus tendre que 2017
   },
+  // HSS — sources: Practical Machinist, STEPCRAFT, Drill-Service.co.uk
+  // HSS rare en CNC pro — carbure 10× plus rentable en production
   hss: {
-    bois_tendre: [80,  150],
-    bois_dur:    [60,  120],
-    ctp:         [80,  150],
-    mdf:         [60,  120],
-    alu_2017:    [30,   80],
+    bois_tendre: [80,  130],   // ~91 m/min pratique max selon Practical Machinist
+    bois_dur:    [60,  100],   // dur + résines → usure très rapide
+    ctp:         [60,  100],   // colles abrasives = non recommandé pour HSS
+    mdf:         [50,   90],   // MDF = HSS inutilisable en série
+    alu_2017:    [60,  100],   // HSS alu: 60-90 m/min (Drill-Service.co.uk)
   },
 };
 
 // ─── fz tables (mm/dent) — indexed by DIAMETER_STEPS[toolType] ───────────────
 
 export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
-  // Carbure — steps [2,3,4,6,8,10,12,16,20]
+  // Carbure monobloc — steps [2,3,4,6,8,10,12,16,20]
+  // Référence: règle ~1-2% du diamètre, Onsrud, Vortex Tool, Techno CNC
   carbure_monobloc: {
-    bois_tendre:   [0.030, 0.040, 0.050, 0.070, 0.100, 0.120, 0.150, 0.180, 0.220],
-    bois_dur:      [0.025, 0.030, 0.040, 0.060, 0.080, 0.100, 0.120, 0.150, 0.180],
-    bois_exotique: [0.018, 0.025, 0.030, 0.045, 0.060, 0.075, 0.090, 0.110, 0.140],
-    mdf:           [0.025, 0.035, 0.040, 0.060, 0.080, 0.100, 0.120, 0.150, 0.180],
-    ctp:           [0.030, 0.040, 0.050, 0.070, 0.100, 0.120, 0.150, 0.180, 0.220],
-    melamine:      [0.022, 0.030, 0.038, 0.055, 0.070, 0.090, 0.110, 0.130, 0.160],
-    alu_2017:      [0.008, 0.012, 0.015, 0.020, 0.025, 0.030, 0.040, 0.050, 0.060],
-    alu_7075:      [0.006, 0.010, 0.012, 0.018, 0.022, 0.028, 0.035, 0.042, 0.050],
-    alu_6060:      [0.012, 0.016, 0.020, 0.025, 0.030, 0.040, 0.050, 0.060, 0.075],
-    alu_coule:     [0.008, 0.010, 0.012, 0.016, 0.020, 0.025, 0.030, 0.038, 0.045],
-    pvc_expanse:   [0.040, 0.055, 0.070, 0.100, 0.130, 0.160, 0.200, 0.240, 0.280],
-    pvc_massif:    [0.030, 0.040, 0.055, 0.080, 0.100, 0.130, 0.160, 0.200, 0.240],
-    pmma:          [0.030, 0.040, 0.055, 0.080, 0.100, 0.130, 0.160, 0.200, 0.240],
-    pc:            [0.025, 0.035, 0.050, 0.070, 0.090, 0.120, 0.140, 0.170, 0.200],
-    abs_pom:       [0.040, 0.055, 0.070, 0.100, 0.130, 0.160, 0.200, 0.240, 0.280],
+    bois_tendre:   [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
+    bois_dur:      [0.025, 0.035, 0.045, 0.070, 0.090, 0.115, 0.140, 0.170, 0.210],
+    bois_exotique: [0.018, 0.025, 0.032, 0.050, 0.068, 0.085, 0.100, 0.125, 0.155],
+    mdf:           [0.025, 0.038, 0.050, 0.075, 0.095, 0.120, 0.145, 0.180, 0.220],
+    ctp:           [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
+    melamine:      [0.022, 0.032, 0.042, 0.065, 0.085, 0.105, 0.130, 0.160, 0.195],
+    // Aluminium — sources: Harvey Performance, Garr Tool, Machining Doctor
+    // fz minimum anti-BUE (alu gummy si fz trop faible)
+    alu_2017:      [0.006, 0.010, 0.013, 0.022, 0.030, 0.040, 0.050, 0.065, 0.080],
+    alu_7075:      [0.005, 0.008, 0.011, 0.018, 0.025, 0.033, 0.042, 0.053, 0.065],
+    alu_6060:      [0.008, 0.012, 0.016, 0.028, 0.040, 0.055, 0.065, 0.085, 0.105],
+    alu_coule:     [0.005, 0.008, 0.011, 0.018, 0.024, 0.030, 0.038, 0.048, 0.058],
+    // Plastiques — fz élevé = moins de chaleur = pas de fusion
+    pvc_expanse:   [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
+    pvc_massif:    [0.035, 0.050, 0.065, 0.095, 0.120, 0.155, 0.185, 0.230, 0.275],
+    pmma:          [0.030, 0.042, 0.058, 0.085, 0.110, 0.140, 0.170, 0.210, 0.255],
+    pc:            [0.030, 0.042, 0.058, 0.085, 0.108, 0.140, 0.165, 0.200, 0.240],
+    abs_pom:       [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
   },
-  // Diamant — steps [3,6,8,10,12,16,20] — apply notation correction after
+  // Diamant PCD — steps [3,6,8,10,12,16,20]
+  // Vc bien plus élevée qu'en carbure → fz reste dans les mêmes ordres de grandeur
   diamant_coupe: {
-    bois_tendre:   [0.040, 0.080, 0.110, 0.140, 0.170, 0.200, 0.240],
-    bois_dur:      [0.030, 0.060, 0.090, 0.110, 0.130, 0.160, 0.190],
-    bois_exotique: [0.025, 0.050, 0.070, 0.090, 0.110, 0.130, 0.160],
-    mdf:           [0.040, 0.080, 0.110, 0.140, 0.160, 0.190, 0.230],
-    ctp:           [0.040, 0.080, 0.120, 0.140, 0.170, 0.200, 0.240],
-    melamine:      [0.030, 0.060, 0.090, 0.110, 0.140, 0.170, 0.200],
+    bois_tendre:   [0.045, 0.090, 0.125, 0.160, 0.190, 0.230, 0.275],
+    bois_dur:      [0.035, 0.070, 0.100, 0.125, 0.150, 0.185, 0.220],
+    bois_exotique: [0.028, 0.058, 0.082, 0.105, 0.128, 0.155, 0.188],
+    mdf:           [0.045, 0.090, 0.125, 0.158, 0.185, 0.220, 0.265],
+    ctp:           [0.045, 0.090, 0.135, 0.160, 0.195, 0.230, 0.275],
+    melamine:      [0.035, 0.070, 0.100, 0.128, 0.158, 0.195, 0.230],
   },
-  // Compression — steps [3,6,8,10,12,16,20] — apply notation correction after
+  // Compression — steps [3,6,8,10,12,16,20]
+  // Référence: Vortex Tool, Amana Tool, Onsrud — validé terrain
   compression: {
-    bois_tendre: [0.030, 0.070, 0.100, 0.120, 0.150, 0.180, 0.220],
-    bois_dur:    [0.025, 0.055, 0.080, 0.100, 0.120, 0.150, 0.180],
-    mdf:         [0.030, 0.070, 0.100, 0.120, 0.150, 0.180, 0.220],
-    ctp:         [0.032, 0.075, 0.110, 0.130, 0.160, 0.190, 0.230],
-    melamine:    [0.025, 0.060, 0.090, 0.110, 0.130, 0.160, 0.190],
+    bois_tendre: [0.032, 0.078, 0.112, 0.135, 0.168, 0.202, 0.248],
+    bois_dur:    [0.027, 0.062, 0.090, 0.112, 0.135, 0.168, 0.202],
+    mdf:         [0.032, 0.078, 0.112, 0.135, 0.168, 0.202, 0.248],
+    ctp:         [0.035, 0.085, 0.122, 0.148, 0.180, 0.215, 0.260],
+    melamine:    [0.027, 0.068, 0.100, 0.125, 0.148, 0.180, 0.215],
   },
   // Ravageuse — steps [6,8,10,12,16,20]
+  // Festons permettent fz plus élevé que carbure standard
   ravageuse: {
-    bois_tendre: [0.100, 0.140, 0.170, 0.200, 0.250, 0.300],
-    bois_dur:    [0.080, 0.110, 0.130, 0.160, 0.200, 0.240],
-    mdf:         [0.090, 0.120, 0.150, 0.180, 0.220, 0.260],
-    ctp:         [0.100, 0.140, 0.170, 0.200, 0.250, 0.300],
-    alu_2017:    [0.040, 0.060, 0.080, 0.100, 0.130, 0.160],
-    alu_6060:    [0.050, 0.080, 0.100, 0.120, 0.150, 0.180],
+    bois_tendre: [0.115, 0.160, 0.195, 0.230, 0.285, 0.340],
+    bois_dur:    [0.090, 0.125, 0.150, 0.182, 0.228, 0.275],
+    mdf:         [0.100, 0.138, 0.170, 0.205, 0.252, 0.300],
+    ctp:         [0.115, 0.160, 0.195, 0.230, 0.285, 0.340],
+    alu_2017:    [0.035, 0.055, 0.075, 0.095, 0.125, 0.155],
+    alu_6060:    [0.048, 0.075, 0.095, 0.115, 0.148, 0.178],
   },
   // HSS — steps [3,6,8,10,12]
+  // HSS moins rigide que carbure → fz conservateur pour éviter chatter/casse
   hss: {
-    bois_tendre: [0.020, 0.040, 0.060, 0.080, 0.100],
-    bois_dur:    [0.015, 0.030, 0.045, 0.060, 0.080],
-    ctp:         [0.020, 0.040, 0.060, 0.080, 0.100],
-    mdf:         [0.015, 0.030, 0.045, 0.060, 0.075],
-    alu_2017:    [0.008, 0.015, 0.020, 0.025, 0.030],
+    bois_tendre: [0.025, 0.050, 0.072, 0.095, 0.120],
+    bois_dur:    [0.018, 0.035, 0.052, 0.070, 0.092],
+    ctp:         [0.022, 0.045, 0.065, 0.085, 0.108],
+    mdf:         [0.018, 0.035, 0.052, 0.068, 0.088],
+    alu_2017:    [0.010, 0.018, 0.025, 0.032, 0.040],
   },
 };
 
