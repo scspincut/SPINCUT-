@@ -28,7 +28,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'compression',
     label: 'Fraise Compression',
-    description: 'Up & Down — bois, mélaminé, CTP',
+    description: '2 faces nettes — mélaminé, CTP, MDF, stratifié, bois massif',
     subCategories: [
       {
         id: 'compression_lc22',
@@ -54,7 +54,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'carbure',
     label: 'Fraise Carbure',
-    description: 'Usage classique — bois, plastiques, alu',
+    description: 'Bois massif, MDF, panneaux, PVC, PMMA, aluminium',
     comingSoon: true,
     subCategories: [
       { id: 'carbure_1d', label: '1 Dent', products: [] },
@@ -65,7 +65,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'diamant',
     label: 'Diamant (PCD)',
-    description: 'Longévité maximale — MDF, mélaminé intensif',
+    description: 'Usage intensif — MDF, HDF, mélaminé, aggloméré, composites (pas bois massif)',
     comingSoon: true,
     subCategories: [
       { id: 'diamant_droite', label: 'Droite', products: [] },
@@ -75,7 +75,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'ravageuse',
     label: 'Ravageuse',
-    description: 'Ébauche rapide — bois massif, panneaux épais',
+    description: 'Ébauche rapide — bois massif tendre et dur, panneaux épais',
     comingSoon: true,
     subCategories: [
       { id: 'ravageuse_std', label: 'Standard', products: [] },
