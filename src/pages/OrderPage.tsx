@@ -53,7 +53,7 @@ const CATEGORIES: Category[] = [
   },
   {
     id: 'carbure',
-    label: 'Fraise Carbure',
+    label: 'Fraise Hélicoïdale',
     description: 'Bois massif, MDF, contreplaqué, PVC, PMMA, aluminium',
     comingSoon: true,
     subCategories: [
