@@ -28,7 +28,7 @@ const CATEGORIES: Category[] = [
   {
     id: 'compression',
     label: 'Fraise Compression',
-    description: '2 faces nettes — mélaminé, CTP, MDF, stratifié, bois massif',
+    description: '2 faces nettes — mélaminé, contreplaqué, MDF, stratifié HPL/CPL',
     subCategories: [
       {
         id: 'compression_lc22',
