@@ -163,7 +163,7 @@ export default function LoginPage() {
           {showForm && (
             <div className="px-5 pb-5 space-y-3" style={{ borderTop: '1px solid #2a2a2a', paddingTop: '1rem' }}>
               <p className="text-xs font-semibold" style={{ color: '#d4780f' }}>
-                Laissez vos coordonnées — je vous contacte sous 24h
+                Une fois votre fiche client créée, vous recevez automatiquement votre code.
               </p>
               {[
                 { label: 'Nom complet *', value: prospectName, set: setProspectName, placeholder: 'Jean Dupont' },
