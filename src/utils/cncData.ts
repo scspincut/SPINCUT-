@@ -164,7 +164,7 @@ export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
     bois_tendre:   [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
     bois_dur:      [0.025, 0.035, 0.045, 0.070, 0.090, 0.115, 0.140, 0.170, 0.210],
     bois_exotique: [0.018, 0.025, 0.032, 0.050, 0.068, 0.085, 0.100, 0.125, 0.155],
-    mdf:           [0.025, 0.038, 0.050, 0.075, 0.095, 0.120, 0.145, 0.180, 0.220],
+    mdf:           [0.030, 0.045, 0.058, 0.088, 0.110, 0.140, 0.168, 0.208, 0.255],   // Freud: MDF ≥ bois tendre (silice → chip load élevé anti-friction)
     ctp:           [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
     melamine:      [0.022, 0.032, 0.042, 0.065, 0.085, 0.105, 0.130, 0.160, 0.195],
     // Aluminium — sources: Harvey Performance, Garr Tool, Machining Doctor
