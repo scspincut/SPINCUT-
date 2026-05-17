@@ -5,9 +5,7 @@ export type Material =
   | 'mdf' | 'ctp' | 'melamine'
   | 'alu_2017' | 'alu_7075' | 'alu_6060' | 'alu_coule'
   | 'pvc_expanse' | 'pvc_massif' | 'pmma' | 'pc' | 'abs_pom';
-export type Operation =
-  | 'detourage' | 'rainurage' | 'surfacage'
-  | 'contournage_ebauche' | 'poche_ebauche' | 'poche_finition';
+export type Operation = 'decoupe' | 'rainure' | 'poche' | 'gravure';
 export type MachineType = 'hobby' | 'semi_pro' | 'pro_portique' | 'centre_usinage';
 export type Coating = 'none' | 'tin' | 'tialn' | 'altin' | 'dlc' | 'zrn';
 

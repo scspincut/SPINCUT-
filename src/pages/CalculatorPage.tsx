@@ -91,7 +91,7 @@ export default function CalculatorPage() {
   const [toolType, setToolType] = useState<CalculatorParams['toolType']>('carbure_monobloc');
   const [notation, setNotation] = useState<ToolNotation>('2+2');
   const [material, setMaterial] = useState<CalculatorParams['material']>('mdf');
-  const [operation, setOperation] = useState<CalculatorParams['operation']>('detourage');
+  const [operation, setOperation] = useState<CalculatorParams['operation']>('decoupe');
   const [diameter, setDiameter] = useState(6);
   const [zTeeth, setZTeeth] = useState(2);
   const [nMax, setNMax] = useState('20000');
@@ -254,7 +254,17 @@ export default function CalculatorPage() {
 
           {/* Machine limits */}
           <div className="pt-2 border-t border-[#1e1e1e] grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <NumberField label="Épaisseur matière (mm)" value={thickness} onChange={setThickness} placeholder="Ex: 18" hint="pour calcul N passes" />
+            <NumberField
+              label={
+                operation === 'rainure' ? 'Profondeur de rainure (mm)' :
+                operation === 'poche'   ? 'Profondeur de poche (mm)' :
+                operation === 'gravure' ? 'Profondeur de gravure (mm)' :
+                'Épaisseur matière (mm)'
+              }
+              value={thickness} onChange={setThickness}
+              placeholder={operation === 'decoupe' ? 'Ex: 18' : 'Ex: 8'}
+              hint="pour calcul N passes"
+            />
             <NumberField label="Vitesse broche max — n max (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" hint="facultatif" />
             <NumberField label="Vitesse d'avance max — Vf max (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" hint="facultatif" />
           </div>

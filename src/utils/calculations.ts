@@ -61,7 +61,7 @@ export function calculate(params: CalculatorParams): CalcResult {
   let fzBase = interpolateFz(toolType, material, diameter);
 
   // Step 8 — Finition correction (fz × 0.40)
-  const opParams = OPERATION_PARAMS[operation] ?? OPERATION_PARAMS['detourage'];
+  const opParams = OPERATION_PARAMS[operation] ?? OPERATION_PARAMS['decoupe'];
   if (opParams.isFinition) fzBase *= 0.40;
 
   // Step 9 — Geometry correction for diamant/compression

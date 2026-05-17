@@ -29,12 +29,17 @@ export const MATERIAL_LABELS: Record<Material, string> = {
 };
 
 export const OPERATION_LABELS: Record<string, string> = {
-  detourage:           'Détourage / Profil finition',
-  rainurage:           'Rainurage (pleine fraise)',
-  surfacage:           'Surfaçage',
-  contournage_ebauche: 'Contournage ébauche',
-  poche_ebauche:       'Poche ébauche',
-  poche_finition:      'Poche finition',
+  decoupe: 'Découpe',
+  rainure: 'Rainure',
+  poche:   'Poche',
+  gravure: 'Gravure',
+  // anciens codes (historique localStorage)
+  detourage:           'Découpe',
+  rainurage:           'Rainure',
+  surfacage:           'Poche',
+  contournage_ebauche: 'Découpe',
+  poche_ebauche:       'Poche',
+  poche_finition:      'Poche',
 };
 
 export const MACHINE_TYPE_LABELS: Record<string, string> = {
@@ -235,42 +240,37 @@ export interface OpParams {
 }
 
 export const OPERATION_PARAMS: Record<string, OpParams> = {
-  detourage: {
+  decoupe: {
     apFactor: 1.00, aeFactor: 0.125,
-    apLabel: '1×D (détourage/profil)',
-    aeLabel: '0.10–0.15×D (profil finition)',
+    apLabel: '1×D par passe',
+    aeLabel: '~12% du diamètre',
     isFinition: true, noRctf: false,
   },
-  rainurage: {
+  rainure: {
     apFactor: 0.50, aeFactor: 1.00,
-    apLabel: '0.5×D (rainurage)',
-    aeLabel: '1×D (pleine fraise)',
+    apLabel: '0.5×D par passe',
+    aeLabel: 'pleine fraise (100%)',
     isFinition: false, noRctf: true,
   },
-  surfacage: {
-    apFactor: 0.10, aeFactor: 0.675,
-    apLabel: '0.1×D (surfaçage)',
-    aeLabel: '0.60–0.75×D (surfaçage)',
-    isFinition: false, noRctf: false,
-  },
-  contournage_ebauche: {
-    apFactor: 0.50, aeFactor: 0.30,
-    apLabel: '0.5×D (contournage ébauche)',
-    aeLabel: '0.30×D (ébauche)',
-    isFinition: false, noRctf: false,
-  },
-  poche_ebauche: {
+  poche: {
     apFactor: 0.40, aeFactor: 0.50,
-    apLabel: '0.4×D (poche ébauche)',
-    aeLabel: '0.40–0.60×D (poche ébauche)',
+    apLabel: '0.4×D par passe',
+    aeLabel: '50% du diamètre',
     isFinition: false, noRctf: false,
   },
-  poche_finition: {
-    apFactor: 0.25, aeFactor: 0.10,
-    apLabel: '0.25×D (poche finition)',
-    aeLabel: '0.10–0.15×D (poche finition)',
+  gravure: {
+    apFactor: 0.05, aeFactor: 0.20,
+    apLabel: '~0.3–0.5mm par passe',
+    aeLabel: '20% du diamètre',
     isFinition: true, noRctf: false,
   },
+  // anciens codes (fallback historique)
+  detourage:           { apFactor: 1.00, aeFactor: 0.125, apLabel: '1×D', aeLabel: '12%D', isFinition: true,  noRctf: false },
+  rainurage:           { apFactor: 0.50, aeFactor: 1.00,  apLabel: '0.5×D', aeLabel: '100%', isFinition: false, noRctf: true  },
+  surfacage:           { apFactor: 0.10, aeFactor: 0.675, apLabel: '0.1×D', aeLabel: '67%', isFinition: false, noRctf: false },
+  contournage_ebauche: { apFactor: 0.50, aeFactor: 0.30,  apLabel: '0.5×D', aeLabel: '30%', isFinition: false, noRctf: false },
+  poche_ebauche:       { apFactor: 0.40, aeFactor: 0.50,  apLabel: '0.4×D', aeLabel: '50%', isFinition: false, noRctf: false },
+  poche_finition:      { apFactor: 0.25, aeFactor: 0.10,  apLabel: '0.25×D', aeLabel: '10%', isFinition: true, noRctf: false },
 };
 
 // ─── Coating Vc multipliers (section 4.1) ────────────────────────────────────
