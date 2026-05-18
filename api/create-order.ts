@@ -25,39 +25,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     const contact = contacts?.docs?.[0]
+    let orderId: string | null = null
 
-    if (!contact) {
-      return res.status(404).json({
-        error: `Client "${clientName}" introuvable dans Abby — vérifiez que la fiche existe.`,
+    if (contact) {
+      // 2 — Créer le bon de commande pour ce contact
+      const { data: order } = await abby.estimate.createEstimateByContactOrOrganizationId({
+        path: { customerId: contact.id },
+        body: { estimateType: 'purchase_order' },
       })
+
+      if (order?.id) {
+        orderId = order.id
+
+        // 3 — Ajouter les lignes produits (désignation ASCII uniquement)
+        await abby.billing.updateLines({
+          path: { billingId: order.id },
+          body: {
+            lines: items.map(item => ({
+              designation: (item.queue
+                ? `${item.designation} - Queue ${item.queue}`
+                : item.designation
+              ).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x00-\x7F]/g, ''),
+              reference: item.ref,
+              unitPrice: Math.round(item.price * 100),
+              quantity: item.quantity,
+              quantityUnit: 'unit' as const,
+            })),
+          },
+        })
+      }
     }
-
-    // 2 — Créer le bon de commande pour ce contact
-    const { data: order } = await abby.estimate.createEstimateByContactOrOrganizationId({
-      path: { customerId: contact.id },
-      body: { estimateType: 'purchase_order' },
-    })
-
-    if (!order?.id) {
-      return res.status(500).json({ error: 'Bon de commande non créé — réponse Abby invalide.' })
-    }
-
-    // 3 — Ajouter les lignes produits (désignation ASCII uniquement)
-    await abby.billing.updateLines({
-      path: { billingId: order.id },
-      body: {
-        lines: items.map(item => ({
-          designation: (item.queue
-            ? `${item.designation} - Queue ${item.queue}`
-            : item.designation
-          ).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x00-\x7F]/g, ''),
-          reference: item.ref,
-          unitPrice: Math.round(item.price * 100),
-          quantity: item.quantity,
-          quantityUnit: 'unit' as const,
-        })),
-      },
-    })
 
     // 4 — Déduire le stock dans Google Sheets (non bloquant)
     const sheetsUrl = process.env.SHEETS_API_URL
@@ -76,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    return res.status(200).json({ success: true, orderId: order.id })
+    return res.status(200).json({ success: true, orderId })
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue'
