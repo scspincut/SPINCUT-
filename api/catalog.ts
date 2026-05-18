@@ -23,6 +23,7 @@ function categorize(p: SheetRow): string {
   if (f.includes('RAV')) return 'ravageuse'
   if (f.startsWith('F-PERC')) return 'percage'
   if (f === 'COLLET' || f.includes('DUST') || f.includes('EXTRACTION')) return 'accessoires'
+  if (f.includes('ALU') || p.ref.toUpperCase().includes('ALU')) return 'alu'
   if (p.sens === 'UP AND DOWN') return 'compression'
   return 'classique'
 }
@@ -35,13 +36,14 @@ function makeDesignation(p: SheetRow): string {
   const z = p.dents && p.dents !== '/' ? ` Z${p.dents}` : ''
   const q = p.queue && p.queue !== '/' ? `Q${p.queue}` : ''
   const suffix = q ? ` — ${q}` : ''
+  const pm = p.ref.toUpperCase().includes('PM') || f.toUpperCase().includes('PM') ? ' — Polimiroir' : ''
 
   if (f.includes('GRAV')) {
     const ang = p.angle && p.angle !== '/' ? `${p.angle}°` : ''
-    return `Fraise gravure ${ang}${lt}${z}${suffix}`
+    return `Fraise gravure ${ang}${lt}${z}${suffix}${pm}`
   }
   if (f.startsWith('FD')) {
-    return `Fraise diamant${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}`
+    return `Fraise diamant${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}${pm}`
   }
   if (f === 'COLLET') {
     return `Collet ER32${d ? ' ' + d : ''}`
@@ -50,12 +52,13 @@ function makeDesignation(p: SheetRow): string {
     return `Kit aspiration ${p.diametre}`
   }
   if (f.includes('RAV')) {
-    return `Fraise ravageuse${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}`
+    return `Fraise ravageuse${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}${pm}`
   }
   if (f.startsWith('F-PERC')) {
-    return `Foret${d ? ' ' + d : ''}${lc}${lt}${suffix}`
+    const dir = p.ref.endsWith('L') ? ' — Gauche' : p.ref.endsWith('R') ? ' — Droite' : ''
+    return `Foret${d ? ' ' + d : ''}${lc}${lt}${dir}${suffix}`
   }
-  return `${d}${lc}${lt}${z}${suffix}`
+  return `${d}${lc}${lt}${z}${suffix}${pm}`
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

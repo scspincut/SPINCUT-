@@ -23,12 +23,13 @@ interface CatalogProduct {
 
 const CATEGORY_META: Record<string, { label: string; description: string; order: number }> = {
   compression: { label: 'Fraise Compression', description: '2 faces nettes — mélaminé, contreplaqué, MDF, stratifié HPL/CPL', order: 1 },
-  classique:   { label: 'Fraise Classique',   description: 'Bois massif, MDF, contreplaqué, PVC, PMMA, aluminium', order: 2 },
-  ravageuse:   { label: 'Ravageuse',          description: 'Ébauche rapide — bois massif tendre et dur, panneaux épais', order: 3 },
-  gravure:     { label: 'Fraise Gravure',     description: 'Gravure et découpe fine — V-bit 30° et 60°', order: 4 },
-  diamant:     { label: 'Diamant (PCD)',      description: 'Longévité maximale — MDF, HDF, mélaminé, composites, Trespa', order: 5 },
-  percage:     { label: 'Perçage',            description: 'Mèches et outils de perçage — bois, panneaux, plastiques', order: 6 },
-  accessoires: { label: 'Accessoires',        description: 'Collets ER32, kits aspiration et équipements', order: 7 },
+  classique:   { label: 'Fraise Classique',   description: 'Bois massif, MDF, contreplaqué, PVC, PMMA', order: 2 },
+  alu:         { label: 'Aluminium',          description: 'Fraises spéciales aluminium et métaux non ferreux', order: 3 },
+  ravageuse:   { label: 'Ravageuse',          description: 'Ébauche rapide — bois massif tendre et dur, panneaux épais', order: 4 },
+  gravure:     { label: 'Fraise Gravure',     description: 'Gravure et découpe fine — V-bit 30° et 60°', order: 5 },
+  diamant:     { label: 'Diamant (PCD)',      description: 'Longévité maximale — MDF, HDF, mélaminé, composites, Trespa', order: 6 },
+  percage:     { label: 'Perçage',            description: 'Mèches et outils de perçage — bois, panneaux, plastiques', order: 7 },
+  accessoires: { label: 'Accessoires',        description: 'Collets ER32, kits aspiration et équipements', order: 8 },
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
@@ -65,6 +66,7 @@ export default function OrderPage() {
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({ compression: true })
   const [filterDiam, setFilterDiam] = useState<Record<string, string | null>>({})
   const [filterLC, setFilterLC] = useState<Record<string, string | null>>({})
+  const [filterDents, setFilterDents] = useState<Record<string, string | null>>({})
   const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [orderError, setOrderError] = useState('')
 
@@ -114,6 +116,8 @@ export default function OrderPage() {
     setFilterDiam(prev => ({ ...prev, [catId]: prev[catId] === d ? null : d }))
   const toggleLC = (catId: string, lc: string) =>
     setFilterLC(prev => ({ ...prev, [catId]: prev[catId] === lc ? null : lc }))
+  const toggleDents = (catId: string, d: string) =>
+    setFilterDents(prev => ({ ...prev, [catId]: prev[catId] === d ? null : d }))
 
   const total = catalog.reduce((s, item) => s + (quantities[item.ref] || 0) * item.prix, 0)
   const hasItems = catalog.some(item => (quantities[item.ref] || 0) > 0)
@@ -195,6 +199,7 @@ export default function OrderPage() {
           const isOpen = openCats[cat.id] ?? false
           const activeDiam = filterDiam[cat.id] ?? null
           const activeLC = filterLC[cat.id] ?? null
+          const activeDents = filterDents[cat.id] ?? null
 
           const diameters = [...new Set(cat.products.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) =>
             parseFloat(a) - parseFloat(b) || a.localeCompare(b)
@@ -202,10 +207,12 @@ export default function OrderPage() {
           const lcValues = [...new Set(cat.products.map(p => p.lc).filter(l => l && l !== '/'))].sort((a, b) =>
             parseFloat(a) - parseFloat(b)
           )
+          const dentsValues = [...new Set(cat.products.map(p => p.dents).filter(d => d && d !== '/'))].sort()
 
           const filtered = cat.products.filter(p =>
             (activeDiam === null || p.diametre === activeDiam) &&
-            (activeLC === null || p.lc === activeLC)
+            (activeLC === null || p.lc === activeLC) &&
+            (activeDents === null || p.dents === activeDents)
           )
 
           const catCount = cat.products.reduce((s, item) => s + (quantities[item.ref] || 0), 0)
@@ -236,7 +243,7 @@ export default function OrderPage() {
 
               {isOpen && (
                 <div className="border-t border-[#1e1e1e]">
-                  {(diameters.length > 1 || lcValues.length > 1) && (
+                  {(diameters.length > 1 || lcValues.length > 1 || dentsValues.length > 1) && (
                     <div className="px-4 py-3 space-y-2 bg-[#0f0f0f] border-b border-[#1a1a1a]">
                       {diameters.length > 1 && (
                         <div className="flex items-center gap-2 flex-wrap">
@@ -263,6 +270,20 @@ export default function OrderPage() {
                                   : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
                               }`}
                             >LC {lc}</button>
+                          ))}
+                        </div>
+                      )}
+                      {dentsValues.length > 1 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[#555] text-[10px] font-semibold uppercase tracking-wider w-8">Z</span>
+                          {dentsValues.map(d => (
+                            <button key={d} onClick={() => toggleDents(cat.id, d)}
+                              className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${
+                                activeDents === d
+                                  ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                                  : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
+                              }`}
+                            >Z{d}</button>
                           ))}
                         </div>
                       )}
