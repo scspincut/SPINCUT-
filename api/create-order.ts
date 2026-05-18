@@ -25,35 +25,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     const contact = contacts?.docs?.[0]
+    if (!contact) {
+      return res.status(400).json({ error: 'Compte client introuvable dans Abby. Contactez SPINCUT pour créer votre compte.' })
+    }
+
     let orderId: string | null = null
 
-    if (contact) {
-      // 2 — Créer le bon de commande pour ce contact
-      const { data: order } = await abby.estimate.createEstimateByContactOrOrganizationId({
-        path: { customerId: contact.id },
-        body: { estimateType: 'purchase_order' },
+    // 2 — Créer le bon de commande pour ce contact
+    const { data: order } = await abby.estimate.createEstimateByContactOrOrganizationId({
+      path: { customerId: contact.id },
+      body: { estimateType: 'purchase_order' },
+    })
+
+    if (order?.id) {
+      orderId = order.id
+
+      // 3 — Ajouter les lignes produits (désignation ASCII uniquement)
+      await abby.billing.updateLines({
+        path: { billingId: order.id },
+        body: {
+          lines: items.map(item => ({
+            designation: (item.queue
+              ? `${item.designation} - Queue ${item.queue}`
+              : item.designation
+            ).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x00-\x7F]/g, ''),
+            reference: item.ref,
+            unitPrice: Math.round(item.price * 100),
+            quantity: item.quantity,
+            quantityUnit: 'unit' as const,
+          })),
+        },
       })
-
-      if (order?.id) {
-        orderId = order.id
-
-        // 3 — Ajouter les lignes produits (désignation ASCII uniquement)
-        await abby.billing.updateLines({
-          path: { billingId: order.id },
-          body: {
-            lines: items.map(item => ({
-              designation: (item.queue
-                ? `${item.designation} - Queue ${item.queue}`
-                : item.designation
-              ).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x00-\x7F]/g, ''),
-              reference: item.ref,
-              unitPrice: Math.round(item.price * 100),
-              quantity: item.quantity,
-              quantityUnit: 'unit' as const,
-            })),
-          },
-        })
-      }
     }
 
     // 4 — Déduire le stock uniquement si la commande Abby a été créée
