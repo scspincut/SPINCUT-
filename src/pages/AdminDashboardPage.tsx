@@ -4,6 +4,16 @@ import { useAdminAuth, getAccessCodes, saveAccessCodes } from '../hooks/useAuth'
 import { AccessCode } from '../types'
 import SpincutLogo from '../components/SpincutLogo'
 
+function generateCode(name: string, existing: string[]): string {
+  const clean = name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8)
+  if (clean.length >= 4 && !existing.includes(clean)) return clean
+  for (let i = 2; i <= 99; i++) {
+    const candidate = clean.slice(0, 6) + i
+    if (!existing.includes(candidate)) return candidate
+  }
+  return clean + Date.now().toString().slice(-3)
+}
+
 export default function AdminDashboardPage() {
   const { isAdmin, adminLogout } = useAdminAuth()
   const navigate = useNavigate()
@@ -13,6 +23,8 @@ export default function AdminDashboardPage() {
   const [newClientPhone, setNewClientPhone] = useState('')
   const [createError, setCreateError] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [importMsg, setImportMsg] = useState('')
 
   const copyLink = (code: string) => {
     const url = `${window.location.origin}/?activate=${code}`
@@ -78,6 +90,39 @@ export default function AdminDashboardPage() {
     const updated = codes.filter(c => c.id !== id)
     saveAccessCodes(updated)
     setCodes(updated)
+  }
+
+  const importFromAbby = async () => {
+    setImportStatus('loading')
+    setImportMsg('')
+    try {
+      const res = await fetch('/api/abby-clients')
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
+      const clients: { id: string; name: string; phone?: string }[] = await res.json()
+      const existing = getAccessCodes()
+      const existingNames = existing.map(c => c.clientName?.toLowerCase())
+      const existingCodes = existing.map(c => c.code)
+      const toAdd: AccessCode[] = []
+      const today = new Date()
+      const createdAt = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`
+      for (const client of clients) {
+        if (existingNames.includes(client.name.toLowerCase())) continue
+        const code = generateCode(client.name, [...existingCodes, ...toAdd.map(c => c.code)])
+        toAdd.push({ id: Date.now().toString() + Math.random(), code, active: true, createdAt, clientName: client.name, clientPhone: client.phone })
+      }
+      if (toAdd.length === 0) {
+        setImportMsg('Tous les clients Abby ont déjà un code.')
+      } else {
+        const updated = [...existing, ...toAdd]
+        saveAccessCodes(updated)
+        setCodes(updated)
+        setImportMsg(`${toAdd.length} code${toAdd.length > 1 ? 's' : ''} importé${toAdd.length > 1 ? 's' : ''} depuis Abby.`)
+      }
+      setImportStatus('done')
+    } catch (e: unknown) {
+      setImportStatus('error')
+      setImportMsg(e instanceof Error ? e.message : 'Erreur inconnue')
+    }
   }
 
   const handleLogout = () => {
@@ -178,6 +223,31 @@ export default function AdminDashboardPage() {
               />
             </div>
           </form>
+        </div>
+
+        {/* Import Abby */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-white">Importer depuis Abby</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#8a8a8a' }}>Génère automatiquement un code pour chaque client Abby</p>
+            </div>
+            <button
+              onClick={importFromAbby}
+              disabled={importStatus === 'loading'}
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              style={{ background: '#0a1628', color: '#60a5fa', border: '1px solid #1e3a5f' }}
+            >
+              {importStatus === 'loading' ? (
+                <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Importation…</>
+              ) : '↓ Importer'}
+            </button>
+          </div>
+          {importMsg && (
+            <p className="text-xs mt-3 px-3 py-2 rounded-lg" style={{ background: importStatus === 'error' ? '#2a0000' : '#0a1f0a', color: importStatus === 'error' ? '#f87171' : '#4ade80' }}>
+              {importMsg}
+            </p>
+          )}
         </div>
 
         {/* Codes list card */}
