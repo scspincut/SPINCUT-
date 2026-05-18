@@ -82,6 +82,9 @@ export default function OrderPage() {
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
   const clientName = clientInfo?.clientName ?? null
 
+  const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [orderError, setOrderError] = useState('')
+
   const setQty = (ref: string, delta: number) =>
     setQuantities(prev => ({ ...prev, [ref]: Math.max(0, (prev[ref] || 0) + delta) }))
 
@@ -102,16 +105,34 @@ export default function OrderPage() {
 
   if (!isAuthenticated) { navigate('/'); return null }
 
-  const sendOrder = () => {
-    const lines = ALL_PRODUCTS
+  const sendOrder = async () => {
+    if (orderStatus === 'loading') return
+    setOrderStatus('loading')
+    setOrderError('')
+
+    const items = ALL_PRODUCTS
       .filter(item => (quantities[item.ref] || 0) > 0)
-      .map(item => {
-        const qty = quantities[item.ref]
-        return `· ${item.designation} ${item.queue} (réf. ${item.ref}) ×${qty} = ${fmt(qty * item.price)}€`
-      }).join('\n')
-    const clientLine = clientName ? `Client : ${clientName}\n\n` : ''
-    const msg = encodeURIComponent(`🛒 Commande SPINCUT\n\n${clientLine}${lines}\n\nTOTAL : ${fmt(total)}€ HT`)
-    window.open(`https://wa.me/33767739561?text=${msg}`, '_blank')
+      .map(item => ({
+        ref: item.ref,
+        designation: item.designation,
+        queue: item.queue,
+        quantity: quantities[item.ref],
+        price: item.price,
+      }))
+
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', items }),
+      })
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
+      setOrderStatus('success')
+      setQuantities({})
+    } catch (e: unknown) {
+      setOrderStatus('error')
+      setOrderError(e instanceof Error ? e.message : 'Erreur inconnue')
+    }
   }
 
   return (
@@ -281,26 +302,61 @@ export default function OrderPage() {
       {/* Barre commande fixe */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#0d0d0d]/95 backdrop-blur border-t border-[#1e1e1e] px-4 py-3">
         <div className="max-w-2xl mx-auto space-y-2">
-          {hasItems && (
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[#888] text-sm">{itemCount} article{itemCount > 1 ? 's' : ''}</span>
-              <span className="text-[#d4780f] font-bold text-lg">{fmt(total)}€ HT</span>
+
+          {/* Succès */}
+          {orderStatus === 'success' && (
+            <div className="rounded-xl bg-[#0a2010] border border-green-800 px-4 py-3 flex items-center gap-3">
+              <span className="text-green-400 text-lg">✓</span>
+              <div>
+                <p className="text-green-400 text-sm font-semibold">Commande envoyée !</p>
+                <p className="text-green-700 text-xs mt-0.5">Votre devis a été créé — SPINCUT vous recontacte sous 24h.</p>
+              </div>
+              <button onClick={() => setOrderStatus('idle')} className="ml-auto text-green-700 hover:text-green-400 text-lg">×</button>
             </div>
           )}
-          <button
-            onClick={sendOrder}
-            disabled={!hasItems}
-            className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-              hasItems
-                ? 'bg-[#25D366] text-white hover:bg-[#1fb558] active:scale-95'
-                : 'bg-[#1e1e1e] text-[#444] cursor-not-allowed border border-[#2a2a2a]'
-            }`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            {hasItems ? `Envoyer ma commande — ${fmt(total)}€ HT` : 'Sélectionnez des produits'}
-          </button>
+
+          {/* Erreur */}
+          {orderStatus === 'error' && (
+            <div className="rounded-xl bg-[#2a0000] border border-red-800 px-4 py-3 flex items-center gap-3">
+              <span className="text-red-400 text-lg">⚠️</span>
+              <p className="text-red-400 text-sm flex-1">{orderError || 'Une erreur est survenue, réessayez.'}</p>
+              <button onClick={() => setOrderStatus('idle')} className="text-red-700 hover:text-red-400 text-lg">×</button>
+            </div>
+          )}
+
+          {orderStatus !== 'success' && (
+            <>
+              {hasItems && (
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[#888] text-sm">{itemCount} article{itemCount > 1 ? 's' : ''}</span>
+                  <span className="text-[#d4780f] font-bold text-lg">{fmt(total)}€ HT</span>
+                </div>
+              )}
+              <button
+                onClick={sendOrder}
+                disabled={!hasItems || orderStatus === 'loading'}
+                className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                  hasItems && orderStatus !== 'loading'
+                    ? 'bg-[#d4780f] text-white hover:bg-[#b86400] active:scale-95'
+                    : 'bg-[#1e1e1e] text-[#444] cursor-not-allowed border border-[#2a2a2a]'
+                }`}
+              >
+                {orderStatus === 'loading' ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
+                    Envoi en cours…
+                  </>
+                ) : hasItems ? (
+                  `Commander — ${fmt(total)}€ HT`
+                ) : (
+                  'Sélectionnez des produits'
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
