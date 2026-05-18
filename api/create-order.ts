@@ -56,10 +56,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 4 — Déduire le stock dans Google Sheets (non bloquant)
+    // 4 — Déduire le stock uniquement si la commande Abby a été créée
     const sheetsUrl = process.env.SHEETS_API_URL
     const sheetsSecret = process.env.SHEETS_SECRET
-    if (sheetsUrl && sheetsSecret) {
+    if (orderId && sheetsUrl && sheetsSecret) {
       const updates = items
         .filter(item => item.sheet && item.row)
         .map(item => ({ sheet: item.sheet, row: item.row, qty: item.quantity }))
