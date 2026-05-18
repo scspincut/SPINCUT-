@@ -73,6 +73,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // 5 — Notification WhatsApp via CallMeBot (non bloquant)
+    const callMeBotKey = process.env.CALLMEBOT_API_KEY
+    const waPhone = process.env.WHATSAPP_PHONE ?? '33767739561'
+    if (callMeBotKey) {
+      const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
+      const lignes = items
+        .map(i => `- ${i.quantity}x ${i.ref} (${i.price.toFixed(2)}EUR)`)
+        .join('\n')
+      const msg = [
+        `Nouvelle commande SPINCUT`,
+        `Client : ${clientName}`,
+        orderId ? `BDC Abby : ${orderId}` : `(pas de BDC Abby)`,
+        ``,
+        lignes,
+        ``,
+        `Total : ${total.toFixed(2)} EUR HT`,
+      ].join('\n')
+
+      fetch(
+        `https://api.callmebot.com/whatsapp.php?phone=${waPhone}&text=${encodeURIComponent(msg)}&apikey=${callMeBotKey}`
+      ).catch(() => {})
+    }
+
     return res.status(200).json({ success: true, orderId })
 
   } catch (err: unknown) {
