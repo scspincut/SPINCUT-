@@ -1,0 +1,97 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+
+interface SheetRow {
+  sheet: string
+  row: number
+  famille: string
+  ref: string
+  diametre: string
+  lc: string
+  lt: string
+  dents: string
+  angle: string
+  queue: string
+  sens: string
+  prix: number
+  stock: number
+}
+
+function categorize(p: SheetRow): string {
+  const f = p.famille.trim()
+  if (f.includes('GRAV')) return 'gravure'
+  if (f.startsWith('FD')) return 'diamant'
+  if (f.includes('RAV')) return 'ravageuse'
+  if (f.startsWith('F-PERC')) return 'percage'
+  if (f === 'COLLET' || f.includes('DUST') || f.includes('EXTRACTION')) return 'accessoires'
+  if (p.sens === 'UP AND DOWN') return 'compression'
+  return 'classique'
+}
+
+function makeDesignation(p: SheetRow): string {
+  const f = p.famille.trim()
+  const d = p.diametre && p.diametre !== '/' ? `Ø${p.diametre}` : ''
+  const lc = p.lc && p.lc !== '/' ? ` LC${p.lc}` : ''
+  const lt = p.lt && p.lt !== '/' ? ` LT${p.lt}` : ''
+  const z = p.dents && p.dents !== '/' ? ` Z${p.dents}` : ''
+  const q = p.queue && p.queue !== '/' ? `Q${p.queue}` : ''
+  const suffix = q ? ` — ${q}` : ''
+
+  if (f.includes('GRAV')) {
+    const ang = p.angle && p.angle !== '/' ? `${p.angle}°` : ''
+    return `Fraise gravure ${ang}${lt}${z}${suffix}`
+  }
+  if (f.startsWith('FD')) {
+    return `Fraise diamant${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}`
+  }
+  if (f === 'COLLET') {
+    return `Collet ER32${d ? ' ' + d : ''}`
+  }
+  if (f.includes('DUST') || f.includes('EXTRACTION')) {
+    return `Kit aspiration ${p.diametre}`
+  }
+  if (f.includes('RAV')) {
+    return `Fraise ravageuse${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}`
+  }
+  if (f.startsWith('F-PERC')) {
+    return `Foret${d ? ' ' + d : ''}${lc}${lt}${suffix}`
+  }
+  return `${d}${lc}${lt}${z}${suffix}`
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+
+  const url = process.env.SHEETS_API_URL
+  const secret = process.env.SHEETS_SECRET
+  if (!url || !secret) return res.status(500).json({ error: 'Google Sheets non configuré' })
+
+  try {
+    const response = await fetch(`${url}?secret=${encodeURIComponent(secret)}`)
+    if (!response.ok) return res.status(502).json({ error: 'Erreur Google Sheets' })
+
+    const raw: (SheetRow & { error?: string })[] = await response.json()
+    if ('error' in raw) return res.status(403).json({ error: 'Accès Google Sheets refusé' })
+
+    const products = (raw as SheetRow[]).map(p => ({
+      sheet: p.sheet,
+      row: p.row,
+      ref: p.ref,
+      famille: p.famille,
+      diametre: p.diametre,
+      lc: p.lc,
+      lt: p.lt,
+      dents: p.dents,
+      angle: p.angle,
+      queue: p.queue,
+      sens: p.sens,
+      prix: p.prix,
+      stock: p.stock,
+      category: categorize(p),
+      designation: makeDesignation(p),
+    }))
+
+    return res.status(200).json(products)
+  } catch {
+    return res.status(500).json({ error: 'Erreur catalogue' })
+  }
+}
