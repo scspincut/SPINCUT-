@@ -326,7 +326,7 @@ export default function OrderPage() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-mono text-[10px] text-[#555] bg-[#1e1e1e] px-1.5 py-0.5 rounded">{item.ref}</span>
                               <StockBadge stock={item.stock} />
-                              {(item.pm || item.designation.includes('Polimiroir')) && (
+                              {item.pm && (
                                 <span className="text-[10px] font-semibold text-purple-400 bg-purple-900/30 px-1.5 py-0.5 rounded">Polimiroir</span>
                               )}
                             </div>

@@ -36,14 +36,13 @@ function makeDesignation(p: SheetRow): string {
   const z = p.dents && p.dents !== '/' ? ` Z${p.dents}` : ''
   const q = p.queue && p.queue !== '/' ? `Q${p.queue}` : ''
   const suffix = q ? ` — ${q}` : ''
-  const pm = p.ref.toUpperCase().includes('PM') || f.toUpperCase().includes('PM') ? ' — Polimiroir' : ''
 
   if (f.includes('GRAV')) {
     const ang = p.angle && p.angle !== '/' ? `${p.angle}°` : ''
-    return `Fraise gravure ${ang}${lt}${z}${suffix}${pm}`
+    return `Fraise gravure ${ang}${lt}${z}${suffix}`
   }
   if (f.startsWith('FD')) {
-    return `Fraise diamant${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}${pm}`
+    return `Fraise diamant${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}`
   }
   if (f === 'COLLET') {
     return `Collet ER32${d ? ' ' + d : ''}`
@@ -52,13 +51,13 @@ function makeDesignation(p: SheetRow): string {
     return `Kit aspiration ${p.diametre}`
   }
   if (f.includes('RAV')) {
-    return `Fraise ravageuse${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}${pm}`
+    return `Fraise ravageuse${d ? ' ' + d : ''}${lc}${lt}${z}${suffix}`
   }
   if (f.startsWith('F-PERC')) {
     const dir = p.ref.endsWith('L') ? ' — Gauche' : p.ref.endsWith('R') ? ' — Droite' : ''
     return `Foret${d ? ' ' + d : ''}${lc}${lt}${dir}${suffix}`
   }
-  return `${d}${lc}${lt}${z}${suffix}${pm}`
+  return `${d}${lc}${lt}${z}${suffix}`
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -79,7 +78,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const designation = makeDesignation(p)
       const pm = p.ref.toUpperCase().includes('PM')
         || p.famille.trim().toUpperCase().includes('PM')
-        || designation.includes('Polimiroir')
       return {
         sheet: p.sheet,
         row: p.row,
