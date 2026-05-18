@@ -17,6 +17,7 @@ interface CatalogProduct {
   sens: string
   prix: number
   stock: number
+  pm: boolean
   category: string
   designation: string
 }
@@ -67,6 +68,7 @@ export default function OrderPage() {
   const [filterDiam, setFilterDiam] = useState<Record<string, string | null>>({})
   const [filterLC, setFilterLC] = useState<Record<string, string | null>>({})
   const [filterDents, setFilterDents] = useState<Record<string, string | null>>({})
+  const [filterPM, setFilterPM] = useState<Record<string, boolean>>({})
   const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [orderError, setOrderError] = useState('')
 
@@ -118,6 +120,8 @@ export default function OrderPage() {
     setFilterLC(prev => ({ ...prev, [catId]: prev[catId] === lc ? null : lc }))
   const toggleDents = (catId: string, d: string) =>
     setFilterDents(prev => ({ ...prev, [catId]: prev[catId] === d ? null : d }))
+  const togglePM = (catId: string) =>
+    setFilterPM(prev => ({ ...prev, [catId]: !prev[catId] }))
 
   const total = catalog.reduce((s, item) => s + (quantities[item.ref] || 0) * item.prix, 0)
   const hasItems = catalog.some(item => (quantities[item.ref] || 0) > 0)
@@ -200,6 +204,7 @@ export default function OrderPage() {
           const activeDiam = filterDiam[cat.id] ?? null
           const activeLC = filterLC[cat.id] ?? null
           const activeDents = filterDents[cat.id] ?? null
+          const activePM = filterPM[cat.id] ?? false
 
           const diameters = [...new Set(cat.products.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) =>
             parseFloat(a) - parseFloat(b) || a.localeCompare(b)
@@ -208,11 +213,13 @@ export default function OrderPage() {
             parseFloat(a) - parseFloat(b)
           )
           const dentsValues = [...new Set(cat.products.map(p => p.dents).filter(d => d && d !== '/'))].sort()
+          const hasPM = cat.products.some(p => p.pm)
 
           const filtered = cat.products.filter(p =>
             (activeDiam === null || p.diametre === activeDiam) &&
             (activeLC === null || p.lc === activeLC) &&
-            (activeDents === null || p.dents === activeDents)
+            (activeDents === null || p.dents === activeDents) &&
+            (!activePM || p.pm)
           )
 
           const catCount = cat.products.reduce((s, item) => s + (quantities[item.ref] || 0), 0)
@@ -243,7 +250,7 @@ export default function OrderPage() {
 
               {isOpen && (
                 <div className="border-t border-[#1e1e1e]">
-                  {(diameters.length > 1 || lcValues.length > 1 || dentsValues.length > 1) && (
+                  {(diameters.length > 1 || lcValues.length > 1 || dentsValues.length > 1 || hasPM) && (
                     <div className="px-4 py-3 space-y-2 bg-[#0f0f0f] border-b border-[#1a1a1a]">
                       {diameters.length > 1 && (
                         <div className="flex items-center gap-2 flex-wrap">
@@ -285,6 +292,18 @@ export default function OrderPage() {
                               }`}
                             >Z{d}</button>
                           ))}
+                        </div>
+                      )}
+                      {hasPM && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[#555] text-[10px] font-semibold uppercase tracking-wider w-8">PM</span>
+                          <button onClick={() => togglePM(cat.id)}
+                            className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${
+                              activePM
+                                ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                                : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
+                            }`}
+                          >Polimiroir</button>
                         </div>
                       )}
                     </div>
