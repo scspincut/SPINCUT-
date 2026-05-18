@@ -100,6 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     })
 
+    res.setHeader('Cache-Control', 'no-store')
     return res.status(200).json(products)
   } catch {
     return res.status(500).json({ error: 'Erreur catalogue' })
