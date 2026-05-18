@@ -76,7 +76,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if ('error' in raw) return res.status(403).json({ error: 'Accès Google Sheets refusé' })
 
     const products = (raw as SheetRow[]).map(p => {
-      const pm = p.ref.toUpperCase().includes('PM') || p.famille.toUpperCase().includes('PM')
+      const designation = makeDesignation(p)
+      const pm = p.ref.toUpperCase().includes('PM')
+        || p.famille.trim().toUpperCase().includes('PM')
+        || designation.includes('Polimiroir')
       return {
         sheet: p.sheet,
         row: p.row,
@@ -93,7 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         stock: p.stock,
         pm,
         category: categorize(p),
-        designation: makeDesignation(p),
+        designation,
       }
     })
 
