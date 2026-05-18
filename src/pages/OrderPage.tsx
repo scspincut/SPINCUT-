@@ -23,12 +23,12 @@ interface CatalogProduct {
 }
 
 const CATEGORY_META: Record<string, { label: string; description: string; order: number }> = {
-  compression: { label: 'Fraise Compression', description: '2 faces nettes — mélaminé, contreplaqué, MDF, stratifié HPL/CPL', order: 1 },
-  classique:   { label: 'Fraise Classique',   description: 'Bois massif, MDF, contreplaqué, PVC, PMMA', order: 2 },
-  alu:         { label: 'Aluminium',          description: 'Fraises spéciales aluminium et métaux non ferreux', order: 3 },
+  classique:   { label: 'Fraise Classique',   description: 'Bois massif, MDF, contreplaqué, PVC, PMMA', order: 1 },
+  compression: { label: 'Fraise Compression', description: '2 faces nettes — mélaminé, contreplaqué, MDF, stratifié HPL/CPL', order: 2 },
+  diamant:     { label: 'Diamant (PCD)',      description: 'Longévité maximale — MDF, HDF, mélaminé, composites, Trespa', order: 3 },
   ravageuse:   { label: 'Ravageuse',          description: 'Ébauche rapide — bois massif tendre et dur, panneaux épais', order: 4 },
-  gravure:     { label: 'Fraise Gravure',     description: 'Gravure et découpe fine — V-bit 30° et 60°', order: 5 },
-  diamant:     { label: 'Diamant (PCD)',      description: 'Longévité maximale — MDF, HDF, mélaminé, composites, Trespa', order: 6 },
+  alu:         { label: 'Aluminium',          description: 'Fraises spéciales aluminium et métaux non ferreux', order: 5 },
+  gravure:     { label: 'Fraise Gravure',     description: 'Gravure et découpe fine — V-bit 30° et 60°', order: 6 },
   percage:     { label: 'Perçage',            description: 'Mèches et outils de perçage — bois, panneaux, plastiques', order: 7 },
   accessoires: { label: 'Accessoires',        description: 'Collets ER32, kits aspiration et équipements', order: 8 },
 }
@@ -64,7 +64,7 @@ export default function OrderPage() {
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [quantities, setQuantities] = useState<Record<string, number>>({})
-  const [openCats, setOpenCats] = useState<Record<string, boolean>>({ compression: true })
+  const [openCats, setOpenCats] = useState<Record<string, boolean>>({})
   const [filterDiam, setFilterDiam] = useState<Record<string, string | null>>({})
   const [filterLC, setFilterLC] = useState<Record<string, string | null>>({})
   const [filterDents, setFilterDents] = useState<Record<string, string | null>>({})
