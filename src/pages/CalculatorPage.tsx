@@ -450,7 +450,7 @@ export default function CalculatorPage() {
         {/* Diagnostic */}
         <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
           <button onClick={() => setShowDiag(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
-            <h2 className="text-[#d4780f] font-semibold text-base">🔩 Diagnostic</h2>
+            <h2 className="text-[#d4780f] font-semibold text-base">💡 TIPS</h2>
             <svg className={`w-5 h-5 text-[#555] transition-transform ${showDiag ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
