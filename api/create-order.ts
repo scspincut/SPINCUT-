@@ -10,22 +10,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!clientName || !items?.length) {
-    return res.status(400).json({ error: 'Missing clientName or items' })
+    return res.status(400).json({ error: 'Données manquantes' })
   }
 
   const apiKey = process.env.ABBY_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'ABBY_API_KEY not configured' })
+  if (!apiKey) return res.status(500).json({ error: 'ABBY_API_KEY non configurée' })
 
   const abby = new Abby(apiKey)
 
-  // 1 — Créer le contact client
-  const nameParts = clientName.trim().split(/\s+/)
-  const firstname = nameParts[0] ?? 'Client'
-  const lastname = nameParts.slice(1).join(' ') || 'SPINCUT'
-
-  const { data: contact } = await abby.contact.createContact({
-    body: { firstname, lastname, notes: 'Commande via SPINCUT App' },
+  // 1 — Chercher le contact existant par nom de société
+  const { data: contacts } = await abby.contact.retrieveContacts({
+    query: { search: clientName, limit: 5 },
   })
+
+  const contact = contacts?.docs?.[0]
+
+  if (!contact) {
+    return res.status(404).json({
+      error: `Client "${clientName}" introuvable dans Abby — vérifiez que la fiche existe.`,
+    })
+  }
 
   // 2 — Créer le devis pour ce contact
   const { data: estimate } = await abby.estimate.createEstimateByContactOrOrganizationId({
