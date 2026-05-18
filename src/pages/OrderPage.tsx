@@ -75,7 +75,14 @@ export default function OrderPage() {
   useEffect(() => {
     fetch('/api/catalog')
       .then(r => r.json())
-      .then(data => { setCatalog(data); setCatalogLoading(false) })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCatalog(data)
+        } else {
+          setCatalogError(data?.error ?? 'Erreur catalogue')
+        }
+        setCatalogLoading(false)
+      })
       .catch(() => { setCatalogError('Impossible de charger le catalogue'); setCatalogLoading(false) })
   }, [])
 
@@ -140,7 +147,7 @@ export default function OrderPage() {
       setQuantities({})
       fetch('/api/catalog')
         .then(r => r.json())
-        .then(data => setCatalog(data))
+        .then(data => { if (Array.isArray(data)) setCatalog(data) })
         .catch(() => {})
     } catch (e: unknown) {
       setOrderStatus('error')
