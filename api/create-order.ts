@@ -31,14 +31,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   }
 
-  // 2 — Créer la facture / bon de commande pour ce contact
-  const { data: invoice } = await abby.invoice.createInvoiceByContactOrOrganizationId({
+  // 2 — Créer le bon de commande pour ce contact
+  const { data: order } = await abby.estimate.createEstimateByContactOrOrganizationId({
     path: { customerId: contact.id },
+    body: { estimateType: 'purchase_order' },
   })
 
   // 3 — Ajouter les lignes produits
   await abby.billing.updateLines({
-    path: { billingId: invoice.id },
+    path: { billingId: order.id },
     body: {
       lines: items.map(item => ({
         designation: `${item.designation} — Queue ${item.queue}`,
@@ -50,5 +51,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
   })
 
-  return res.status(200).json({ success: true, invoiceId: invoice.id })
+  return res.status(200).json({ success: true, orderId: order.id })
 }
