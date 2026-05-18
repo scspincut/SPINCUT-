@@ -73,28 +73,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 5 — Notification WhatsApp via CallMeBot (non bloquant)
-    const callMeBotKey = process.env.CALLMEBOT_API_KEY
-    const waPhone = process.env.WHATSAPP_PHONE ?? '33767739561'
-    if (callMeBotKey) {
-      const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
-      const lignes = items
-        .map(i => `- ${i.quantity}x ${i.ref} (${i.price.toFixed(2)}EUR)`)
-        .join('\n')
-      const msg = [
-        `Nouvelle commande SPINCUT`,
-        `Client : ${clientName}`,
-        orderId ? `BDC Abby : ${orderId}` : `(pas de BDC Abby)`,
-        ``,
-        lignes,
-        ``,
-        `Total : ${total.toFixed(2)} EUR HT`,
-      ].join('\n')
+    // 5 — Notification push via ntfy.sh (non bloquant, sans clé API)
+    const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
+    const lignes = items
+      .map(i => `${i.quantity}x ${i.ref} (${i.price.toFixed(2)}EUR)`)
+      .join(' | ')
+    const ntfyMsg = `Client : ${clientName}\n${lignes}\nTotal : ${total.toFixed(2)} EUR HT${orderId ? `\nBDC : ${orderId}` : ''}`
 
-      fetch(
-        `https://api.callmebot.com/whatsapp.php?phone=${waPhone}&text=${encodeURIComponent(msg)}&apikey=${callMeBotKey}`
-      ).catch(() => {})
-    }
+    fetch('https://ntfy.sh/spincut-commandes-7x4k9', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+        'Title': `Nouvelle commande SPINCUT`,
+        'Priority': 'high',
+        'Tags': 'shopping,fr',
+      },
+      body: ntfyMsg,
+    }).catch(() => {})
 
     return res.status(200).json({ success: true, orderId })
 
