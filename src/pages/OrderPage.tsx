@@ -10,6 +10,14 @@ interface CatalogProduct {
   prix: number; stock: number; pm: boolean; category: string; designation: string
 }
 
+interface OrderHistoryEntry {
+  date: number
+  orderId: string
+  isNewBdc: boolean
+  items: { ref: string; designation: string; quantity: number; price: number }[]
+  total: number
+}
+
 const CATEGORY_META: Record<string, { label: string; order: number }> = {
   classique:   { label: 'Fraise Classique',   order: 1 },
   compression: { label: 'Fraise Compression', order: 2 },
@@ -55,6 +63,13 @@ export default function OrderPage() {
   const clientName = clientInfo?.clientName ?? null
 
   const cartKey = `spincut_cart_${clientCode ?? 'guest'}`
+  const bdcKey = `spincut_bdc_${clientCode ?? 'guest'}`
+  const historyKey = `spincut_orders_${clientCode ?? 'guest'}`
+
+  const [orderHistory, setOrderHistory] = useState<OrderHistoryEntry[]>(() => {
+    try { return JSON.parse(localStorage.getItem(historyKey) ?? '[]') } catch { return [] }
+  })
+  const [showHistory, setShowHistory] = useState(false)
 
   useEffect(() => {
     try {
@@ -138,11 +153,29 @@ export default function OrderPage() {
       quantity: quantities[uid(p)], price: p.prix, sheet: p.sheet, row: p.row,
     }))
     try {
+      let existingBdcId: string | undefined
+      try { existingBdcId = JSON.parse(localStorage.getItem(bdcKey) ?? 'null') ?? undefined } catch { /* ignore */ }
+
       const res = await fetch('/api/create-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', items }),
+        body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', items, existingBdcId }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
+      const { orderId, isNewBdc } = await res.json()
+
+      // Sauvegarder le BDC ouvert
+      try { localStorage.setItem(bdcKey, JSON.stringify(orderId)) } catch { /* ignore */ }
+
+      // Historique
+      const entry: OrderHistoryEntry = {
+        date: Date.now(), orderId, isNewBdc,
+        items: items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price })),
+        total: items.reduce((s, i) => s + i.price * i.quantity, 0),
+      }
+      const newHistory = [entry, ...orderHistory].slice(0, 20)
+      setOrderHistory(newHistory)
+      try { localStorage.setItem(historyKey, JSON.stringify(newHistory)) } catch { /* ignore */ }
+
       setOrderStatus('success')
       setQuantities({})
       try { localStorage.removeItem(cartKey) } catch { /* ignore */ }
@@ -364,6 +397,47 @@ export default function OrderPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+        {/* Historique commandes */}
+        {orderHistory.length > 0 && (
+          <div className="mx-4 mt-4 mb-2">
+            <button
+              onClick={() => setShowHistory(h => !h)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#161616] border border-[#2a2a2a] text-sm font-semibold text-[#888] hover:text-white transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Mes commandes
+                <span className="text-[10px] bg-[#d4780f]/20 text-[#d4780f] px-1.5 py-0.5 rounded-full font-bold">{orderHistory.length}</span>
+              </span>
+              <svg className={`w-4 h-4 transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            {showHistory && (
+              <div className="mt-2 space-y-2">
+                {orderHistory.map((entry, i) => (
+                  <div key={i} className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+                    <div className="px-4 py-2.5 flex items-center justify-between border-b border-[#1e1e1e]">
+                      <span className="text-[#888] text-xs">{new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${entry.isNewBdc ? 'bg-blue-900/30 text-blue-400' : 'bg-[#3a1e00] text-[#d4780f]'}`}>
+                          {entry.isNewBdc ? 'Nouveau BDC' : 'Ajout BDC'}
+                        </span>
+                        <span className="text-[#d4780f] text-xs font-bold">{entry.total.toFixed(2).replace('.', ',')} € HT</span>
+                      </div>
+                    </div>
+                    <div className="px-4 py-2 space-y-1">
+                      {entry.items.map((item, j) => (
+                        <div key={j} className="flex items-center justify-between text-xs">
+                          <span className="text-[#aaa] truncate flex-1 mr-2">{item.quantity}× {item.designation}</span>
+                          <span className="text-[#555] flex-shrink-0">{(item.quantity * item.price).toFixed(2).replace('.', ',')} €</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
