@@ -364,12 +364,18 @@ export default function OrderPage() {
                 <div key={p.ref} className="px-4 py-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">{p.designation}</p>
-                    <p className="text-[#555] text-xs font-mono">{p.ref}</p>
+                    <p className="text-[#d4780f] text-xs font-medium mt-0.5">{fmt(quantities[p.ref] * p.prix)} € HT</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[#888] text-sm">×{quantities[p.ref]}</span>
-                    <span className="text-[#d4780f] font-bold text-sm">{fmt(quantities[p.ref] * p.prix)}€</span>
-                    <button onClick={() => setQuantities(prev => ({ ...prev, [p.ref]: 0 }))} className="text-[#444] hover:text-red-400 text-lg leading-none ml-1">×</button>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => setQty(p.ref, -1, p.stock)}
+                      className="w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] text-[#888] flex items-center justify-center font-bold text-base"
+                    >−</button>
+                    <span className="w-7 text-center text-white font-bold text-sm">{quantities[p.ref]}</span>
+                    <button
+                      onClick={() => setQty(p.ref, +1, p.stock)}
+                      className="w-8 h-8 rounded-lg bg-[#d4780f] text-white flex items-center justify-center font-bold text-base"
+                    >+</button>
                   </div>
                 </div>
               ))}
