@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CalculatorParams, ToolNotation } from '../types';
 import { calculate } from '../utils/calculations';
@@ -543,53 +544,47 @@ export default function CalculatorPage() {
             <p className="text-center text-[#888] text-xs tracking-widest uppercase mb-4">Envoyer un mail à SPINCUT</p>
 
             <a href="mailto:scspincut@gmail.com?subject=Question%20SPINCUT"
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
             >
-              {/* Apple Mail logo */}
-              <svg width="30" height="30" viewBox="0 0 60 60">
-                <rect width="60" height="60" rx="13" fill="#1C8EF9"/>
-                <rect x="10" y="19" width="40" height="26" rx="3" fill="white"/>
-                <path d="M10 22l20 14 20-14" fill="none" stroke="#1C8EF9" strokeWidth="3" strokeLinejoin="round"/>
-              </svg>
-              Apple Mail
+              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#1C8EF9] flex items-center justify-center">
+                <Icon icon="fluent:mail-24-filled" width={22} height={22} color="white" />
+              </span>
+              <span>
+                <span className="block font-semibold">Apple Mail</span>
+                <span className="block text-[#888] text-xs">Application Mail par défaut</span>
+              </span>
             </a>
 
             <a href="https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com&su=Question%20SPINCUT"
               target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
             >
-              {/* Gmail logo */}
-              <svg width="30" height="30" viewBox="0 0 60 60">
-                <rect width="60" height="60" rx="13" fill="white"/>
-                <path fill="#4285F4" d="M6 45V26l-4-3v19a4 4 0 004 4z"/>
-                <path fill="#34A853" d="M54 45V26l4-3v19a4 4 0 01-4 4z"/>
-                <path fill="#FBBC04" d="M54 20v6L30 40 6 26v-6l-4-3v3l28 18 28-18v-3l-4 3z"/>
-                <path fill="#EA4335" d="M6 20v6l24 14 24-14v-6L30 34 6 20z"/>
-                <path fill="#C5221F" d="M2 17l4 3 24 14 24-14 4-3L30 6 2 17z"/>
-              </svg>
-              Gmail
+              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white flex items-center justify-center">
+                <Icon icon="logos:gmail" width={24} height={24} />
+              </span>
+              <span>
+                <span className="block font-semibold">Gmail</span>
+                <span className="block text-[#888] text-xs">Ouvre Gmail dans le navigateur</span>
+              </span>
             </a>
 
             <a href="https://outlook.live.com/mail/0/deeplink/compose?to=scspincut@gmail.com&subject=Question%20SPINCUT"
               target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
             >
-              {/* Outlook logo */}
-              <svg width="30" height="30" viewBox="0 0 60 60">
-                <rect width="60" height="60" rx="13" fill="#0078D4"/>
-                <rect x="28" y="10" width="24" height="18" rx="2.5" fill="white"/>
-                <rect x="28" y="24" width="24" height="12" rx="2.5" fill="#005A9E"/>
-                <path d="M28 24l12 6 12-6" fill="none" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-                <circle cx="19" cy="36" r="12" fill="white"/>
-                <circle cx="19" cy="36" r="7.5" fill="#0078D4"/>
-              </svg>
-              Outlook
+              <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white flex items-center justify-center">
+                <Icon icon="logos:microsoft-outlook" width={26} height={26} />
+              </span>
+              <span>
+                <span className="block font-semibold">Outlook</span>
+                <span className="block text-[#888] text-xs">Ouvre Outlook dans le navigateur</span>
+              </span>
             </a>
 
             <button
