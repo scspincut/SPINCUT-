@@ -547,8 +547,11 @@ export default function CalculatorPage() {
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+              {/* Apple Mail logo */}
+              <svg width="30" height="30" viewBox="0 0 60 60">
+                <rect width="60" height="60" rx="13" fill="#1C8EF9"/>
+                <rect x="10" y="19" width="40" height="26" rx="3" fill="white"/>
+                <path d="M10 22l20 14 20-14" fill="none" stroke="#1C8EF9" strokeWidth="3" strokeLinejoin="round"/>
               </svg>
               Apple Mail
             </a>
@@ -559,8 +562,14 @@ export default function CalculatorPage() {
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EA4335" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+              {/* Gmail logo */}
+              <svg width="30" height="30" viewBox="0 0 60 60">
+                <rect width="60" height="60" rx="13" fill="white"/>
+                <path fill="#4285F4" d="M6 45V26l-4-3v19a4 4 0 004 4z"/>
+                <path fill="#34A853" d="M54 45V26l4-3v19a4 4 0 01-4 4z"/>
+                <path fill="#FBBC04" d="M54 20v6L30 40 6 26v-6l-4-3v3l28 18 28-18v-3l-4 3z"/>
+                <path fill="#EA4335" d="M6 20v6l24 14 24-14v-6L30 34 6 20z"/>
+                <path fill="#C5221F" d="M2 17l4 3 24 14 24-14 4-3L30 6 2 17z"/>
               </svg>
               Gmail
             </a>
@@ -571,8 +580,14 @@ export default function CalculatorPage() {
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0078D4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+              {/* Outlook logo */}
+              <svg width="30" height="30" viewBox="0 0 60 60">
+                <rect width="60" height="60" rx="13" fill="#0078D4"/>
+                <rect x="28" y="10" width="24" height="18" rx="2.5" fill="white"/>
+                <rect x="28" y="24" width="24" height="12" rx="2.5" fill="#005A9E"/>
+                <path d="M28 24l12 6 12-6" fill="none" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
+                <circle cx="19" cy="36" r="12" fill="white"/>
+                <circle cx="19" cy="36" r="7.5" fill="#0078D4"/>
               </svg>
               Outlook
             </a>
