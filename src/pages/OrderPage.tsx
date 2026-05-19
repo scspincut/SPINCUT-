@@ -46,7 +46,6 @@ export default function OrderPage() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
-  const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -66,17 +65,13 @@ export default function OrderPage() {
   const bdcKey = `spincut_bdc_${clientCode ?? 'guest'}`
   const historyKey = `spincut_orders_${clientCode ?? 'guest'}`
 
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
+  })
   const [orderHistory, setOrderHistory] = useState<OrderHistoryEntry[]>(() => {
-    try { return JSON.parse(localStorage.getItem(historyKey) ?? '[]') } catch { return [] }
+    try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
   const [showHistory, setShowHistory] = useState(false)
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(cartKey)
-      if (saved) setQuantities(JSON.parse(saved))
-    } catch { /* ignore */ }
-  }, [cartKey])
 
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
