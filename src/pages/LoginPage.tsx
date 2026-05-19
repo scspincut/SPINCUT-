@@ -3,6 +3,42 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useClientAuth } from '../hooks/useAuth'
 import SpincutLogo from '../components/SpincutLogo'
 
+function AppleMailIcon() {
+  return (
+    <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: '#1C8EF9' }}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+        <path d="M22 8.608v8.142a3.25 3.25 0 0 1-3.066 3.245L18.75 20H5.25a3.25 3.25 0 0 1-3.245-3.066L2 16.75V8.608l9.652 5.056a.75.75 0 0 0 .696 0zM5.25 4h13.5a3.25 3.25 0 0 1 3.234 2.924L12 12.154l-9.984-5.23A3.25 3.25 0 0 1 5.25 4z"/>
+      </svg>
+    </span>
+  )
+}
+
+function GmailIcon() {
+  return (
+    <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'white' }}>
+      <svg width="28" height="28" viewBox="0 0 256 256">
+        <path fill="#4285f4" d="M58.182 192.05V93.14L27.507 65.077L0 49.504v125.091c0 9.658 7.825 17.455 17.455 17.455z"/>
+        <path fill="#34a853" d="M197.818 192.05h40.727c9.659 0 17.455-7.826 17.455-17.455V49.505l-31.156 17.837l-27.026 25.798z"/>
+        <path fill="#ea4335" d="m58.182 93.14l-4.174-38.647l4.174-36.989L128 69.868l69.818-52.364l4.669 34.992l-4.669 40.644L128 145.504z"/>
+        <path fill="#fbbc04" d="M197.818 17.504V93.14L256 49.504V26.231c0-21.585-24.64-33.89-41.89-20.945z"/>
+        <path fill="#c5221f" d="m0 49.504l26.759 20.07L58.182 93.14V17.504L41.89 5.286C24.61-7.66 0 4.646 0 26.23z"/>
+      </svg>
+    </span>
+  )
+}
+
+function OutlookIcon() {
+  return (
+    <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'white' }}>
+      <svg width="28" height="28" viewBox="0 0 32 32">
+        <path fill="#0072c6" d="M19.484 7.937v5.477l1.916 1.205a.5.5 0 0 0 .21 0l8.238-5.554a1.174 1.174 0 0 0-.959-1.128Z"/>
+        <path fill="#0072c6" d="m19.484 15.457l1.747 1.2a.52.52 0 0 0 .543 0c-.3.181 8.073-5.378 8.073-5.378v10.066a1.408 1.408 0 0 1-1.49 1.555h-8.874zm-9.044-2.525a1.61 1.61 0 0 0-1.42.838a4.13 4.13 0 0 0-.526 2.218A4.05 4.05 0 0 0 9.02 18.2a1.6 1.6 0 0 0 2.771.022a4 4 0 0 0 .515-2.2a4.37 4.37 0 0 0-.5-2.281a1.54 1.54 0 0 0-1.366-.809"/>
+        <path fill="#0072c6" d="M2.153 5.155v21.427L18.453 30V2Zm10.908 14.336a3.23 3.23 0 0 1-2.7 1.361a3.19 3.19 0 0 1-2.64-1.318A5.46 5.46 0 0 1 6.706 16.1a5.87 5.87 0 0 1 1.036-3.616a3.27 3.27 0 0 1 2.744-1.384a3.12 3.12 0 0 1 2.61 1.321a5.64 5.64 0 0 1 1 3.484a5.76 5.76 0 0 1-1.035 3.586"/>
+      </svg>
+    </span>
+  )
+}
+
 export default function LoginPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -11,6 +47,7 @@ export default function LoginPage() {
   const [prospectEmail, setProspectEmail] = useState('')
   const [prospectCompany, setProspectCompany] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [showMailMenu, setShowMailMenu] = useState(false)
   const { isAuthenticated, login } = useClientAuth()
   const navigate = useNavigate()
 
@@ -32,11 +69,7 @@ export default function LoginPage() {
     window.open(`https://wa.me/33767739561?text=${encodeURIComponent(buildMessage())}`, '_blank')
   }
 
-  const handleEmail = () => {
-    const subject = encodeURIComponent('Demande accès SPINCUT')
-    const body = encodeURIComponent(buildMessage())
-    window.open(`mailto:scspincut@gmail.com?subject=${subject}&body=${body}`, '_blank')
-  }
+  const handleEmail = () => setShowMailMenu(true)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -242,6 +275,74 @@ export default function LoginPage() {
           © SPINCUT — Ces valeurs sont des recommandations standards. Un test avant production est conseillé.
         </p>
       </div>
+
+      {/* Mail app chooser */}
+      {showMailMenu && (
+        <div
+          className="fixed inset-0 z-30 flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.7)' }}
+          onClick={() => setShowMailMenu(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-2xl p-5 space-y-3"
+            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="text-center text-xs tracking-widest uppercase mb-4" style={{ color: '#888' }}>
+              Envoyer votre demande par email
+            </p>
+
+            <a
+              href={`mailto:scspincut@gmail.com?subject=${encodeURIComponent('Demande accès SPINCUT')}&body=${encodeURIComponent(buildMessage())}`}
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <AppleMailIcon />
+              <span>
+                <span className="block font-semibold">Apple Mail</span>
+                <span className="block text-xs" style={{ color: '#888' }}>Application Mail par défaut</span>
+              </span>
+            </a>
+
+            <a
+              href={`https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com&su=${encodeURIComponent('Demande accès SPINCUT')}&body=${encodeURIComponent(buildMessage())}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <GmailIcon />
+              <span>
+                <span className="block font-semibold">Gmail</span>
+                <span className="block text-xs" style={{ color: '#888' }}>Ouvre Gmail dans le navigateur</span>
+              </span>
+            </a>
+
+            <a
+              href={`https://outlook.live.com/mail/0/deeplink/compose?to=scspincut@gmail.com&subject=${encodeURIComponent('Demande accès SPINCUT')}&body=${encodeURIComponent(buildMessage())}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <OutlookIcon />
+              <span>
+                <span className="block font-semibold">Outlook</span>
+                <span className="block text-xs" style={{ color: '#888' }}>Ouvre Outlook dans le navigateur</span>
+              </span>
+            </a>
+
+            <button
+              onClick={() => setShowMailMenu(false)}
+              className="w-full py-3 rounded-xl text-sm"
+              style={{ color: '#666' }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
