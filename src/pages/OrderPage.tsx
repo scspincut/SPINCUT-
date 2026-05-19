@@ -54,6 +54,19 @@ export default function OrderPage() {
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
   const clientName = clientInfo?.clientName ?? null
 
+  const cartKey = `spincut_cart_${clientCode ?? 'guest'}`
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(cartKey)
+      if (saved) setQuantities(JSON.parse(saved))
+    } catch { /* ignore */ }
+  }, [cartKey])
+
+  useEffect(() => {
+    try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
+  }, [quantities, cartKey])
+
   useEffect(() => {
     fetch('/api/catalog')
       .then(r => r.json())
@@ -130,7 +143,9 @@ export default function OrderPage() {
         body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', items }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
-      setOrderStatus('success'); setQuantities({})
+      setOrderStatus('success')
+      setQuantities({})
+      try { localStorage.removeItem(cartKey) } catch { /* ignore */ }
       fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
     } catch (e: unknown) {
       setOrderStatus('error'); setOrderError(e instanceof Error ? e.message : 'Erreur inconnue')
