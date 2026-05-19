@@ -22,6 +22,7 @@ const CATEGORY_META: Record<string, { label: string; order: number }> = {
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
+function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 
 function StockBadge({ stock }: { stock: number }) {
   if (stock === 0) return <span className="flex items-center gap-1 text-[10px] font-semibold text-red-400"><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />Rupture</span>
@@ -106,22 +107,22 @@ export default function OrderPage() {
 
   if (!isAuthenticated) { navigate('/'); return null }
 
-  const setQty = (ref: string, delta: number, max: number) =>
-    setQuantities(prev => ({ ...prev, [ref]: Math.min(max, Math.max(0, (prev[ref] || 0) + delta)) }))
-  const setQtyDirect = (ref: string, val: string, max: number) =>
-    setQuantities(prev => ({ ...prev, [ref]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
+  const setQty = (key: string, delta: number, max: number) =>
+    setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
+  const setQtyDirect = (key: string, val: string, max: number) =>
+    setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
-  const total = catalog.reduce((s, p) => s + (quantities[p.ref] || 0) * p.prix, 0)
-  const itemCount = catalog.reduce((s, p) => s + (quantities[p.ref] || 0), 0)
+  const total = catalog.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0)
+  const itemCount = catalog.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
   const hasItems = itemCount > 0
 
   const sendOrder = async () => {
     if (orderStatus === 'loading') return
     setOrderStatus('loading'); setOrderError('')
-    const items = catalog.filter(p => (quantities[p.ref] || 0) > 0).map(p => ({
+    const items = catalog.filter(p => (quantities[uid(p)] || 0) > 0).map(p => ({
       ref: p.ref, designation: p.designation,
       queue: p.queue !== '/' ? p.queue : '',
-      quantity: quantities[p.ref], price: p.prix, sheet: p.sheet, row: p.row,
+      quantity: quantities[uid(p)], price: p.prix, sheet: p.sheet, row: p.row,
     }))
     try {
       const res = await fetch('/api/create-order', {
@@ -165,7 +166,7 @@ export default function OrderPage() {
             {dropdownOpen && (
               <div className="absolute top-full left-0 mt-2 w-56 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] shadow-2xl overflow-hidden z-50">
                 {tabs.map(([id, meta]) => {
-                  const count = catalog.filter(p => p.category === id).reduce((s, p) => s + (quantities[p.ref] || 0), 0)
+                  const count = catalog.filter(p => p.category === id).reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                   return (
                     <button
                       key={id}
@@ -306,11 +307,12 @@ export default function OrderPage() {
                 {activeFilterCount > 0 && <button onClick={resetFilters} className="text-[#d4780f] text-xs underline">Effacer les filtres</button>}
               </div>
             ) : filtered.map(item => {
-              const qty = quantities[item.ref] || 0
+              const key = uid(item)
+              const qty = quantities[key] || 0
               const selected = qty > 0
               const outOfStock = item.stock === 0
               return (
-                <div key={item.ref}
+                <div key={key}
                   className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-[#0d0d0d]'} ${outOfStock ? 'opacity-40' : ''}`}
                 >
                   <div className="flex-1 min-w-0">
@@ -329,16 +331,16 @@ export default function OrderPage() {
                     }
                     {!outOfStock && item.prix > 0 && (
                       <div className="flex items-center gap-1.5">
-                        <button onClick={() => setQty(item.ref, -1, item.stock)}
+                        <button onClick={() => setQty(key, -1, item.stock)}
                           className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
                         >−</button>
                         {qty > 0 && (
                           <input type="number" min={0} max={item.stock} value={qty}
-                            onChange={e => setQtyDirect(item.ref, e.target.value, item.stock)}
+                            onChange={e => setQtyDirect(key, e.target.value, item.stock)}
                             className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
                           />
                         )}
-                        <button onClick={() => setQty(item.ref, +1, item.stock)}
+                        <button onClick={() => setQty(key, +1, item.stock)}
                           className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
                         >+</button>
                       </div>
@@ -360,20 +362,20 @@ export default function OrderPage() {
               <button onClick={() => setCartOpen(false)} className="text-[#555] hover:text-white text-xl leading-none">×</button>
             </div>
             <div className="overflow-y-auto flex-1 divide-y divide-[#1e1e1e]">
-              {catalog.filter(p => (quantities[p.ref] || 0) > 0).map(p => (
-                <div key={p.ref} className="px-4 py-3 flex items-center gap-3">
+              {catalog.filter(p => (quantities[uid(p)] || 0) > 0).map(p => (
+                <div key={uid(p)} className="px-4 py-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">{p.designation}</p>
-                    <p className="text-[#d4780f] text-xs font-medium mt-0.5">{fmt(quantities[p.ref] * p.prix)} € HT</p>
+                    <p className="text-[#d4780f] text-xs font-medium mt-0.5">{fmt(quantities[uid(p)] * p.prix)} € HT</p>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
-                      onClick={() => setQty(p.ref, -1, p.stock)}
+                      onClick={() => setQty(uid(p), -1, p.stock)}
                       className="w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] text-[#888] flex items-center justify-center font-bold text-base"
                     >−</button>
-                    <span className="w-7 text-center text-white font-bold text-sm">{quantities[p.ref]}</span>
+                    <span className="w-7 text-center text-white font-bold text-sm">{quantities[uid(p)]}</span>
                     <button
-                      onClick={() => setQty(p.ref, +1, p.stock)}
+                      onClick={() => setQty(uid(p), +1, p.stock)}
                       className="w-8 h-8 rounded-lg bg-[#d4780f] text-white flex items-center justify-center font-bold text-base"
                     >+</button>
                   </div>
