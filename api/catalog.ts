@@ -16,10 +16,14 @@ interface SheetRow {
   stock: number
 }
 
+function isPMProduct(p: SheetRow): boolean {
+  const fields = [p.famille, p.ref, p.diametre, p.lc, p.lt, p.dents, p.angle, p.queue, p.sens]
+  return fields.some(v => typeof v === 'string' && v.toUpperCase().includes('PM'))
+}
+
 function categorize(p: SheetRow): string {
   const f = p.famille.trim()
-  const isPM = p.ref.toUpperCase().includes('PM') || f.toUpperCase().includes('PM')
-  if (isPM) return 'classique'
+  if (isPMProduct(p)) return 'classique'
   if (f.includes('GRAV')) return 'gravure'
   if (f.startsWith('FD')) return 'diamant'
   if (f.includes('RAV')) return 'ravageuse'
@@ -78,8 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const products = (raw as SheetRow[]).map(p => {
       const designation = makeDesignation(p)
-      const pm = p.ref.toUpperCase().includes('PM')
-        || p.famille.trim().toUpperCase().includes('PM')
+      const pm = isPMProduct(p)
       return {
         sheet: p.sheet,
         row: p.row,
