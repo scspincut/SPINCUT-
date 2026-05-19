@@ -100,8 +100,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     })
 
+    // Dédoublonnage par ref (STOCK A0 + A2 peuvent avoir la même ref)
+    const deduped = new Map<string, typeof products[0]>()
+    for (const p of products) {
+      if (deduped.has(p.ref)) {
+        const existing = deduped.get(p.ref)!
+        deduped.set(p.ref, { ...existing, stock: existing.stock + p.stock })
+      } else {
+        deduped.set(p.ref, p)
+      }
+    }
+
     res.setHeader('Cache-Control', 'no-store')
-    return res.status(200).json(products)
+    return res.status(200).json([...deduped.values()])
   } catch {
     return res.status(500).json({ error: 'Erreur catalogue' })
   }

@@ -47,6 +47,7 @@ export default function OrderPage() {
   const [filterPM, setFilterPM] = useState(false)
   const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [orderError, setOrderError] = useState('')
+  const [cartOpen, setCartOpen] = useState(false)
 
   const clientCode = getClientCode()
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
@@ -350,6 +351,45 @@ export default function OrderPage() {
         )}
       </main>
 
+      {/* Cart drawer */}
+      {cartOpen && hasItems && (
+        <div className="fixed inset-0 z-40 flex flex-col justify-end" onClick={() => setCartOpen(false)}>
+          <div className="bg-[#161616] border-t border-[#2a2a2a] rounded-t-2xl max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-4 border-b border-[#2a2a2a]">
+              <p className="font-bold text-white">Mon panier</p>
+              <button onClick={() => setCartOpen(false)} className="text-[#555] hover:text-white text-xl leading-none">×</button>
+            </div>
+            <div className="overflow-y-auto flex-1 divide-y divide-[#1e1e1e]">
+              {catalog.filter(p => (quantities[p.ref] || 0) > 0).map(p => (
+                <div key={p.ref} className="px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{p.designation}</p>
+                    <p className="text-[#555] text-xs font-mono">{p.ref}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[#888] text-sm">×{quantities[p.ref]}</span>
+                    <span className="text-[#d4780f] font-bold text-sm">{fmt(quantities[p.ref] * p.prix)}€</span>
+                    <button onClick={() => setQuantities(prev => ({ ...prev, [p.ref]: 0 }))} className="text-[#444] hover:text-red-400 text-lg leading-none ml-1">×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-4 py-4 border-t border-[#2a2a2a] flex items-center justify-between">
+              <div>
+                <p className="text-[#888] text-xs">{itemCount} article{itemCount > 1 ? 's' : ''}</p>
+                <p className="text-[#d4780f] font-bold text-lg">{fmt(total)} € HT</p>
+              </div>
+              <button onClick={() => { setCartOpen(false); sendOrder() }}
+                disabled={orderStatus === 'loading'}
+                className="py-3 px-6 rounded-xl bg-[#d4780f] text-white text-sm font-bold hover:bg-[#b86400] active:scale-95 transition-all"
+              >
+                Commander →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 z-20 bg-[#0d0d0d]/95 backdrop-blur border-t border-[#1e1e1e]">
         <div className="max-w-2xl mx-auto px-4 py-3 space-y-2">
@@ -372,10 +412,10 @@ export default function OrderPage() {
           {orderStatus !== 'success' && (
             <div className="flex items-center gap-3">
               {hasItems && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-[#888] text-xs">{itemCount} article{itemCount > 1 ? 's' : ''}</p>
+                <button onClick={() => setCartOpen(true)} className="flex-1 min-w-0 text-left">
+                  <p className="text-[#888] text-xs">{itemCount} article{itemCount > 1 ? 's' : ''} — <span className="text-[#d4780f] underline underline-offset-2">voir</span></p>
                   <p className="text-[#d4780f] font-bold text-lg leading-tight">{fmt(total)} € HT</p>
-                </div>
+                </button>
               )}
               <button onClick={sendOrder} disabled={!hasItems || orderStatus === 'loading'}
                 className={`${hasItems ? 'flex-shrink-0' : 'flex-1'} py-3 px-6 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
