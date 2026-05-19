@@ -18,6 +18,8 @@ interface SheetRow {
 
 function categorize(p: SheetRow): string {
   const f = p.famille.trim()
+  const isPM = p.ref.toUpperCase().includes('PM') || f.toUpperCase().includes('PM')
+  if (isPM) return 'classique'
   if (f.includes('GRAV')) return 'gravure'
   if (f.startsWith('FD')) return 'diamant'
   if (f.includes('RAV')) return 'ravageuse'
