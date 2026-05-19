@@ -100,14 +100,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     })
 
-    // Dédoublonnage par ref (STOCK A0 + A2 peuvent avoir la même ref)
+    // Dédoublonnage : fusionne uniquement si même ref ET même ligne (produit en double entre A0 et A2)
     const deduped = new Map<string, typeof products[0]>()
     for (const p of products) {
-      if (deduped.has(p.ref)) {
-        const existing = deduped.get(p.ref)!
-        deduped.set(p.ref, { ...existing, stock: existing.stock + p.stock })
+      const key = `${p.ref}__${p.row}`
+      if (deduped.has(key)) {
+        const existing = deduped.get(key)!
+        deduped.set(key, { ...existing, stock: existing.stock + p.stock })
       } else {
-        deduped.set(p.ref, p)
+        deduped.set(key, p)
       }
     }
 
