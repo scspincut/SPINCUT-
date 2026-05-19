@@ -542,7 +542,7 @@ export default function CalculatorPage() {
           >
             <p className="text-center text-[#888] text-xs tracking-widest uppercase mb-4">Envoyer un mail à SPINCUT</p>
 
-            <a href="mailto:scspincut@gmail.com"
+            <a href="mailto:scspincut@gmail.com?subject=Question%20SPINCUT"
               className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
@@ -553,7 +553,7 @@ export default function CalculatorPage() {
               Apple Mail
             </a>
 
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com"
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com&su=Question%20SPINCUT"
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
               style={{ background: '#2a2a2a' }}
@@ -565,7 +565,8 @@ export default function CalculatorPage() {
               Gmail
             </a>
 
-            <a href="ms-outlook://compose?to=scspincut@gmail.com"
+            <a href="https://outlook.live.com/mail/0/deeplink/compose?to=scspincut@gmail.com&subject=Question%20SPINCUT"
+              target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white"
               style={{ background: '#2a2a2a' }}
               onClick={() => setShowMailMenu(false)}
