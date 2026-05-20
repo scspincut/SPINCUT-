@@ -5,13 +5,40 @@ import { AccessCode } from '../types'
 import SpincutLogo from '../components/SpincutLogo'
 
 function generateCode(name: string, existing: string[]): string {
-  const clean = name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8)
-  if (clean.length >= 4 && !existing.includes(clean)) return clean
+  // Normalize: uppercase, remove accents, keep alphanumeric + spaces
+  const normalized = name.toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ').trim()
+
+  // Filter out short connector words
+  const stop = new Set(['DE', 'DU', 'LA', 'LE', 'LES', 'ET', 'EN', 'AU', 'AUX', 'L', 'D', 'UN', 'UNE'])
+  const words = normalized.split(' ').filter(w => w.length > 0 && !stop.has(w))
+  if (words.length === 0) words.push(normalized.replace(/\s/g, '').slice(0, 6))
+
+  let base: string
+  if (words.length === 1) {
+    base = words[0].slice(0, 6)
+  } else if (words.length === 2) {
+    const [w1, w2] = words
+    if (w1.length + w2.length <= 6) base = w1 + w2
+    else if (w1.length <= 3) base = (w1 + w2.slice(0, 6 - w1.length)).slice(0, 6)
+    else base = (w1.slice(0, 4) + w2.slice(0, 2)).slice(0, 6)
+  } else {
+    const [w1, ...rest] = words
+    if (w1.length <= 3) {
+      base = (w1 + rest.slice(0, 2).map(w => w.slice(0, 2)).join('')).slice(0, 6)
+    } else {
+      base = (w1.slice(0, 4) + rest.map(w => w[0]).join('')).slice(0, 6)
+    }
+  }
+
+  if (!existing.includes(base)) return base
   for (let i = 2; i <= 99; i++) {
-    const candidate = clean.slice(0, 6) + i
+    const candidate = base.slice(0, 5) + i
     if (!existing.includes(candidate)) return candidate
   }
-  return clean + Date.now().toString().slice(-3)
+  return base + Date.now().toString().slice(-3)
 }
 
 export default function AdminDashboardPage() {
