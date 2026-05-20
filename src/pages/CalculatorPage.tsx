@@ -328,29 +328,38 @@ export default function CalculatorPage() {
               ))}
             </SelectField>
 
-            {isCompDiam && (
-              <div>
-                <label className={LBL}>Géométrie / Notation</label>
+            <SelectField label="Diamètre de fraise (mm)" value={safeDiam ? String(safeDiam) : ''} onChange={v => setDiameter(Number(v))}>
+              <option value="" disabled>— Choisir —</option>
+              {availDiams.map(d => <option key={d} value={d}>Ø {d} mm</option>)}
+            </SelectField>
+
+            {toolType && (
+              <div className="sm:col-span-2">
+                <label className={LBL}>Nombre de dents</label>
                 <div className="flex gap-2">
-                  {(['1+1','2+2','3+3'] as ToolNotation[]).map(n => (
-                    <button key={n} onClick={() => setNotation(n)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        notation === n
-                          ? 'bg-[#d4780f] border-[#d4780f] text-white'
-                          : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
-                      }`}
-                    >{n}</button>
-                  ))}
+                  {isCompDiam
+                    ? (['1+1','2+2','3+3'] as ToolNotation[]).map(n => (
+                        <button key={n} onClick={() => setNotation(n)}
+                          className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                            notation === n
+                              ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                              : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
+                          }`}
+                        >{n}</button>
+                      ))
+                    : TEETH_OPTIONS.map(z => (
+                        <button key={z} onClick={() => setZTeeth(z)}
+                          className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                            zTeeth === z
+                              ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                              : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
+                          }`}
+                        >Z{z}</button>
+                      ))
+                  }
                 </div>
               </div>
             )}
-
-            <SelectField label="Matériau" value={safeMat ?? ''} onChange={v => setMaterial(v as CalculatorParams['material'])}>
-              <option value="" disabled>— Choisir —</option>
-              {availableMaterials.map(m => (
-                <option key={m} value={m}>{MATERIAL_LABELS[m]}</option>
-              ))}
-            </SelectField>
 
             <SelectField label="Type d'opération" value={operation ?? ''} onChange={v => setOperation(v as CalculatorParams['operation'])}>
               <option value="" disabled>— Choisir —</option>
@@ -359,27 +368,12 @@ export default function CalculatorPage() {
               ))}
             </SelectField>
 
-            <SelectField label="Diamètre de fraise (mm)" value={safeDiam ? String(safeDiam) : ''} onChange={v => setDiameter(Number(v))}>
+            <SelectField label="Matériau" value={safeMat ?? ''} onChange={v => setMaterial(v as CalculatorParams['material'])}>
               <option value="" disabled>— Choisir —</option>
-              {availDiams.map(d => <option key={d} value={d}>Ø {d} mm</option>)}
+              {availableMaterials.map(m => (
+                <option key={m} value={m}>{MATERIAL_LABELS[m]}</option>
+              ))}
             </SelectField>
-
-            {toolType && !isCompDiam && (
-              <div>
-                <label className={LBL}>Nombre de dents (Z)</label>
-                <div className="flex gap-2">
-                  {TEETH_OPTIONS.map(z => (
-                    <button key={z} onClick={() => setZTeeth(z)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                        zTeeth === z
-                          ? 'bg-[#d4780f] border-[#d4780f] text-white'
-                          : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
-                      }`}
-                    >Z{z}</button>
-                  ))}
-                </div>
-              </div>
-            )}
 
           </div>
 
