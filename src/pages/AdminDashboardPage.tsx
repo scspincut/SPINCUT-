@@ -7,7 +7,7 @@ import SpincutLogo from '../components/SpincutLogo'
 function generateCode(name: string, existing: string[]): string {
   // Normalize: uppercase, remove accents, keep alphanumeric + spaces
   const normalized = name.toUpperCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[àáâãäåæçèéêëìíîïðñòóôõöùúûüý]/g, (c) => c.normalize('NFD')[0])
     .replace(/[^A-Z0-9 ]/g, ' ')
     .replace(/\s+/g, ' ').trim()
 
