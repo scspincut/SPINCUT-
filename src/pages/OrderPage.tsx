@@ -189,44 +189,6 @@ export default function OrderPage() {
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-3 relative flex items-center justify-center">
 
-          {/* Category dropdown — absolute left */}
-          <div ref={dropdownRef} className="absolute left-4 z-10">
-            <button
-              onClick={() => setDropdownOpen(o => !o)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-sm font-semibold transition-colors hover:border-[#d4780f]"
-            >
-              <svg className="w-4 h-4 text-[#d4780f] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-              </svg>
-              <span className={currentLabel ? 'text-white' : 'text-[#555]'}>
-                {catalogLoading ? 'Chargement…' : currentLabel ?? 'Catégorie'}
-              </span>
-              <svg className={`w-3.5 h-3.5 text-[#555] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-
-            {dropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] shadow-2xl overflow-hidden z-50">
-                {tabs.map(([id, meta]) => {
-                  const count = catalog.filter(p => p.category === id).reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => selectCategory(id)}
-                      className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${
-                        activeCategory === id ? 'bg-[#2a1400] text-[#d4780f]' : 'text-[#ccc] hover:bg-[#222] hover:text-white'
-                      }`}
-                    >
-                      {meta.label}
-                      {count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#d4780f]/20 text-[#d4780f]">{count}</span>}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
           {/* Logo — truly centered */}
           <SpincutLogo />
 
@@ -237,7 +199,7 @@ export default function OrderPage() {
           </Link>
         </div>
 
-        {/* Filter button row */}
+        {/* Filter button row — only when category selected */}
         {activeCategory && (
           <div className="max-w-2xl mx-auto px-4 pb-3 flex items-center gap-2">
             <button
@@ -309,6 +271,68 @@ export default function OrderPage() {
 
       {/* Main */}
       <main className="flex-1 max-w-2xl mx-auto w-full pb-28">
+
+        {/* Dropdown catégorie + filtres — toujours en haut à gauche du contenu */}
+        {!catalogLoading && !catalogError && (
+          <div className="px-4 pt-4 pb-1 flex items-center gap-2">
+            <div ref={dropdownRef} className="relative">
+              <button
+                onClick={() => setDropdownOpen(o => !o)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-sm font-semibold transition-colors hover:border-[#d4780f]"
+              >
+                <svg className="w-4 h-4 text-[#d4780f] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+                <span className={currentLabel ? 'text-white' : 'text-[#555]'}>
+                  {currentLabel ?? 'Catégorie'}
+                </span>
+                <svg className={`w-3.5 h-3.5 text-[#555] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] shadow-2xl overflow-hidden z-50">
+                  {tabs.map(([id, meta]) => {
+                    const count = catalog.filter(p => p.category === id).reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => selectCategory(id)}
+                        className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${
+                          activeCategory === id ? 'bg-[#2a1400] text-[#d4780f]' : 'text-[#ccc] hover:bg-[#222] hover:text-white'
+                        }`}
+                      >
+                        {meta.label}
+                        {count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#d4780f]/20 text-[#d4780f]">{count}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {activeCategory && (
+              <>
+                <button
+                  onClick={() => setFiltersOpen(o => !o)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+                    activeFilterCount > 0
+                      ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                      : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
+                  Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                </button>
+                {activeFilterCount > 0 && (
+                  <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>
+                )}
+                <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
+              </>
+            )}
+          </div>
+        )}
 
         {catalogLoading && (
           <div className="flex items-center justify-center py-20 gap-3 text-[#444]">
