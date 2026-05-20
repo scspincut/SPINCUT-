@@ -347,7 +347,7 @@ export default function CalculatorPage() {
                           }`}
                         >{n}</button>
                       ))
-                    : TEETH_OPTIONS.map(z => (
+                    : TEETH_OPTIONS.filter(z => z <= 4).map(z => (
                         <button key={z} onClick={() => setZTeeth(z)}
                           className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
                             zTeeth === z
