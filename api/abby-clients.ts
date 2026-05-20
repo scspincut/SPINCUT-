@@ -9,25 +9,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const abby = new Abby(apiKey)
-    const allContacts: { id: string; name: string; phone?: string }[] = []
+    const result: { id: string; name: string; phone?: string }[] = []
+    const seen = new Set<string>()
+
+    // Fetch organisations (companies)
     let page = 1
     let hasMore = true
+    while (hasMore) {
+      const { data } = await abby.organization.retrieveOrganizations({
+        query: { limit: 100, page },
+      })
+      const docs = data?.docs ?? []
+      for (const o of docs) {
+        const name = (o.commercialName || o.name || '').trim()
+        if (name && !seen.has(name.toLowerCase())) {
+          seen.add(name.toLowerCase())
+          result.push({ id: o.id, name })
+        }
+      }
+      hasMore = docs.length === 100
+      page++
+    }
 
+    // Fetch individual contacts (fullname field in current SDK)
+    page = 1
+    hasMore = true
     while (hasMore) {
       const { data } = await abby.contact.retrieveContacts({
         query: { limit: 100, page },
       })
       const docs = data?.docs ?? []
       for (const c of docs) {
-        const name = c.companyName || `${c.firstname ?? ''} ${c.lastname ?? ''}`.trim()
-        if (name) allContacts.push({ id: c.id, name, phone: c.phone ?? c.mobile ?? undefined })
+        const name = ((c as unknown as { fullname?: string }).fullname || '').trim()
+        if (name && !seen.has(name.toLowerCase())) {
+          seen.add(name.toLowerCase())
+          result.push({ id: c.id, name })
+        }
       }
       hasMore = docs.length === 100
       page++
     }
 
     res.setHeader('Cache-Control', 'no-store')
-    return res.status(200).json(allContacts)
+    return res.status(200).json(result)
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur inconnue'
     return res.status(500).json({ error: `Erreur Abby : ${msg}` })
