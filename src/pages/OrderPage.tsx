@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
 import SpincutLogo from '../components/SpincutLogo'
@@ -41,13 +41,11 @@ function StockBadge({ stock }: { stock: number }) {
 export default function OrderPage() {
   const navigate = useNavigate()
   const { isAuthenticated } = useClientAuth()
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filterDiam, setFilterDiam] = useState<string | null>(null)
   const [filterLC, setFilterLC] = useState<string | null>(null)
@@ -88,14 +86,6 @@ export default function OrderPage() {
       .catch(() => { setCatalogError('Impossible de charger le catalogue'); setCatalogLoading(false) })
   }, [])
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
   const tabs = useMemo(() => {
     const cats = new Set(catalog.map(p => p.category))
     return Object.entries(CATEGORY_META).filter(([id]) => cats.has(id)).sort((a, b) => a[1].order - b[1].order)
@@ -123,7 +113,6 @@ export default function OrderPage() {
 
   const selectCategory = (id: string) => {
     setActiveCategory(id)
-    setDropdownOpen(false)
     setFiltersOpen(false)
     resetFilters()
   }
@@ -199,65 +188,31 @@ export default function OrderPage() {
       {/* Main */}
       <main className="flex-1 max-w-2xl mx-auto w-full pb-28">
 
-        {/* Dropdown catégorie + filtres */}
-        {!catalogLoading && !catalogError && (
+        {/* Barre filtres — uniquement quand une catégorie est sélectionnée */}
+        {!catalogLoading && !catalogError && activeCategory && (
           <div className="px-4 pt-4 pb-1 flex items-center gap-2">
-            <div ref={dropdownRef} className="relative">
-              <button
-                onClick={() => setDropdownOpen(o => !o)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-sm font-semibold transition-colors hover:border-[#d4780f]"
-              >
-                <svg className="w-4 h-4 text-[#d4780f] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-                <span className={currentLabel ? 'text-white' : 'text-[#555]'}>
-                  {currentLabel ?? 'Catégorie'}
-                </span>
-                <svg className={`w-3.5 h-3.5 text-[#555] transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-                </svg>
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-56 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] shadow-2xl overflow-hidden z-50">
-                  {tabs.map(([id, meta]) => {
-                    const count = catalog.filter(p => p.category === id).reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => selectCategory(id)}
-                        className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${
-                          activeCategory === id ? 'bg-[#2a1400] text-[#d4780f]' : 'text-[#ccc] hover:bg-[#222] hover:text-white'
-                        }`}
-                      >
-                        {meta.label}
-                        {count > 0 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#d4780f]/20 text-[#d4780f]">{count}</span>}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            {activeCategory && (
-              <>
-                <button
-                  onClick={() => setFiltersOpen(o => !o)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
-                    activeFilterCount > 0
-                      ? 'bg-[#d4780f] border-[#d4780f] text-white'
-                      : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
-                  }`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
-                  Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-                </button>
-                {activeFilterCount > 0 && (
-                  <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>
-                )}
-                <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
-              </>
+            <button
+              onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
+              className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors mr-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              {currentLabel}
+            </button>
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+                activeFilterCount > 0
+                  ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                  : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
+              Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            </button>
+            {activeFilterCount > 0 && (
+              <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>
             )}
+            <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
           </div>
         )}
 
