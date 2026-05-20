@@ -188,11 +188,7 @@ export default function OrderPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-3 relative flex items-center justify-center">
-
-          {/* Logo — truly centered */}
           <SpincutLogo />
-
-          {/* Back — absolute right */}
           <Link to="/calculator" className="absolute right-4 text-[#555] hover:text-white text-xs transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Retour
@@ -203,7 +199,7 @@ export default function OrderPage() {
       {/* Main */}
       <main className="flex-1 max-w-2xl mx-auto w-full pb-28">
 
-        {/* Dropdown catégorie + filtres — toujours en haut à gauche du contenu */}
+        {/* Dropdown catégorie + filtres */}
         {!catalogLoading && !catalogError && (
           <div className="px-4 pt-4 pb-1 flex items-center gap-2">
             <div ref={dropdownRef} className="relative">
