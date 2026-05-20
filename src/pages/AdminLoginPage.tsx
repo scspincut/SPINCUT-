@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAdminAuth } from '../hooks/useAuth'
 import SpincutLogo from '../components/SpincutLogo'
@@ -9,10 +9,9 @@ export default function AdminLoginPage() {
   const { isAdmin, adminLogin } = useAdminAuth()
   const navigate = useNavigate()
 
-  if (isAdmin) {
-    navigate('/admin/dashboard', { replace: true })
-    return null
-  }
+  useEffect(() => {
+    if (isAdmin) navigate('/admin/dashboard', { replace: true })
+  }, [isAdmin, navigate])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
