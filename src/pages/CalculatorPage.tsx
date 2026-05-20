@@ -290,24 +290,26 @@ export default function CalculatorPage() {
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-white">
       {/* Header */}
-      <header className="border-b border-[#1e1e1e] px-4 py-3 flex items-center justify-between sticky top-0 bg-[#0d0d0d] z-10">
-        <div className="flex items-center gap-3">
-          <SpincutLogo />
-          {isAdmin && (
-            <span className="bg-[#3a1e00] text-[#d4780f] text-xs font-bold px-2 py-0.5 rounded-full border border-[#d4780f]/30">
-              Admin
-            </span>
-          )}
+      <header className="border-b border-[#1e1e1e] px-4 py-3 sticky top-0 bg-[#0d0d0d] z-10">
+        <div className="max-w-4xl mx-auto relative flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <SpincutLogo />
+            {isAdmin && (
+              <span className="bg-[#3a1e00] text-[#d4780f] text-xs font-bold px-2 py-0.5 rounded-full border border-[#d4780f]/30">
+                Admin
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => { logout(); navigate('/'); }}
+            className="absolute right-0 flex items-center gap-1.5 text-[#888] hover:text-white text-sm transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Déconnexion
+          </button>
         </div>
-        <button
-          onClick={() => { logout(); navigate('/'); }}
-          className="flex items-center gap-1.5 text-[#888] hover:text-white text-sm transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Déconnexion
-        </button>
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
