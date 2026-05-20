@@ -47,6 +47,55 @@ import SpincutLogo from '../components/SpincutLogo';
 import { useClientAuth } from '../hooks/useAuth';
 import { HistoryEntry, loadHistory, pushToHistory, groupByDay } from '../utils/history';
 
+interface CatalogProduct {
+  sheet: string; row: number; ref: string; famille: string
+  diametre: string; lc: string; lt: string; dents: string
+  angle: string; queue: string; sens: string
+  prix: number; stock: number; pm: boolean; category: string; designation: string
+}
+
+function parseDents(s: string): number {
+  const n = parseInt(s, 10)
+  return isNaN(n) ? 99 : n
+}
+
+function parseLc(s: string): number {
+  const n = parseFloat(s)
+  return isNaN(n) ? 0 : n
+}
+
+function getRecommendations(products: CatalogProduct[], material: string, lcMin: number | null): CatalogProduct[] {
+  type Filter = (p: CatalogProduct) => boolean
+  const rules: Record<string, Filter> = {
+    melamine:      p => p.category === 'compression' || p.category === 'diamant',
+    mdf:           p => p.category === 'classique' && !p.pm && parseDents(p.dents) <= 2,
+    ctp:           p => ['classique', 'compression', 'diamant'].includes(p.category) && !p.pm,
+    bois_tendre:   p => (p.category === 'classique' && !p.pm && parseDents(p.dents) === 2) || p.category === 'ravageuse',
+    bois_dur:      p => (p.category === 'classique' && !p.pm) || p.category === 'ravageuse',
+    bois_exotique: p => (p.category === 'classique' && !p.pm) || p.category === 'diamant',
+    alu_2017:      p => p.category === 'alu' || (p.category === 'classique' && p.pm),
+    alu_6060:      p => p.category === 'alu' || (p.category === 'classique' && p.pm),
+    alu_coule:     p => p.category === 'alu' || (p.category === 'classique' && p.pm),
+    pvc:           p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
+    pmma:          p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
+    polycarbonate: p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
+    nylon_pa:      p => p.category === 'classique',
+  }
+  const rule = rules[material]
+  if (!rule) return []
+  let recs = products.filter(rule)
+  if (lcMin !== null && lcMin > 0) {
+    recs = recs.filter(p => parseLc(p.lc) >= lcMin)
+  }
+  recs.sort((a, b) => {
+    const aOk = a.stock > 0 ? 0 : 1
+    const bOk = b.stock > 0 ? 0 : 1
+    if (aOk !== bOk) return aOk - bOk
+    return parseFloat(a.diametre) - parseFloat(b.diametre)
+  })
+  return recs
+}
+
 const SEL = "w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4780f] appearance-none cursor-pointer";
 const INP = "w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4780f] placeholder-[#555]";
 const LBL = "block text-sm text-[#aaa] mb-1.5";
@@ -140,6 +189,7 @@ export default function CalculatorPage() {
   const [savedThisCalc, setSavedThisCalc] = useState(false);
   const [showMailMenu, setShowMailMenu] = useState(false);
   const [showGlossaire, setShowGlossaire] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
 
   // Derived values needed by useMemo below
   const availableMaterials = TOOL_MATERIALS[toolType];
@@ -169,6 +219,19 @@ export default function CalculatorPage() {
   ]);
 
   useEffect(() => { setSavedThisCalc(false); }, [result]);
+
+  useEffect(() => {
+    fetch('/api/catalog')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => { if (Array.isArray(data)) setCatalog(data) })
+      .catch(() => {})
+  }, [])
+
+  const recommendations = useMemo(() => {
+    if (catalog.length === 0 || result.forbidden) return []
+    const lcMin = thickness ? parseFloat(thickness) : null
+    return getRecommendations(catalog, safeMat, lcMin !== null && !isNaN(lcMin) ? lcMin : null)
+  }, [catalog, safeMat, thickness, result.forbidden])
 
   // Auth guard — after every hook
   if (!isAuthenticated) {
@@ -396,6 +459,64 @@ export default function CalculatorPage() {
             >
               {savedThisCalc ? '✓ Calcul sauvegardé dans l\'historique' : '💾 Sauvegarder ce calcul'}
             </button>
+          </div>
+        )}
+
+        {/* Fraises recommandées */}
+        {recommendations.length > 0 && (
+          <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+            <div className="px-5 pt-5 pb-3">
+              <h2 className="text-[#d4780f] font-semibold text-base">🔩 Fraises SPINCUT recommandées</h2>
+              <p className="text-[#555] text-xs mt-1">
+                {recommendations.length} outil{recommendations.length > 1 ? 's' : ''} pour {MATERIAL_LABELS[safeMat]}
+                {thickness && !isNaN(parseFloat(thickness))
+                  ? ` · LC ≥ ${thickness} mm`
+                  : ' · Renseigne l\'épaisseur pour filtrer par LC'}
+              </p>
+            </div>
+            <div className="overflow-x-auto pb-5">
+              <div className="flex gap-3 px-5" style={{ width: 'max-content' }}>
+                {recommendations.map(p => (
+                  <div
+                    key={`${p.ref}__${p.row}`}
+                    className="w-44 flex-shrink-0 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2"
+                  >
+                    <div className="flex flex-wrap gap-1">
+                      {p.diametre && p.diametre !== '/' && (
+                        <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#d4780f] px-1.5 py-0.5 rounded">Ø{p.diametre}</span>
+                      )}
+                      {p.dents && p.dents !== '/' && (
+                        <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">Z{p.dents}</span>
+                      )}
+                      {p.lc && p.lc !== '/' && (
+                        <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">LC{p.lc}</span>
+                      )}
+                      {p.pm && (
+                        <span className="text-[10px] font-bold bg-[#0d2a0d] text-green-400 px-1.5 py-0.5 rounded">PM</span>
+                      )}
+                    </div>
+                    <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
+                    <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
+                    <div>
+                      {p.stock === 0
+                        ? <p className="text-[10px] font-semibold text-red-400">Rupture de stock</p>
+                        : p.stock <= 5
+                          ? <p className="text-[10px] text-orange-400">Stock faible ({p.stock})</p>
+                          : <p className="text-[10px] text-green-400">En stock ({p.stock})</p>
+                      }
+                      <p className="text-[#d4780f] font-bold text-sm mt-0.5">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
+                    </div>
+                    <Link
+                      to="/commande"
+                      className="w-full py-2 rounded-lg text-xs font-bold text-center block"
+                      style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+                    >
+                      Commander →
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
