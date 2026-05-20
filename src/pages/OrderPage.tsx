@@ -187,10 +187,10 @@ export default function OrderPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 py-3 relative flex items-center justify-center">
 
-          {/* Category dropdown — top left */}
-          <div ref={dropdownRef} className="relative">
+          {/* Category dropdown — absolute left */}
+          <div ref={dropdownRef} className="absolute left-4 z-10">
             <button
               onClick={() => setDropdownOpen(o => !o)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-sm font-semibold transition-colors hover:border-[#d4780f]"
@@ -227,13 +227,11 @@ export default function OrderPage() {
             )}
           </div>
 
-          {/* Spacer + Logo */}
-          <div className="flex-1 flex justify-center">
-            <SpincutLogo />
-          </div>
+          {/* Logo — truly centered */}
+          <SpincutLogo />
 
-          {/* Back */}
-          <Link to="/calculator" className="text-[#555] hover:text-white text-xs transition-colors flex items-center gap-1 flex-shrink-0">
+          {/* Back — absolute right */}
+          <Link to="/calculator" className="absolute right-4 text-[#555] hover:text-white text-xs transition-colors flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Retour
           </Link>

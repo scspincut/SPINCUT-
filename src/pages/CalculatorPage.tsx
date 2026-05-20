@@ -311,7 +311,7 @@ export default function CalculatorPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <div className="pt-1 pb-2">
+        <div className="pt-1 pb-2 text-center">
           <h1 className="text-lg font-bold text-white">Calculateur CNC Pro</h1>
           <p className="text-[#555] text-xs mt-0.5">Paramètres optimisés pour votre outillage SPINCUT</p>
         </div>
