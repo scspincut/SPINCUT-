@@ -199,74 +199,6 @@ export default function OrderPage() {
           </Link>
         </div>
 
-        {/* Filter button row — only when category selected */}
-        {activeCategory && (
-          <div className="max-w-2xl mx-auto px-4 pb-3 flex items-center gap-2">
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                activeFilterCount > 0
-                  ? 'bg-[#d4780f] border-[#d4780f] text-white'
-                  : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888] hover:border-[#d4780f] hover:text-white'
-              }`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
-              Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-            </button>
-            {activeFilterCount > 0 && (
-              <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">
-                Effacer
-              </button>
-            )}
-            <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
-          </div>
-        )}
-
-        {/* Filters panel */}
-        {activeCategory && filtersOpen && (
-          <div className="border-t border-[#1a1a1a] bg-[#111]">
-            <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
-              {diameters.length > 1 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
-                  {diameters.map(d => (
-                    <button key={d} onClick={() => setFilterDiam(p => p === d ? null : d)}
-                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                    >Ø{d}</button>
-                  ))}
-                </div>
-              )}
-              {dentsValues.length > 1 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
-                  {dentsValues.map(d => (
-                    <button key={d} onClick={() => setFilterDents(p => p === d ? null : d)}
-                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                    >Z{d}</button>
-                  ))}
-                </div>
-              )}
-              {lcValues.length > 1 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
-                  {lcValues.map(lc => (
-                    <button key={lc} onClick={() => setFilterLC(p => p === lc ? null : lc)}
-                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                    >LC{lc}</button>
-                  ))}
-                </div>
-              )}
-              {hasPM && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">PM</span>
-                  <button onClick={() => setFilterPM(p => !p)}
-                    className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterPM ? 'bg-purple-600 border-purple-600 text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                  >Polimiroir</button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Main */}
@@ -331,6 +263,52 @@ export default function OrderPage() {
                 <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
               </>
             )}
+          </div>
+        )}
+
+        {/* Filters panel */}
+        {activeCategory && filtersOpen && (
+          <div className="border-t border-[#1a1a1a] bg-[#111]">
+            <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
+              {diameters.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
+                  {diameters.map(d => (
+                    <button key={d} onClick={() => setFilterDiam(p => p === d ? null : d)}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                    >Ø{d}</button>
+                  ))}
+                </div>
+              )}
+              {dentsValues.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
+                  {dentsValues.map(d => (
+                    <button key={d} onClick={() => setFilterDents(p => p === d ? null : d)}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                    >Z{d}</button>
+                  ))}
+                </div>
+              )}
+              {lcValues.length > 1 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
+                  {lcValues.map(lc => (
+                    <button key={lc} onClick={() => setFilterLC(p => p === lc ? null : lc)}
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                    >LC{lc}</button>
+                  ))}
+                </div>
+              )}
+              {hasPM && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">PM</span>
+                  <button onClick={() => setFilterPM(p => !p)}
+                    className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterPM ? 'bg-purple-600 border-purple-600 text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                  >Polimiroir</button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
