@@ -173,12 +173,12 @@ export default function CalculatorPage() {
   const isAdmin = localStorage.getItem('spincut_admin_session') === 'true';
 
   // All hooks must be called unconditionally before any early return
-  const [toolType, setToolType] = useState<CalculatorParams['toolType']>('carbure_monobloc');
+  const [toolType, setToolType] = useState<CalculatorParams['toolType'] | null>(null);
   const [notation, setNotation] = useState<ToolNotation>('2+2');
-  const [material, setMaterial] = useState<CalculatorParams['material']>('mdf');
-  const [operation, setOperation] = useState<CalculatorParams['operation']>('decoupe');
-  const [diameter, setDiameter] = useState(6);
-  const [zTeeth, setZTeeth] = useState(2);
+  const [material, setMaterial] = useState<CalculatorParams['material'] | null>(null);
+  const [operation, setOperation] = useState<CalculatorParams['operation'] | null>(null);
+  const [diameter, setDiameter] = useState<number | null>(null);
+  const [zTeeth, setZTeeth] = useState<number | null>(null);
   const [nMax, setNMax] = useState('');
   const [vfMax, setVfMax] = useState('');
   const [thickness, setThickness] = useState('');
@@ -192,28 +192,43 @@ export default function CalculatorPage() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
 
   // Derived values needed by useMemo below
-  const availableMaterials = TOOL_MATERIALS[toolType];
-  const safeMat = availableMaterials.includes(material) ? material : availableMaterials[0];
+  const availableMaterials = toolType ? TOOL_MATERIALS[toolType] : [];
+  const safeMat = toolType && material && availableMaterials.includes(material) ? material : null;
 
-  const availDiams = DIAMETER_OPTIONS.filter(d => {
+  const availDiams = toolType ? DIAMETER_OPTIONS.filter(d => {
     if (toolType === 'ravageuse') return d >= 6;
     if (toolType === 'hss') return d >= 3 && d <= 12;
     if (toolType === 'diamant_coupe' || toolType === 'compression') return d >= 3;
     return true;
-  });
-  const safeDiam = availDiams.includes(diameter) ? diameter : (availDiams[1] ?? availDiams[0]);
+  }) : [];
+  const safeDiam = diameter && availDiams.includes(diameter) ? diameter : null;
 
-  const params: CalculatorParams = {
-    toolType, notation, material: safeMat, operation,
-    diameter: safeDiam, zTeeth, machineType: 'pro_portique', coating: 'none',
+  // For compression/diamant, zTeeth is derived from notation; for others it's explicit
+  const isCompDiam = toolType === 'diamant_coupe' || toolType === 'compression';
+  const effectiveZTeeth = isCompDiam
+    ? (notation === '1+1' ? 2 : notation === '2+2' ? 4 : 6)
+    : (zTeeth ?? 2);
+
+  const isReady = toolType !== null && safeMat !== null && operation !== null && safeDiam !== null &&
+    (isCompDiam || zTeeth !== null);
+
+  const params: CalculatorParams | null = isReady ? {
+    toolType: toolType!,
+    notation,
+    material: safeMat!,
+    operation: operation!,
+    diameter: safeDiam!,
+    zTeeth: effectiveZTeeth,
+    machineType: 'pro_portique',
+    coating: 'none',
     nMax: nMax ? parseFloat(nMax) : null,
     vfMax: vfMax ? parseFloat(vfMax) : null,
     materialThickness: thickness ? parseFloat(thickness) : null,
     apOverride: null,
-  };
+  } : null;
 
   // useMemo + useEffect MUST stay above the auth guard (Rules of Hooks)
-  const result = useMemo(() => calculate(params), [
+  const result = useMemo(() => params ? calculate(params) : null, [
     toolType, notation, safeMat, operation, safeDiam, zTeeth,
     nMax, vfMax, thickness,
   ]);
@@ -228,10 +243,10 @@ export default function CalculatorPage() {
   }, [])
 
   const recommendations = useMemo(() => {
-    if (catalog.length === 0 || result.forbidden) return []
+    if (catalog.length === 0 || !result || result.forbidden || !safeMat) return []
     const lcMin = thickness ? parseFloat(thickness) : null
     return getRecommendations(catalog, safeMat, lcMin !== null && !isNaN(lcMin) ? lcMin : null)
-  }, [catalog, safeMat, thickness, result.forbidden])
+  }, [catalog, safeMat, thickness, result])
 
   // Auth guard — after every hook
   if (!isAuthenticated) {
@@ -240,11 +255,11 @@ export default function CalculatorPage() {
   }
 
   const handleSave = () => {
-    if (result.forbidden) return;
+    if (!result || result.forbidden || !safeMat || !operation || !safeDiam) return;
     const entry: HistoryEntry = {
       id: Date.now().toString(),
       timestamp: Date.now(),
-      params: { toolType, notation, material: safeMat, operation, diameter: safeDiam, zTeeth, nMax, vfMax, thickness },
+      params: { toolType: toolType!, notation, material: safeMat, operation, diameter: safeDiam, zTeeth: effectiveZTeeth, nMax, vfMax, thickness },
       result: { n: result.n, vf: result.vf, vc: result.vc },
     };
     setHistory(pushToHistory(entry));
@@ -265,9 +280,11 @@ export default function CalculatorPage() {
   };
 
   const handleToolChange = (t: string) => {
+    if (!t) { setToolType(null); return; }
     const tt = t as CalculatorParams['toolType'];
     setToolType(tt);
-    if (!TOOL_MATERIALS[tt].includes(safeMat)) setMaterial(TOOL_MATERIALS[tt][0]);
+    if (material && !TOOL_MATERIALS[tt].includes(material)) setMaterial(null);
+    if (!isCompDiam) setZTeeth(null);
   };
 
   return (
@@ -304,13 +321,14 @@ export default function CalculatorPage() {
           <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">🔧 Paramètres</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-            <SelectField label="Type d'outil" value={toolType} onChange={handleToolChange}>
+            <SelectField label="Type d'outil" value={toolType ?? ''} onChange={handleToolChange}>
+              <option value="" disabled>— Choisir —</option>
               {(Object.keys(TOOL_TYPE_LABELS) as CalculatorParams['toolType'][]).map(k => (
                 <option key={k} value={k}>{TOOL_TYPE_LABELS[k]}</option>
               ))}
             </SelectField>
 
-            {(toolType === 'diamant_coupe' || toolType === 'compression') && (
+            {isCompDiam && (
               <div>
                 <label className={LBL}>Géométrie / Notation</label>
                 <div className="flex gap-2">
@@ -327,26 +345,40 @@ export default function CalculatorPage() {
               </div>
             )}
 
-            <SelectField label="Matériau" value={safeMat} onChange={v => setMaterial(v as CalculatorParams['material'])}>
+            <SelectField label="Matériau" value={safeMat ?? ''} onChange={v => setMaterial(v as CalculatorParams['material'])}>
+              <option value="" disabled>— Choisir —</option>
               {availableMaterials.map(m => (
                 <option key={m} value={m}>{MATERIAL_LABELS[m]}</option>
               ))}
             </SelectField>
 
-            <SelectField label="Type d'opération" value={operation} onChange={v => setOperation(v as CalculatorParams['operation'])}>
+            <SelectField label="Type d'opération" value={operation ?? ''} onChange={v => setOperation(v as CalculatorParams['operation'])}>
+              <option value="" disabled>— Choisir —</option>
               {(['decoupe', 'rainure', 'poche', 'gravure'] as const).map(k => (
                 <option key={k} value={k}>{OPERATION_LABELS[k]}</option>
               ))}
             </SelectField>
 
-            <SelectField label="Diamètre de fraise (mm)" value={String(safeDiam)} onChange={v => setDiameter(Number(v))}>
+            <SelectField label="Diamètre de fraise (mm)" value={safeDiam ? String(safeDiam) : ''} onChange={v => setDiameter(Number(v))}>
+              <option value="" disabled>— Choisir —</option>
               {availDiams.map(d => <option key={d} value={d}>Ø {d} mm</option>)}
             </SelectField>
 
-            {toolType !== 'diamant_coupe' && toolType !== 'compression' && (
-              <SelectField label="Nombre de dents (Z)" value={String(zTeeth)} onChange={v => setZTeeth(Number(v))}>
-                {TEETH_OPTIONS.map(z => <option key={z} value={z}>{z} dent{z > 1 ? 's' : ''}</option>)}
-              </SelectField>
+            {toolType && !isCompDiam && (
+              <div>
+                <label className={LBL}>Nombre de dents (Z)</label>
+                <div className="flex gap-2">
+                  {TEETH_OPTIONS.map(z => (
+                    <button key={z} onClick={() => setZTeeth(z)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        zTeeth === z
+                          ? 'bg-[#d4780f] border-[#d4780f] text-white'
+                          : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
+                      }`}
+                    >Z{z}</button>
+                  ))}
+                </div>
+              </div>
             )}
 
           </div>
@@ -361,7 +393,7 @@ export default function CalculatorPage() {
                 'Épaisseur matière (mm)'
               }
               value={thickness} onChange={setThickness}
-              placeholder={operation === 'decoupe' ? 'Ex: 18' : 'Ex: 8'}
+              placeholder={operation === 'decoupe' || !operation ? 'Ex: 18' : 'Ex: 8'}
               hint="pour calcul N passes"
             />
             <NumberField label="Vitesse broche max — n max (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" hint="facultatif" />
@@ -369,8 +401,15 @@ export default function CalculatorPage() {
           </div>
         </div>
 
+        {/* Placeholder quand pas encore rempli */}
+        {!isReady && (
+          <div className="bg-[#161616] rounded-2xl p-6 border border-[#1e1e1e] text-center">
+            <p className="text-[#444] text-sm">Sélectionnez vos paramètres pour voir les résultats</p>
+          </div>
+        )}
+
         {/* Forbidden */}
-        {result.forbidden && (
+        {result && result.forbidden && (
           <div className="bg-[#2a0000] border border-red-800 rounded-xl p-4 flex items-start gap-3">
             <span className="text-red-400 text-xl mt-0.5">⛔</span>
             <div>
@@ -381,7 +420,7 @@ export default function CalculatorPage() {
         )}
 
         {/* Alerts */}
-        {!result.forbidden && result.alerts.length > 0 && (
+        {result && !result.forbidden && result.alerts.length > 0 && (
           <div className="space-y-2">
             {result.alerts.map((a, i) => (
               <div key={i} className={`rounded-xl p-3 flex items-start gap-3 border ${
@@ -397,7 +436,7 @@ export default function CalculatorPage() {
         )}
 
         {/* Results */}
-        {!result.forbidden && (
+        {result && !result.forbidden && (
           <div className="bg-[#161616] rounded-2xl p-5 border border-[#1e1e1e] space-y-4">
             <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">🏎️ Résultats</h2>
 
@@ -468,7 +507,7 @@ export default function CalculatorPage() {
             <div className="px-5 pt-5 pb-3">
               <h2 className="text-[#d4780f] font-semibold text-base">⭐ Fraises SPINCUT recommandées</h2>
               <p className="text-[#555] text-xs mt-1">
-                {recommendations.length} outil{recommendations.length > 1 ? 's' : ''} pour {MATERIAL_LABELS[safeMat]}
+                {recommendations.length} outil{recommendations.length > 1 ? 's' : ''} pour {safeMat ? MATERIAL_LABELS[safeMat] : ''}
                 {thickness && !isNaN(parseFloat(thickness))
                   ? ` · LC ≥ ${thickness} mm`
                   : ' · Renseigne l\'épaisseur pour filtrer par LC'}
@@ -586,7 +625,7 @@ export default function CalculatorPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          {showConseils && (
+          {showConseils && toolType && safeMat && (
             <div className="px-5 pb-5 space-y-4">
               <div>
                 <p className="text-[#d4780f] font-medium text-sm mb-2">{TOOL_TYPE_LABELS[toolType]}</p>
@@ -601,6 +640,9 @@ export default function CalculatorPage() {
                 ))}</ul>
               </div>
             </div>
+          )}
+          {showConseils && (!toolType || !safeMat) && (
+            <p className="px-5 pb-5 text-[#444] text-sm">Sélectionnez un type d'outil et un matériau pour voir les conseils.</p>
           )}
         </div>
 
