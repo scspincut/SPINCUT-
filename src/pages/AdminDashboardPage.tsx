@@ -5,40 +5,36 @@ import { AccessCode } from '../types'
 import SpincutLogo from '../components/SpincutLogo'
 
 function generateCode(name: string, existing: string[]): string {
-  // Normalize: uppercase, remove accents, keep alphanumeric + spaces
   const normalized = name.toUpperCase()
     .replace(/[àáâãäåæçèéêëìíîïðñòóôõöùúûüý]/g, (c) => c.normalize('NFD')[0])
     .replace(/[^A-Z0-9 ]/g, ' ')
     .replace(/\s+/g, ' ').trim()
 
-  // Filter out short connector words
   const stop = new Set(['DE', 'DU', 'LA', 'LE', 'LES', 'ET', 'EN', 'AU', 'AUX', 'L', 'D', 'UN', 'UNE'])
   const words = normalized.split(' ').filter(w => w.length > 0 && !stop.has(w))
-  if (words.length === 0) words.push(normalized.replace(/\s/g, '').slice(0, 6))
+  if (words.length === 0) words.push(normalized.replace(/\s/g, '').slice(0, 4) || 'CLI')
 
+  // Build a simple 4-char base from the first word(s)
   let base: string
-  if (words.length === 1) {
-    base = words[0].slice(0, 6)
-  } else if (words.length === 2) {
-    const [w1, w2] = words
-    if (w1.length + w2.length <= 6) base = w1 + w2
-    else if (w1.length <= 3) base = (w1 + w2.slice(0, 6 - w1.length)).slice(0, 6)
-    else base = (w1.slice(0, 4) + w2.slice(0, 2)).slice(0, 6)
+  const w1 = words[0]
+  if (w1.length >= 4) {
+    // First word is long enough — take 4 chars
+    base = w1.slice(0, 4)
+  } else if (words.length >= 2) {
+    // First word is short — pad with start of next word
+    const needed = 4 - w1.length
+    base = w1 + words[1].slice(0, needed)
   } else {
-    const [w1, ...rest] = words
-    if (w1.length <= 3) {
-      base = (w1 + rest.slice(0, 2).map(w => w.slice(0, 2)).join('')).slice(0, 6)
-    } else {
-      base = (w1.slice(0, 4) + rest.map(w => w[0]).join('')).slice(0, 6)
-    }
+    // Single short word — use as-is
+    base = w1
   }
 
   if (!existing.includes(base)) return base
   for (let i = 2; i <= 99; i++) {
-    const candidate = base.slice(0, 5) + i
+    const candidate = base + i
     if (!existing.includes(candidate)) return candidate
   }
-  return base + Date.now().toString().slice(-3)
+  return base + Date.now().toString().slice(-2)
 }
 
 export default function AdminDashboardPage() {
