@@ -14,10 +14,15 @@ function generateCode(name: string, existing: string[]): string {
   const words = normalized.split(' ').filter(w => w.length > 0 && !stop.has(w))
   if (words.length === 0) words.push(normalized.replace(/\s/g, '') || 'CLI')
 
-  // Nom sans espace → identique ; plusieurs mots → 4 premiers chars collés
-  const base = words.length === 1
-    ? words[0]
-    : words.join('').slice(0, 4) || 'CLI'
+  // 1 mot → identique | 2 mots → mot1 + 1ère lettre mot2 | 3+ mots → mot1 + 2 premières lettres de chaque mot suivant
+  let base: string
+  if (words.length === 1) {
+    base = words[0]
+  } else if (words.length === 2) {
+    base = words[0] + words[1][0]
+  } else {
+    base = words[0] + words.slice(1).map(w => w.slice(0, 2)).join('')
+  }
 
   if (!existing.includes(base)) return base
   for (let i = 2; i <= 99; i++) {
