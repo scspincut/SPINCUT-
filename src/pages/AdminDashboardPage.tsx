@@ -99,8 +99,13 @@ export default function AdminDashboardPage() {
       const res = await fetch('/api/abby-clients')
       if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
       const clients: { id: string; name: string; phone?: string }[] = await res.json()
+      if (clients.length === 0) {
+        setImportMsg('Aucun contact trouvé dans Abby.')
+        setImportStatus('done')
+        return
+      }
       const existing = getAccessCodes()
-      const existingNames = existing.map(c => c.clientName?.toLowerCase())
+      const existingNames = existing.map(c => c.clientName?.toLowerCase()).filter(Boolean)
       const existingCodes = existing.map(c => c.code)
       const toAdd: AccessCode[] = []
       const today = new Date()
@@ -111,7 +116,7 @@ export default function AdminDashboardPage() {
         toAdd.push({ id: Date.now().toString() + Math.random(), code, active: true, createdAt, clientName: client.name, clientPhone: client.phone })
       }
       if (toAdd.length === 0) {
-        setImportMsg('Tous les clients Abby ont déjà un code.')
+        setImportMsg(`Tous les ${clients.length} clients Abby ont déjà un code.`)
       } else {
         const updated = [...existing, ...toAdd]
         saveAccessCodes(updated)
