@@ -31,25 +31,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       page++
     }
 
-    // Fetch individual contacts (fullname field in current SDK)
-    page = 1
-    hasMore = true
-    while (hasMore) {
-      const { data } = await abby.contact.retrieveContacts({
-        query: { limit: 100, page },
-      })
-      const docs = data?.docs ?? []
-      for (const c of docs) {
-        const name = ((c as unknown as { fullname?: string }).fullname || '').trim()
-        if (name && !seen.has(name.toLowerCase())) {
-          seen.add(name.toLowerCase())
-          result.push({ id: c.id, name })
-        }
-      }
-      hasMore = docs.length === 100
-      page++
-    }
-
     res.setHeader('Cache-Control', 'no-store')
     return res.status(200).json(result)
   } catch (err: unknown) {
