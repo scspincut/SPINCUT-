@@ -11,3 +11,8 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0d0d0d; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+
+/* Prevent iOS Safari from zooming on input focus */
+input, select, textarea {
+  font-size: max(16px, 1em);
+}
