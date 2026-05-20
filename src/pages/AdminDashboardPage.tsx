@@ -10,13 +10,14 @@ function generateCode(name: string, existing: string[]): string {
     .replace(/[^A-Z0-9 ]/g, ' ')
     .replace(/\s+/g, ' ').trim()
 
-  const words = normalized.split(' ').filter(w => w.length > 0)
-  if (words.length === 0) words.push('CLI')
+  const stop = new Set(['DE', 'DU', 'LA', 'LE', 'LES', 'ET', 'EN', 'AU', 'AUX', 'L', 'D', 'UN', 'UNE'])
+  const words = normalized.split(' ').filter(w => w.length > 0 && !stop.has(w))
+  if (words.length === 0) words.push(normalized.replace(/\s/g, '') || 'CLI')
 
-  // Single word → first 4 chars ; multiple words → initials
+  // Nom sans espace → identique ; plusieurs mots → 4 premiers chars collés
   const base = words.length === 1
-    ? words[0].slice(0, 4)
-    : words.map(w => w[0]).join('')
+    ? words[0]
+    : words.join('').slice(0, 4) || 'CLI'
 
   if (!existing.includes(base)) return base
   for (let i = 2; i <= 99; i++) {
