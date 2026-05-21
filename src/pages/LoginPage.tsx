@@ -1,7 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useClientAuth } from '../hooks/useAuth'
-import SpincutLogo from '../components/SpincutLogo'
 
 function AppleMailIcon() {
   return (
