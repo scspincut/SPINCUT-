@@ -44,7 +44,7 @@ import {
   CONSEILS_OUTIL, CONSEILS_MATIERE, DIAGNOSTIC,
 } from '../utils/cncData';
 import SpincutLogo from '../components/SpincutLogo';
-import { useClientAuth } from '../hooks/useAuth';
+import { useClientAuth, getClientCode } from '../hooks/useAuth';
 import { HistoryEntry, loadHistory, pushToHistory, groupByDay } from '../utils/history';
 
 interface CatalogProduct {
@@ -190,6 +190,26 @@ export default function CalculatorPage() {
   const [showMailMenu, setShowMailMenu] = useState(false);
   const [showGlossaire, setShowGlossaire] = useState(false);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [addedUid, setAddedUid] = useState<string | null>(null)
+  const [cartCount, setCartCount] = useState(() => {
+    try {
+      const cart = JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') as Record<string, number>
+      return Object.values(cart).reduce((s, v) => s + v, 0)
+    } catch { return 0 }
+  })
+
+  const addToCart = (p: CatalogProduct) => {
+    const key = `spincut_cart_${getClientCode() ?? 'guest'}`
+    const id = `${p.ref}__${p.row}`
+    try {
+      const cart = JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, number>
+      cart[id] = (cart[id] || 0) + 1
+      localStorage.setItem(key, JSON.stringify(cart))
+      setCartCount(Object.values(cart).reduce((s, v) => s + v, 0))
+    } catch {}
+    setAddedUid(id)
+    setTimeout(() => setAddedUid(null), 1500)
+  }
 
   // Derived values needed by useMemo below
   const availableMaterials = toolType ? TOOL_MATERIALS[toolType] : [];
@@ -300,15 +320,29 @@ export default function CalculatorPage() {
               </span>
             )}
           </div>
-          <button
-            onClick={() => { logout(); navigate('/'); }}
-            className="absolute right-0 flex items-center gap-1.5 text-[#888] hover:text-white text-sm transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Déconnexion
-          </button>
+          <div className="absolute right-0 flex items-center gap-3">
+            {cartCount > 0 && (
+              <Link
+                to="/commande"
+                className="flex items-center gap-1.5 text-sm font-medium transition-colors"
+                style={{ color: '#d4780f' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span className="bg-[#d4780f] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>
+              </Link>
+            )}
+            <button
+              onClick={() => { logout(); navigate('/'); }}
+              className="flex items-center gap-1.5 text-[#888] hover:text-white text-sm transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Déconnexion
+            </button>
+          </div>
         </div>
       </header>
 
@@ -541,13 +575,19 @@ export default function CalculatorPage() {
                       }
                       <p className="text-[#d4780f] font-bold text-sm mt-0.5">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
                     </div>
-                    <Link
-                      to="/commande"
-                      className="w-full py-2 rounded-lg text-xs font-bold text-center block"
-                      style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+                    <button
+                      onClick={() => addToCart(p)}
+                      disabled={p.stock === 0}
+                      className="w-full py-2 rounded-lg text-xs font-bold text-center transition-colors"
+                      style={{
+                        background: addedUid === `${p.ref}__${p.row}` ? '#0a2010' : p.stock === 0 ? '#1a1a1a' : '#2a1400',
+                        color: addedUid === `${p.ref}__${p.row}` ? '#4ade80' : p.stock === 0 ? '#444' : '#d4780f',
+                        border: `1px solid ${addedUid === `${p.ref}__${p.row}` ? '#166534' : p.stock === 0 ? '#2a2a2a' : '#d4780f33'}`,
+                        cursor: p.stock === 0 ? 'not-allowed' : 'pointer',
+                      }}
                     >
-                      Commander →
-                    </Link>
+                      {addedUid === `${p.ref}__${p.row}` ? '✓ Ajouté' : p.stock === 0 ? 'Rupture' : '+ Ajouter'}
+                    </button>
                   </div>
                 ))}
               </div>
