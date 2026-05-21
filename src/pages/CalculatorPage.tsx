@@ -179,16 +179,19 @@ export default function CalculatorPage() {
   const { isAuthenticated, logout } = useClientAuth();
   const isAdmin = localStorage.getItem('spincut_admin_session') === 'true';
 
+  const CALC_KEY = 'spincut_calc_params'
+  const saved = (() => { try { return JSON.parse(localStorage.getItem(CALC_KEY) ?? '{}') } catch { return {} } })()
+
   // All hooks must be called unconditionally before any early return
-  const [toolType, setToolType] = useState<CalculatorParams['toolType'] | null>(null);
-  const [notation, setNotation] = useState<ToolNotation>('2+2');
-  const [material, setMaterial] = useState<CalculatorParams['material'] | null>(null);
-  const [operation, setOperation] = useState<CalculatorParams['operation'] | null>(null);
-  const [diameter, setDiameter] = useState<number | null>(null);
-  const [zTeeth, setZTeeth] = useState<number | null>(null);
-  const [nMax, setNMax] = useState('');
-  const [vfMax, setVfMax] = useState('');
-  const [thickness, setThickness] = useState('');
+  const [toolType, setToolType] = useState<CalculatorParams['toolType'] | null>(saved.toolType ?? null);
+  const [notation, setNotation] = useState<ToolNotation>(saved.notation ?? '2+2');
+  const [material, setMaterial] = useState<CalculatorParams['material'] | null>(saved.material ?? null);
+  const [operation, setOperation] = useState<CalculatorParams['operation'] | null>(saved.operation ?? null);
+  const [diameter, setDiameter] = useState<number | null>(saved.diameter ?? null);
+  const [zTeeth, setZTeeth] = useState<number | null>(saved.zTeeth ?? null);
+  const [nMax, setNMax] = useState(saved.nMax ?? '');
+  const [vfMax, setVfMax] = useState(saved.vfMax ?? '');
+  const [thickness, setThickness] = useState(saved.thickness ?? '');
   const [showConseils, setShowConseils] = useState(false);
   const [showDiag, setShowDiag] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -268,6 +271,12 @@ export default function CalculatorPage() {
       .then(data => { if (Array.isArray(data)) setCatalog(data) })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CALC_KEY, JSON.stringify({ toolType, notation, material, operation, diameter, zTeeth, nMax, vfMax, thickness }))
+    } catch {}
+  }, [toolType, notation, material, operation, diameter, zTeeth, nMax, vfMax, thickness])
 
   const recommendations = useMemo(() => {
     if (catalog.length === 0 || !result || result.forbidden || !safeMat) return []
