@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel deploy hook
+        env:
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          response=$(curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}")
-          echo "Vercel response: $response"
+          echo "URL length: ${#HOOK_URL}"
+          curl -s -X POST "${HOOK_URL}" && echo "OK" || echo "curl exit: $?"
