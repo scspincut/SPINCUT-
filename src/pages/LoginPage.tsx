@@ -84,17 +84,46 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
       style={{ background: '#0d0d0d' }}
     >
-      <div className="w-full max-w-sm flex flex-col items-center gap-6">
+      <div className="w-full max-w-sm flex flex-col items-center gap-5">
 
-        {/* Logo card */}
-        <div
-          className="w-full flex items-center justify-center py-5 px-6 rounded-xl"
-          style={{ background: '#111', border: '1px solid #1e1e1e' }}
-        >
-          <SpincutLogo size="md" />
+        {/* ── HERO ── */}
+        {/* Logo réel */}
+        <img
+          src="/logo.png"
+          alt="SPINCUT Outils CNC"
+          className="w-full rounded-2xl"
+          style={{ height: '110px', objectFit: 'cover', objectPosition: 'center' }}
+        />
+
+        {/* Accroche */}
+        <div className="text-center px-1">
+          <h1 className="text-2xl font-black text-white leading-tight">
+            Les meilleurs ont le code.
+          </h1>
+          <p className="text-base font-bold tracking-widest mt-2" style={{ color: '#d4780f' }}>
+            Calcule. Commande. Coupe.
+          </p>
+          <p className="text-xs mt-2" style={{ color: '#666' }}>
+            Calculateur CNC + commande de fraises en quelques secondes.
+          </p>
+        </div>
+
+        {/* Photos strip */}
+        <div className="w-screen overflow-x-auto -mx-4" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-2.5 px-4" style={{ width: 'max-content' }}>
+            {['/photo1.jpg', '/photo2.jpg', '/photo3.jpg'].map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt=""
+                className="flex-shrink-0 rounded-xl"
+                style={{ width: '220px', height: '140px', objectFit: 'cover' }}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Auth card */}
