@@ -64,7 +64,15 @@ function parseLc(s: string): number {
   return isNaN(n) ? 0 : n
 }
 
-function getRecommendations(products: CatalogProduct[], material: string, lcMin: number | null): CatalogProduct[] {
+function getRecommendations(products: CatalogProduct[], material: string, lcMin: number | null, operation: string | null): CatalogProduct[] {
+  // Gravure → uniquement les fraises gravure
+  if (operation === 'gravure') {
+    let recs = products.filter(p => p.category === 'gravure')
+    if (lcMin !== null && lcMin > 0) recs = recs.filter(p => parseLc(p.lc) >= lcMin)
+    recs.sort((a, b) => (a.stock > 0 ? 0 : 1) - (b.stock > 0 ? 0 : 1) || parseFloat(a.diametre) - parseFloat(b.diametre))
+    return recs
+  }
+
   type Filter = (p: CatalogProduct) => boolean
   const rules: Record<string, Filter> = {
     melamine:      p => p.category === 'compression' || p.category === 'diamant',
@@ -83,10 +91,9 @@ function getRecommendations(products: CatalogProduct[], material: string, lcMin:
   }
   const rule = rules[material]
   if (!rule) return []
-  let recs = products.filter(rule)
-  if (lcMin !== null && lcMin > 0) {
-    recs = recs.filter(p => parseLc(p.lc) >= lcMin)
-  }
+  // Exclure les fraises gravure des recommandations standard
+  let recs = products.filter(p => p.category !== 'gravure' && rule(p))
+  if (lcMin !== null && lcMin > 0) recs = recs.filter(p => parseLc(p.lc) >= lcMin)
   recs.sort((a, b) => {
     const aOk = a.stock > 0 ? 0 : 1
     const bOk = b.stock > 0 ? 0 : 1
@@ -265,8 +272,8 @@ export default function CalculatorPage() {
   const recommendations = useMemo(() => {
     if (catalog.length === 0 || !result || result.forbidden || !safeMat) return []
     const lcMin = thickness ? parseFloat(thickness) : null
-    return getRecommendations(catalog, safeMat, lcMin !== null && !isNaN(lcMin) ? lcMin : null)
-  }, [catalog, safeMat, thickness, result])
+    return getRecommendations(catalog, safeMat, lcMin !== null && !isNaN(lcMin) ? lcMin : null, operation)
+  }, [catalog, safeMat, thickness, result, operation])
 
   // Auth guard — after every hook
   if (!isAuthenticated) {
