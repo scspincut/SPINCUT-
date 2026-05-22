@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
 import SpincutLogo from '../components/SpincutLogo'
+import BottomNav from '../components/BottomNav'
 
 interface CatalogProduct {
   sheet: string; row: number; famille: string; ref: string
@@ -69,7 +70,7 @@ export default function OrderPage() {
   const [orderHistory, setOrderHistory] = useState<OrderHistoryEntry[]>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
-  const [showHistory, setShowHistory] = useState(false)
+  const [showHistory, setShowHistory] = useState(true)
 
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
@@ -118,6 +119,8 @@ export default function OrderPage() {
   }
 
   if (!isAuthenticated) { navigate('/'); return null }
+
+  localStorage.setItem('spincut_last_section', '/commande')
 
   const setQty = (key: string, delta: number, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
@@ -178,15 +181,12 @@ export default function OrderPage() {
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-3 relative flex items-center justify-center">
           <SpincutLogo />
-          <Link to="/calculator" className="absolute right-4 text-[#555] hover:text-white text-xs transition-colors flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Retour
-          </Link>
+          <span className="absolute left-0 text-sm font-bold text-white">Commandes</span>
         </div>
       </header>
 
       {/* Main */}
-      <main className="flex-1 max-w-2xl mx-auto w-full pb-28">
+      <main className="flex-1 max-w-2xl mx-auto w-full pb-36">
 
         {/* Barre filtres — uniquement quand une catégorie est sélectionnée */}
         {!catalogLoading && !catalogError && activeCategory && (
@@ -487,6 +487,7 @@ export default function OrderPage() {
           )}
         </div>
       </div>
+      <BottomNav cartCount={itemCount} />
     </div>
   )
 }

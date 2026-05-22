@@ -44,6 +44,7 @@ import {
   CONSEILS_OUTIL, CONSEILS_MATIERE, DIAGNOSTIC,
 } from '../utils/cncData';
 import SpincutLogo from '../components/SpincutLogo';
+import BottomNav from '../components/BottomNav';
 import { useClientAuth, getClientCode } from '../hooks/useAuth';
 import { HistoryEntry, loadHistory, pushToHistory, groupByDay } from '../utils/history';
 
@@ -289,6 +290,8 @@ export default function CalculatorPage() {
     navigate('/');
     return null;
   }
+
+  localStorage.setItem('spincut_last_section', '/calculator')
 
   const handleSave = () => {
     if (!result || result.forbidden || !safeMat || !operation || !safeDiam) return;
@@ -881,6 +884,7 @@ export default function CalculatorPage() {
 
         </div>
       </div>
+      <BottomNav cartCount={cartCount} />
     </div>
   );
 }

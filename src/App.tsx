@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import CalculatorPage from './pages/CalculatorPage'
+import BoutiquePage from './pages/BoutiquePage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import OrderPage from './pages/OrderPage'
@@ -36,6 +37,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/calculator" element={<CalculatorPage />} />
+        <Route path="/boutique" element={<BoutiquePage />} />
         <Route path="/commande" element={<OrderPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />

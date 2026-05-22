@@ -75,11 +75,13 @@ export default function LoginPage() {
     setError('')
     const ok = login(code)
     if (ok) {
-      navigate('/calculator')
+      navigate(lastSection)
     } else {
       setError('Code invalide. Contactez SPINCUT pour obtenir votre accès.')
     }
   }
+
+  const lastSection = localStorage.getItem('spincut_last_section') || '/boutique'
 
   return (
     <div
@@ -173,7 +175,7 @@ export default function LoginPage() {
               onMouseEnter={e => (e.currentTarget.style.background = '#b86400')}
               onMouseLeave={e => (e.currentTarget.style.background = '#d4780f')}
             >
-              Accéder au calculateur
+              Se connecter
             </button>
           </form>
 
@@ -191,7 +193,7 @@ export default function LoginPage() {
           <div className="px-5 pt-5 pb-4">
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
             <p className="text-sm mt-1.5" style={{ color: '#8a8a8a' }}>
-              Devenez client SPINCUT et obtenez votre code d'accès gratuitement
+              Boutique 100% en ligne — Devenez client SPINCUT et accédez à toute notre gamme d'outils
             </p>
             <div className="mt-3 space-y-1.5">
               {[

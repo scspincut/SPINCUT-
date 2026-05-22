@@ -1,0 +1,369 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useClientAuth, getClientCode } from '../hooks/useAuth'
+import BottomNav from '../components/BottomNav'
+import SpincutLogo from '../components/SpincutLogo'
+
+interface CatalogProduct {
+  sheet: string; row: number; ref: string; famille: string
+  diametre: string; lc: string; lt: string; dents: string
+  angle: string; queue: string; sens: string
+  prix: number; stock: number; pm: boolean; category: string; designation: string
+}
+
+const CATEGORY_META: Record<string, { label: string; order: number }> = {
+  classique:   { label: 'Fraise Classique',   order: 1 },
+  compression: { label: 'Fraise Compression', order: 2 },
+  diamant:     { label: 'Diamant (PCD)',       order: 3 },
+  ravageuse:   { label: 'Ravageuse',           order: 4 },
+  alu:         { label: 'Aluminium',           order: 5 },
+  gravure:     { label: 'Fraise Gravure',      order: 6 },
+  percage:     { label: 'Perçage',             order: 7 },
+  accessoires: { label: 'Accessoires',         order: 8 },
+}
+
+function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
+function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
+
+function StockBadge({ stock }: { stock: number }) {
+  if (stock === 0) return <span className="flex items-center gap-1 text-[10px] font-semibold text-red-400"><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />Rupture</span>
+  if (stock <= 5) return <span className="flex items-center gap-1 text-[10px] font-semibold text-orange-400"><span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" />Stock faible ({stock})</span>
+  return <span className="flex items-center gap-1 text-[10px] text-[#555]"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />En stock ({stock})</span>
+}
+
+const SHOP_TABS = [
+  { id: 'cnc', label: 'Fraises CNC', sub: 'SPINCUT' },
+  { id: 'cmt', label: 'CMT Défonceuse', sub: 'Bois & dérivés' },
+  { id: 'lames', label: 'Lames Carbure', sub: 'Circulaires' },
+]
+
+export default function BoutiquePage() {
+  const navigate = useNavigate()
+  const { isAuthenticated, logout } = useClientAuth()
+
+  const clientCode = getClientCode()
+  const cartKey = `spincut_cart_${clientCode ?? 'guest'}`
+
+  const [shopTab, setShopTab] = useState<'cnc' | 'cmt' | 'lames'>('cnc')
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [catalogLoading, setCatalogLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [filterDiam, setFilterDiam] = useState<string | null>(null)
+  const [filterLC, setFilterLC] = useState<string | null>(null)
+  const [filterDents, setFilterDents] = useState<string | null>(null)
+  const [filterPM, setFilterPM] = useState(false)
+
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem(cartKey) ?? '{}') } catch { return {} }
+  })
+
+  const cartCount = useMemo(() => Object.values(quantities).reduce((s, v) => s + v, 0), [quantities])
+  const cartTotal = useMemo(() => catalog.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0), [catalog, quantities])
+
+  useEffect(() => {
+    localStorage.setItem('spincut_last_section', '/boutique')
+  }, [])
+
+  useEffect(() => {
+    try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
+  }, [quantities, cartKey])
+
+  useEffect(() => {
+    fetch('/api/catalog')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setCatalog(data)
+        else setCatalogError(data?.error ?? 'Erreur catalogue')
+        setCatalogLoading(false)
+      })
+      .catch(() => { setCatalogError('Impossible de charger le catalogue'); setCatalogLoading(false) })
+  }, [])
+
+  const tabs = useMemo(() => {
+    const cats = new Set(catalog.map(p => p.category))
+    return Object.entries(CATEGORY_META).filter(([id]) => cats.has(id)).sort((a, b) => a[1].order - b[1].order)
+  }, [catalog])
+
+  const categoryProducts = useMemo(() =>
+    activeCategory ? catalog.filter(p => p.category === activeCategory) : [],
+  [catalog, activeCategory])
+
+  const diameters = useMemo(() => [...new Set(categoryProducts.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
+  const lcValues  = useMemo(() => [...new Set(categoryProducts.map(p => p.lc).filter(l => l && l !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
+  const dentsValues = useMemo(() => [...new Set(categoryProducts.map(p => p.dents).filter(d => d && d !== '/'))].sort(), [categoryProducts])
+  const hasPM = useMemo(() => categoryProducts.some(p => p.pm), [categoryProducts])
+
+  const filtered = useMemo(() => categoryProducts.filter(p =>
+    (filterDiam === null || p.diametre === filterDiam) &&
+    (filterLC === null || p.lc === filterLC) &&
+    (filterDents === null || p.dents === filterDents) &&
+    (!filterPM || p.pm)
+  ), [categoryProducts, filterDiam, filterLC, filterDents, filterPM])
+
+  const activeFilterCount = [filterDiam, filterLC, filterDents, filterPM || null].filter(Boolean).length
+  const resetFilters = () => { setFilterDiam(null); setFilterLC(null); setFilterDents(null); setFilterPM(false) }
+
+  const setQty = (key: string, delta: number, max: number) =>
+    setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
+  const setQtyDirect = (key: string, val: string, max: number) =>
+    setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
+
+  const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
+
+  if (!isAuthenticated) { navigate('/'); return null }
+
+  return (
+    <div className="min-h-screen bg-[#0d0d0d] text-white flex flex-col">
+
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+          <SpincutLogo />
+          {cartCount > 0 && (
+            <button
+              onClick={() => navigate('/commande')}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all active:scale-95"
+              style={{ background: '#1a1200', border: '1px solid #d4780f40', color: '#d4780f' }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              {cartCount} article{cartCount > 1 ? 's' : ''} · {fmt(cartTotal)} €
+            </button>
+          )}
+          <button
+            onClick={() => { logout(); navigate('/') }}
+            className="text-[#444] hover:text-white text-xs transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Shop tabs */}
+        <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
+          {SHOP_TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => { setShopTab(t.id as typeof shopTab); setActiveCategory(null); resetFilters() }}
+              className="flex-1 py-3 flex flex-col items-center gap-0.5 transition-colors"
+              style={{ borderBottom: shopTab === t.id ? '2px solid #d4780f' : '2px solid transparent' }}
+            >
+              <span className="text-xs font-bold" style={{ color: shopTab === t.id ? '#d4780f' : '#888' }}>{t.label}</span>
+              <span className="text-[9px]" style={{ color: shopTab === t.id ? '#d4780f80' : '#444' }}>{t.sub}</span>
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-2xl mx-auto w-full pb-24">
+
+        {/* ── CNC Tab ── */}
+        {shopTab === 'cnc' && (
+          <>
+            {/* Filter bar */}
+            {!catalogLoading && !catalogError && activeCategory && (
+              <div className="px-4 pt-4 pb-1 flex items-center gap-2">
+                <button
+                  onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
+                  className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors mr-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                  {CATEGORY_META[activeCategory]?.label}
+                </button>
+                <button
+                  onClick={() => setFiltersOpen(o => !o)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
+                  Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                </button>
+                {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
+                <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+
+            {/* Filters panel */}
+            {activeCategory && filtersOpen && (
+              <div className="border-t border-[#1a1a1a] bg-[#111]">
+                <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
+                  {diameters.length > 1 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
+                      {diameters.map(d => (
+                        <button key={d} onClick={() => setFilterDiam(p => p === d ? null : d)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                        >Ø{d}</button>
+                      ))}
+                    </div>
+                  )}
+                  {dentsValues.length > 1 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
+                      {dentsValues.map(d => (
+                        <button key={d} onClick={() => setFilterDents(p => p === d ? null : d)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                        >Z{d}</button>
+                      ))}
+                    </div>
+                  )}
+                  {lcValues.length > 1 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
+                      {lcValues.map(lc => (
+                        <button key={lc} onClick={() => setFilterLC(p => p === lc ? null : lc)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                        >LC{lc}</button>
+                      ))}
+                    </div>
+                  )}
+                  {hasPM && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">PM</span>
+                      <button onClick={() => setFilterPM(p => !p)}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterPM ? 'bg-purple-600 border-purple-600 text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                      >Polimiroir</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {catalogLoading && (
+              <div className="flex items-center justify-center py-20 gap-3 text-[#444]">
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                Chargement…
+              </div>
+            )}
+
+            {catalogError && <div className="m-4 rounded-xl bg-[#2a0000] border border-red-800 px-4 py-3"><p className="text-red-400 text-sm">{catalogError}</p></div>}
+
+            {/* Category picker */}
+            {!catalogLoading && !catalogError && !activeCategory && (
+              <div className="px-4 pt-6 space-y-2">
+                <p className="text-[#555] text-xs uppercase tracking-widest font-bold mb-4">Catégories</p>
+                {tabs.map(([id, meta]) => (
+                  <button key={id} onClick={() => selectCategory(id)}
+                    className="w-full px-4 py-3.5 rounded-xl bg-[#161616] border border-[#2a2a2a] text-left text-sm font-medium text-white hover:border-[#d4780f] hover:bg-[#1a1200] transition-colors flex items-center justify-between active:scale-[0.99]"
+                  >
+                    {meta.label}
+                    <svg className="w-4 h-4 text-[#444]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Product list */}
+            {!catalogLoading && !catalogError && activeCategory && (
+              <div className="divide-y divide-[#161616]">
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-2">
+                    <p className="text-[#444] text-sm">Aucun produit pour ces filtres</p>
+                    {activeFilterCount > 0 && <button onClick={resetFilters} className="text-[#d4780f] text-xs underline">Effacer les filtres</button>}
+                  </div>
+                ) : filtered.map(item => {
+                  const key = uid(item)
+                  const qty = quantities[key] || 0
+                  const selected = qty > 0
+                  const outOfStock = item.stock === 0
+                  return (
+                    <div key={key}
+                      className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-[#0d0d0d]'} ${outOfStock ? 'opacity-40' : ''}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                          <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
+                          <StockBadge stock={item.stock} />
+                          {item.pm && <span className="text-[10px] font-semibold text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Polimiroir</span>}
+                        </div>
+                        <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
+                        {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
+                      </div>
+                      <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                        {item.prix > 0
+                          ? <span className={`font-bold text-base ${selected ? 'text-[#d4780f]' : 'text-[#d4780f]/70'}`}>{fmt(item.prix)}€</span>
+                          : <span className="text-[#444] text-xs">Sur devis</span>
+                        }
+                        {!outOfStock && item.prix > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => setQty(key, -1, item.stock)}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
+                            >−</button>
+                            {qty > 0 && (
+                              <input type="number" min={0} max={item.stock} value={qty}
+                                onChange={e => setQtyDirect(key, e.target.value, item.stock)}
+                                className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
+                              />
+                            )}
+                            <button onClick={() => setQty(key, +1, item.stock)}
+                              className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
+                            >+</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── CMT Tab ── */}
+        {shopTab === 'cmt' && (
+          <div className="flex flex-col items-center justify-center py-20 px-6 gap-6 text-center">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+              <svg className="w-8 h-8 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-white text-xl font-bold">Fraises CMT Défonceuse</p>
+              <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Fraises CMT pour défonceuse, toupie et CNC portative, bois massif et dérivés.</p>
+            </div>
+            <a
+              href="https://wa.me/33767739561?text=Je%20suis%20int%C3%A9ress%C3%A9%20par%20les%20fraises%20CMT%20d%C3%A9fonceuse"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-95"
+              style={{ background: '#1a5e1a' }}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Me prévenir à l'ouverture
+            </a>
+          </div>
+        )}
+
+        {/* ── Lames Tab ── */}
+        {shopTab === 'lames' && (
+          <div className="flex flex-col items-center justify-center py-20 px-6 gap-6 text-center">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
+              <svg className="w-8 h-8 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="12" cy="12" r="2"/>
+                <path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-white text-xl font-bold">Lames Circulaires Carbure</p>
+              <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Lames circulaires carbure pour scie à table, scie à format, panneaux et bois massif.</p>
+            </div>
+            <a
+              href="https://wa.me/33767739561?text=Je%20suis%20int%C3%A9ress%C3%A9%20par%20les%20lames%20circulaires%20carbure"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white transition-all active:scale-95"
+              style={{ background: '#1a5e1a' }}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Me prévenir à l'ouverture
+            </a>
+          </div>
+        )}
+      </main>
+
+      <BottomNav cartCount={cartCount} />
+    </div>
+  )
+}
