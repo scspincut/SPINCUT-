@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getClientCode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
-import SpincutLogo from '../components/SpincutLogo'
 
 interface CatalogProduct {
   sheet: string; row: number; ref: string; famille: string
@@ -119,23 +118,11 @@ export default function BoutiquePage() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <SpincutLogo />
-          {cartCount > 0 && (
-            <button
-              onClick={() => navigate('/commande')}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all active:scale-95"
-              style={{ background: '#1a1200', border: '1px solid #d4780f40', color: '#d4780f' }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-              </svg>
-              {cartCount} article{cartCount > 1 ? 's' : ''} · {fmt(cartTotal)} €
-            </button>
-          )}
+        <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '38px', objectFit: 'contain' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
-            className="text-[#444] hover:text-white text-xs transition-colors"
+            className="absolute right-4 text-[#444] hover:text-white transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -363,7 +350,7 @@ export default function BoutiquePage() {
         )}
       </main>
 
-      <BottomNav cartCount={cartCount} />
+      <BottomNav cartCount={cartCount} cartTotal={cartTotal} />
     </div>
   )
 }

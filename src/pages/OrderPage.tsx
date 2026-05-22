@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
-import SpincutLogo from '../components/SpincutLogo'
 import BottomNav from '../components/BottomNav'
 
 interface CatalogProduct {
@@ -115,8 +114,8 @@ export default function OrderPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-center">
-          <SpincutLogo />
+        <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-center">
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '38px', objectFit: 'contain' }} />
         </div>
       </header>
 
@@ -251,7 +250,7 @@ export default function OrderPage() {
         )}
       </main>
 
-      <BottomNav cartCount={itemCount} />
+      <BottomNav cartCount={itemCount} cartTotal={total} />
     </div>
   )
 }

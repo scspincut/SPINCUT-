@@ -206,6 +206,7 @@ export default function CalculatorPage() {
   })
 
   const cartCount = Object.values(quantities).reduce((s, v) => s + v, 0)
+  const cartTotal = useMemo(() => catalog.reduce((s, p) => s + (quantities[`${p.ref}__${p.row}`] || 0) * p.prix, 0), [catalog, quantities])
 
   const setQty = (id: string, delta: number, max: number) => {
     setQuantities(prev => {
@@ -326,7 +327,7 @@ export default function CalculatorPage() {
       <header className="border-b border-[#1e1e1e] px-4 py-3 sticky top-0 bg-[#0d0d0d] z-10">
         <div className="max-w-4xl mx-auto relative flex items-center justify-center">
           <div className="flex items-center gap-2">
-            <SpincutLogo />
+            <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '38px', objectFit: 'contain' }} />
             {isAdmin && (
               <span className="bg-[#3a1e00] text-[#d4780f] text-xs font-bold px-2 py-0.5 rounded-full border border-[#d4780f]/30">
                 Admin
@@ -880,7 +881,7 @@ export default function CalculatorPage() {
 
         </div>
       </div>
-      <BottomNav cartCount={cartCount} />
+      <BottomNav cartCount={cartCount} cartTotal={cartTotal} />
     </div>
   );
 }

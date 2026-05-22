@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 
-export default function BottomNav({ cartCount = 0 }: { cartCount?: number }) {
+export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?: number; cartTotal?: number }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
@@ -63,6 +63,11 @@ export default function BottomNav({ cartCount = 0 }: { cartCount?: number }) {
                 ) : null}
               </div>
               <span className="text-[10px] font-medium" style={{ color }}>{tab.label}</span>
+              {tab.path === '/commande' && cartCount > 0 && cartTotal > 0 && (
+                <span className="text-[9px] font-bold leading-none" style={{ color: '#d4780f', marginTop: -2 }}>
+                  {cartTotal.toFixed(2).replace('.', ',')} €
+                </span>
+              )}
             </button>
           )
         })}
