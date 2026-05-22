@@ -15,11 +15,15 @@ jobs:
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          RESPONSE=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=100")
-          PROJECT_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; ps=json.load(sys.stdin).get('projects',[]); p=next((x for x in ps if 'spincut' in x['name'].lower()),None); print(p['id'] if p else '')")
-          ORG_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; ps=json.load(sys.stdin).get('projects',[]); p=next((x for x in ps if 'spincut' in x['name'].lower()),None); print(p.get('accountId','') if p else '')")
-          echo "Project: $PROJECT_ID  Org: $ORG_ID"
-          mkdir -p .vercel
-          printf '{"projectId":"%s","orgId":"%s"}' "$PROJECT_ID" "$ORG_ID" > .vercel/project.json
+          echo "=== Token check ==="
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=1")
+          echo "API status: $STATUS"
+
+          echo "=== Project list ==="
+          curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=10" | python3 -c "import sys,json; data=json.load(sys.stdin); [print(p['id'], p['name']) for p in data.get('projects',[])]" || echo "API error"
+
+          echo "=== Deploy ==="
           npx vercel --prod --token "$VERCEL_TOKEN" --yes
