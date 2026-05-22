@@ -132,13 +132,11 @@ export default function LoginPage() {
         >
           {/* Card header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <div
+            <img
+              src="/emblem-s.png"
+              alt="SPINCUT"
               className="mb-1 flex-shrink-0"
-              style={{
-                width: '64px',
-                height: '64px',
-                background: `url('/logo.png') 25% 44% / 280% auto no-repeat`,
-              }}
+              style={{ width: '72px', height: 'auto' }}
             />
             <p className="text-sm" style={{ color: '#8a8a8a' }}>
               Entrer votre code d'accès Spincut
