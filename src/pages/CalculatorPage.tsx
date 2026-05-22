@@ -201,25 +201,19 @@ export default function CalculatorPage() {
   const [showMailMenu, setShowMailMenu] = useState(false);
   const [showGlossaire, setShowGlossaire] = useState(false);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
-  const [addedUid, setAddedUid] = useState<string | null>(null)
-  const [cartCount, setCartCount] = useState(() => {
-    try {
-      const cart = JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') as Record<string, number>
-      return Object.values(cart).reduce((s, v) => s + v, 0)
-    } catch { return 0 }
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
   })
 
-  const addToCart = (p: CatalogProduct) => {
-    const key = `spincut_cart_${getClientCode() ?? 'guest'}`
-    const id = `${p.ref}__${p.row}`
-    try {
-      const cart = JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, number>
-      cart[id] = (cart[id] || 0) + 1
-      localStorage.setItem(key, JSON.stringify(cart))
-      setCartCount(Object.values(cart).reduce((s, v) => s + v, 0))
-    } catch {}
-    setAddedUid(id)
-    setTimeout(() => setAddedUid(null), 1500)
+  const cartCount = Object.values(quantities).reduce((s, v) => s + v, 0)
+
+  const setQty = (id: string, delta: number, max: number) => {
+    setQuantities(prev => {
+      const next = { ...prev, [id]: Math.min(max, Math.max(0, (prev[id] || 0) + delta)) }
+      if (next[id] === 0) delete next[id]
+      try { localStorage.setItem(`spincut_cart_${getClientCode() ?? 'guest'}`, JSON.stringify(next)) } catch {}
+      return next
+    })
   }
 
   // Derived values needed by useMemo below
@@ -580,19 +574,33 @@ export default function CalculatorPage() {
                       }
                       <p className="text-[#d4780f] font-bold text-sm mt-0.5">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
                     </div>
-                    <button
-                      onClick={() => addToCart(p)}
-                      disabled={p.stock === 0}
-                      className="w-full py-2 rounded-lg text-xs font-bold text-center transition-colors"
-                      style={{
-                        background: addedUid === `${p.ref}__${p.row}` ? '#0a2010' : p.stock === 0 ? '#1a1a1a' : '#2a1400',
-                        color: addedUid === `${p.ref}__${p.row}` ? '#4ade80' : p.stock === 0 ? '#444' : '#d4780f',
-                        border: `1px solid ${addedUid === `${p.ref}__${p.row}` ? '#166534' : p.stock === 0 ? '#2a2a2a' : '#d4780f33'}`,
-                        cursor: p.stock === 0 ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      {addedUid === `${p.ref}__${p.row}` ? '✓ Ajouté' : p.stock === 0 ? 'Rupture' : '+ Ajouter'}
-                    </button>
+                    {p.stock === 0 ? (
+                      <div className="w-full py-2 rounded-lg text-xs font-bold text-center text-[#444] bg-[#1a1a1a] border border-[#2a2a2a]">
+                        Rupture
+                      </div>
+                    ) : (() => {
+                      const id = `${p.ref}__${p.row}`
+                      const qty = quantities[id] || 0
+                      return qty === 0 ? (
+                        <button
+                          onClick={() => setQty(id, 1, p.stock)}
+                          className="w-full py-2 rounded-lg text-xs font-bold text-center transition-colors"
+                          style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+                        >
+                          + Ajouter
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-between gap-1">
+                          <button onClick={() => setQty(id, -1, p.stock)}
+                            className="flex-1 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-base text-white"
+                          >−</button>
+                          <span className="w-7 text-center text-[#d4780f] font-bold text-sm">{qty}</span>
+                          <button onClick={() => setQty(id, +1, p.stock)}
+                            className="flex-1 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-base text-white hover:bg-[#b86400] transition-colors active:scale-95"
+                          >+</button>
+                        </div>
+                      )
+                    })()}
                   </div>
                 ))}
               </div>
