@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
-
 interface CatalogProduct {
   sheet: string; row: number; famille: string; ref: string
   diametre: string; lc: string; lt: string; dents: string
@@ -23,7 +22,7 @@ function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 
 export default function OrderPage() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useClientAuth()
+  const { isAuthenticated, logout } = useClientAuth()
 
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
   const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -114,8 +113,16 @@ export default function OrderPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
-        <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-center">
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '38px', objectFit: 'contain' }} />
+        <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '50px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <button
+            onClick={() => { logout(); navigate('/') }}
+            className="absolute right-4 text-[#444] hover:text-white transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </button>
         </div>
       </header>
 

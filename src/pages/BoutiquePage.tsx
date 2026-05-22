@@ -32,7 +32,7 @@ function StockBadge({ stock }: { stock: number }) {
 
 const SHOP_TABS = [
   { id: 'cnc', label: 'Fraises CNC', sub: 'SPINCUT' },
-  { id: 'cmt', label: 'CMT Défonceuse', sub: 'Bois & dérivés' },
+  { id: 'cmt', label: 'Fraises Défonceuse', sub: 'CMT' },
   { id: 'lames', label: 'Lames Carbure', sub: 'Circulaires' },
 ]
 
@@ -119,7 +119,7 @@ export default function BoutiquePage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '38px', objectFit: 'contain' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '50px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 text-[#444] hover:text-white transition-colors"

@@ -105,11 +105,11 @@ export default function LoginPage() {
             Les meilleurs ont le code.
             <span className="block" style={{ color: '#d4780f' }}>Et vous, vous l'avez ?</span>
           </h1>
-          <p className="text-base font-bold tracking-widest mt-2" style={{ color: '#d4780f' }}>
-            Calcule. Commande. Coupe.
+          <p className="text-xs mt-3" style={{ color: '#666' }}>
+            Calculateur CNC
           </p>
-          <p className="text-xs mt-2" style={{ color: '#666' }}>
-            Calculateur CNC + commande de fraises en quelques secondes.
+          <p className="text-xs mt-1" style={{ color: '#666' }}>
+            Boutique 100% en ligne pour votre outillage bois
           </p>
         </div>
 
