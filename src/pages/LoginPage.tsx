@@ -101,6 +101,7 @@ export default function LoginPage() {
         <div className="text-center px-1">
           <h1 className="text-2xl font-black text-white leading-tight">
             Les meilleurs ont le code.
+            <span className="block" style={{ color: '#d4780f' }}>Et vous, vous l'avez ?</span>
           </h1>
           <p className="text-base font-bold tracking-widest mt-2" style={{ color: '#d4780f' }}>
             Calcule. Commande. Coupe.
@@ -132,12 +133,6 @@ export default function LoginPage() {
         >
           {/* Card header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <img
-              src="/emblem-s.png"
-              alt="SPINCUT"
-              className="mb-1 flex-shrink-0"
-              style={{ width: '72px', height: 'auto' }}
-            />
             <p className="text-sm" style={{ color: '#8a8a8a' }}>
               Entrer votre code d'accès Spincut
             </p>
