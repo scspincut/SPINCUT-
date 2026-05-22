@@ -43,7 +43,6 @@ import {
   TOOL_MATERIALS, DIAMETER_OPTIONS, TEETH_OPTIONS,
   CONSEILS_OUTIL, CONSEILS_MATIERE, DIAGNOSTIC,
 } from '../utils/cncData';
-import SpincutLogo from '../components/SpincutLogo';
 import BottomNav from '../components/BottomNav';
 import { useClientAuth, getClientCode } from '../hooks/useAuth';
 import { HistoryEntry, loadHistory, pushToHistory, groupByDay } from '../utils/history';

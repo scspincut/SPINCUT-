@@ -50,16 +50,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { data: existingBdc } = await abby.billing.getBillingById({
           path: { billingId: existingBdcId },
         })
-        if (existingBdc && 'state' in existingBdc && existingBdc.state === 'draft' && existingBdc.isEditable) {
-          // Fusionner : lignes existantes + nouvelles lignes
-          const existingLines = (existingBdc.lines ?? []).map((l: { reference?: string; designation: string; unitPrice: number; quantity?: number; quantityUnit?: string | null }) => ({
+        const bdc = existingBdc as any
+        if (bdc && bdc.state === 'draft' && bdc.isEditable) {
+          const existingLines = (bdc.lines ?? []).map((l: any) => ({
             designation: l.designation,
             reference: l.reference,
             unitPrice: l.unitPrice,
             quantity: l.quantity ?? 1,
             quantityUnit: (l.quantityUnit ?? 'unit') as 'unit',
           }))
-          await abby.billing.updateLines({
+          await (abby.billing.updateLines as any)({
             path: { billingId: existingBdcId },
             body: { lines: [...existingLines, ...newLines] },
           })
@@ -79,7 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (order?.id) {
         orderId = order.id
         isNewBdc = true
-        await abby.billing.updateLines({
+        await (abby.billing.updateLines as any)({
           path: { billingId: order.id },
           body: { lines: newLines },
         })
