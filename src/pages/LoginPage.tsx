@@ -132,14 +132,11 @@ export default function LoginPage() {
         >
           {/* Card header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <div
-              className="w-12 h-12 rounded-full overflow-hidden mb-1 flex-shrink-0"
-              style={{ border: '1px solid #2a2a2a' }}
-            >
+            <div className="overflow-hidden mb-1" style={{ width: '56px', height: '56px' }}>
               <img
                 src="/logo.png"
                 alt="SPINCUT"
-                style={{ height: '48px', width: 'auto', display: 'block', objectFit: 'none', objectPosition: 'left center' }}
+                style={{ height: '56px', width: 'auto', display: 'block' }}
               />
             </div>
             <p className="text-sm" style={{ color: '#8a8a8a' }}>
