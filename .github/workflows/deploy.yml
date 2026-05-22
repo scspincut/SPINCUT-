@@ -12,26 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Find Vercel project and deploy
+      - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # Get project ID from Vercel API
           RESPONSE=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=100")
-          PROJECT=$(echo "$RESPONSE" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-projects = data.get('projects', [])
-for p in projects:
-    if 'spincut' in p['name'].lower():
-        print(p['id'], p.get('accountId',''))
-        break
-")
-          PROJECT_ID=$(echo $PROJECT | cut -d' ' -f1)
-          ORG_ID=$(echo $PROJECT | cut -d' ' -f2)
+          PROJECT_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; ps=json.load(sys.stdin).get('projects',[]); p=next((x for x in ps if 'spincut' in x['name'].lower()),None); print(p['id'] if p else '')")
+          ORG_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; ps=json.load(sys.stdin).get('projects',[]); p=next((x for x in ps if 'spincut' in x['name'].lower()),None); print(p.get('accountId','') if p else '')")
           echo "Project: $PROJECT_ID  Org: $ORG_ID"
-
           mkdir -p .vercel
-          echo "{\"projectId\":\"$PROJECT_ID\",\"orgId\":\"$ORG_ID\"}" > .vercel/project.json
-
-          npx vercel --prod --token $VERCEL_TOKEN --yes
+          printf '{"projectId":"%s","orgId":"%s"}' "$PROJECT_ID" "$ORG_ID" > .vercel/project.json
+          npx vercel --prod --token "$VERCEL_TOKEN" --yes
