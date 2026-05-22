@@ -10,9 +10,28 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Vercel deploy hook
+      - uses: actions/checkout@v4
+
+      - name: Find Vercel project and deploy
         env:
-          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "URL length: ${#HOOK_URL}"
-          curl -s -X POST "${HOOK_URL}" && echo "OK" || echo "curl exit: $?"
+          # Get project ID from Vercel API
+          RESPONSE=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=100")
+          PROJECT=$(echo "$RESPONSE" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+projects = data.get('projects', [])
+for p in projects:
+    if 'spincut' in p['name'].lower():
+        print(p['id'], p.get('accountId',''))
+        break
+")
+          PROJECT_ID=$(echo $PROJECT | cut -d' ' -f1)
+          ORG_ID=$(echo $PROJECT | cut -d' ' -f2)
+          echo "Project: $PROJECT_ID  Org: $ORG_ID"
+
+          mkdir -p .vercel
+          echo "{\"projectId\":\"$PROJECT_ID\",\"orgId\":\"$ORG_ID\"}" > .vercel/project.json
+
+          npx vercel --prod --token $VERCEL_TOKEN --yes
