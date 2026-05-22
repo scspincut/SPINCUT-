@@ -133,18 +133,17 @@ export default function LoginPage() {
           {/* Card header */}
           <div className="flex flex-col items-center gap-2 text-center">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center mb-1"
-              style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              className="w-12 h-12 rounded-full overflow-hidden mb-1 flex-shrink-0"
+              style={{ border: '1px solid #2a2a2a' }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="11" width="18" height="11" rx="2" stroke="#d4780f" strokeWidth="1.8" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#d4780f" strokeWidth="1.8" strokeLinecap="round" />
-                <circle cx="12" cy="16" r="1.5" fill="#d4780f" />
-              </svg>
+              <img
+                src="/logo.png"
+                alt="S"
+                style={{ height: '48px', width: 'auto', display: 'block' }}
+              />
             </div>
-            <h1 className="text-xl font-bold text-white">Accès Client</h1>
             <p className="text-sm" style={{ color: '#8a8a8a' }}>
-              Entrez votre code d'accès SPINCUT pour utiliser le calculateur CNC
+              Entrer votre code d'accès Spincut
             </p>
           </div>
 
