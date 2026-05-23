@@ -142,7 +142,7 @@ export default function BoutiquePage() {
               </svg>
             </button>
           )}
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '50px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '72px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -235,7 +235,7 @@ export default function BoutiquePage() {
               <button
                 onClick={() => enterTab('cnc')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '120px', background: 'linear-gradient(135deg, #1c0e00 0%, #050200 100%)', border: '1px solid #3a1e00' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #1c0e00 0%, #050200 100%)', border: '1px solid #3a1e00' }}
               >
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
@@ -245,14 +245,14 @@ export default function BoutiquePage() {
                       {catalogLoading ? '…' : `${cncInStock} références en stock`} →
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(212,120,15,0.08)', border: '1px solid rgba(212,120,15,0.2)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="#d4780f" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="3" strokeLinecap="round"/>
-                      <line x1="12" y1="2" x2="12" y2="9" strokeLinecap="round"/>
-                      <line x1="12" y1="15" x2="12" y2="22" strokeLinecap="round"/>
-                      <line x1="2" y1="12" x2="9" y2="12" strokeLinecap="round"/>
-                      <line x1="15" y1="12" x2="22" y2="12" strokeLinecap="round"/>
+                  {/* Photo placeholder */}
+                  <div className="w-24 h-20 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1"
+                    style={{ border: '1.5px dashed rgba(212,120,15,0.35)', background: 'rgba(212,120,15,0.05)' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="rgba(212,120,15,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
                     </svg>
+                    <p className="text-[9px] font-bold" style={{ color: 'rgba(212,120,15,0.5)' }}>Votre photo</p>
                   </div>
                 </div>
               </button>
@@ -261,7 +261,7 @@ export default function BoutiquePage() {
               <button
                 onClick={() => enterTab('cmt')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '120px', background: 'linear-gradient(135deg, #001a0d 0%, #000503 100%)', border: '1px solid #003a1a' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #001a0d 0%, #000503 100%)', border: '1px solid #003a1a' }}
               >
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
@@ -271,10 +271,14 @@ export default function BoutiquePage() {
                       Bientôt disponible
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.12)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="#4ade8060" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                  {/* Photo placeholder */}
+                  <div className="w-24 h-20 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1"
+                    style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="rgba(74,222,128,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
                     </svg>
+                    <p className="text-[9px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Votre photo</p>
                   </div>
                 </div>
               </button>
@@ -283,7 +287,7 @@ export default function BoutiquePage() {
               <button
                 onClick={() => enterTab('lames')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '120px', background: 'linear-gradient(135deg, #0a0a18 0%, #020204 100%)', border: '1px solid #1e1e40' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #0a0a18 0%, #020204 100%)', border: '1px solid #1e1e40' }}
               >
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
@@ -293,12 +297,14 @@ export default function BoutiquePage() {
                       Bientôt disponible
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(129,140,248,0.05)', border: '1px solid rgba(129,140,248,0.12)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="#818cf860" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="9" strokeLinecap="round"/>
-                      <circle cx="12" cy="12" r="2.5"/>
-                      <path d="M12 3v3.5M12 17.5V21M3 12h3.5M17.5 12H21M5.6 5.6l2.5 2.5M15.9 15.9l2.5 2.5M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5" strokeLinecap="round"/>
+                  {/* Photo placeholder */}
+                  <div className="w-24 h-20 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1"
+                    style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="rgba(129,140,248,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
                     </svg>
+                    <p className="text-[9px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Votre photo</p>
                   </div>
                 </div>
               </button>
