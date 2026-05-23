@@ -239,13 +239,13 @@ export default function LoginPage() {
           <div className="px-5 pt-5 pb-4">
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
             <p className="text-sm mt-1.5" style={{ color: '#8a8a8a' }}>
-              Boutique 100% en ligne — Devenez client SPINCUT et accédez à toute notre gamme d'outils
+              Boutique 100% en ligne — Accédez à votre compte, passez commande et gérez vos bons de commande
             </p>
             <div className="mt-3 space-y-1.5">
               {[
-                'Exploitez votre machine à 100% — vitesses et avances au maximum sans casse',
-                'Paramètres optimisés pour chaque matériau',
-                'Mis à jour en continu par SPINCUT',
+                'Calculateur CNC — vitesses, avances et profondeurs optimisées pour votre machine',
+                'Boutique en ligne — commandez vos outils en quelques clics, 24h/24',
+                'Gestion de compte — historique et suivi de vos commandes',
               ].map(txt => (
                 <div key={txt} className="flex items-start gap-2">
                   <span style={{ color: '#d4780f' }} className="mt-0.5 text-sm">✓</span>
