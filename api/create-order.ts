@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1 — Chercher le contact existant par nom
     step = 'recherche contact'
     const { data: contacts } = await abby.contact.retrieveContacts({
-      query: { search: clientName, limit: 5 },
+      query: { search: clientName, limit: 5, page: 1 },
     })
     const contact = contacts?.docs?.[0]
     if (!contact) {
