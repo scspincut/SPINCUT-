@@ -49,7 +49,7 @@ export default function LoginPage() {
   const [showMailMenu, setShowMailMenu] = useState(false)
   const [current, setCurrent] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
-  const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg']
+  const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.jpg']
   const { isAuthenticated, login } = useClientAuth()
   const navigate = useNavigate()
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
         <img
           src="/logo.png"
           alt="SPINCUT Outils CNC"
-          style={{ height: '110px', objectFit: 'contain', mixBlendMode: 'screen', width: '100%' }}
+          style={{ height: '140px', objectFit: 'contain', mixBlendMode: 'screen', width: '100%' }}
         />
 
         {/* Accroche */}
