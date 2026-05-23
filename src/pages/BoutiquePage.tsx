@@ -31,9 +31,9 @@ function StockBadge({ stock }: { stock: number }) {
 }
 
 const SHOP_TABS = [
-  { id: 'cnc', label: 'Fraises CNC', sub: 'SPINCUT' },
-  { id: 'cmt', label: 'Fraises Défonceuse', sub: 'CMT' },
-  { id: 'lames', label: 'Lames Carbure', sub: 'Circulaires' },
+  { id: 'cnc', label: 'Fraises CNC' },
+  { id: 'cmt', label: 'Fraises Défonceuse' },
+  { id: 'lames', label: 'Lames Circulaires Carbure' },
 ]
 
 const HERO_PHOTOS = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
@@ -163,8 +163,7 @@ export default function BoutiquePage() {
                 className="flex-1 py-3 flex flex-col items-center gap-0.5 transition-colors"
                 style={{ borderBottom: shopTab === t.id ? '2px solid #d4780f' : '2px solid transparent' }}
               >
-                <span className="text-xs font-bold" style={{ color: shopTab === t.id ? '#d4780f' : '#888' }}>{t.label}</span>
-                <span className="text-[9px]" style={{ color: shopTab === t.id ? '#d4780f80' : '#444' }}>{t.sub}</span>
+                <span className="text-[11px] font-bold leading-tight text-center" style={{ color: shopTab === t.id ? '#d4780f' : '#888' }}>{t.label}</span>
               </button>
             ))}
           </div>
@@ -258,7 +257,7 @@ export default function BoutiquePage() {
               >
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
-                    <p className="font-black text-xl leading-tight" style={{ color: '#d0d0d0' }}>Lames Carbure</p>
+                    <p className="font-black text-xl leading-tight" style={{ color: '#d0d0d0' }}>Lames Circulaires Carbure</p>
                   </div>
                   <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #aaaaaa, #3a3a3a)', borderRadius: '2px', flexShrink: 0 }} />
                 </div>
