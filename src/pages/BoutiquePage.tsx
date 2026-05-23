@@ -398,7 +398,15 @@ export default function BoutiquePage() {
 
                 {/* Category picker */}
                 {!catalogLoading && !catalogError && !activeCategory && (
-                  <div className="px-4 pt-6 space-y-2">
+                  <div className="px-4 pt-5 space-y-2">
+                    {/* Photo grid CNC */}
+                    <div className="flex gap-2 mb-5" style={{ height: '165px' }}>
+                      <img src="/photo1.jpg" alt="" className="rounded-2xl" style={{ width: '56%', objectFit: 'cover' }} />
+                      <div className="flex flex-col gap-2" style={{ width: '42%' }}>
+                        <img src="/photo2.jpg" alt="" className="rounded-xl flex-1" style={{ objectFit: 'cover' }} />
+                        <img src="/photo4.png" alt="" className="rounded-xl flex-1" style={{ objectFit: 'cover' }} />
+                      </div>
+                    </div>
                     <p className="text-[#555] text-xs uppercase tracking-widest font-bold mb-4">Catégories</p>
                     {tabs.map(([id, meta]) => (
                       <button key={id} onClick={() => selectCategory(id)}
@@ -469,13 +477,37 @@ export default function BoutiquePage() {
 
             {/* ── CMT Tab ── */}
             {shopTab === 'cmt' && (
-              <div className="flex flex-col items-center justify-center py-20 px-6 gap-6 text-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
-                  <svg className="w-8 h-8 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                  </svg>
+              <div className="flex flex-col items-center px-4 pt-5 gap-6">
+                {/* Photo grid CMT — placeholders */}
+                <div className="w-full flex gap-2" style={{ height: '150px' }}>
+                  <div className="rounded-2xl flex-1 flex flex-col items-center justify-center gap-1.5"
+                    style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
+                    <svg className="w-7 h-7" fill="none" stroke="rgba(74,222,128,0.45)" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
+                    </svg>
+                    <p className="text-[9px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Photo CMT 1</p>
+                  </div>
+                  <div className="flex flex-col gap-2" style={{ width: '42%' }}>
+                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
+                      style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
+                      <svg className="w-5 h-5" fill="none" stroke="rgba(74,222,128,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
+                      </svg>
+                      <p className="text-[8px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Photo CMT 2</p>
+                    </div>
+                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
+                      style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
+                      <svg className="w-5 h-5" fill="none" stroke="rgba(74,222,128,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
+                      </svg>
+                      <p className="text-[8px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Photo CMT 3</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
+                <div className="text-center">
                   <p className="text-white text-xl font-bold">Fraises CMT Défonceuse</p>
                   <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Fraises CMT pour défonceuse, toupie et CNC portative, bois massif et dérivés.</p>
                 </div>
@@ -493,15 +525,37 @@ export default function BoutiquePage() {
 
             {/* ── Lames Tab ── */}
             {shopTab === 'lames' && (
-              <div className="flex flex-col items-center justify-center py-20 px-6 gap-6 text-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
-                  <svg className="w-8 h-8 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="9"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>
-                  </svg>
+              <div className="flex flex-col items-center px-4 pt-5 gap-6">
+                {/* Photo grid Lames — placeholders */}
+                <div className="w-full flex gap-2" style={{ height: '150px' }}>
+                  <div className="rounded-2xl flex-1 flex flex-col items-center justify-center gap-1.5"
+                    style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
+                    <svg className="w-7 h-7" fill="none" stroke="rgba(129,140,248,0.45)" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
+                    </svg>
+                    <p className="text-[9px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Photo Lames 1</p>
+                  </div>
+                  <div className="flex flex-col gap-2" style={{ width: '42%' }}>
+                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
+                      style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
+                      <svg className="w-5 h-5" fill="none" stroke="rgba(129,140,248,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
+                      </svg>
+                      <p className="text-[8px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Photo Lames 2</p>
+                    </div>
+                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
+                      style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
+                      <svg className="w-5 h-5" fill="none" stroke="rgba(129,140,248,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
+                      </svg>
+                      <p className="text-[8px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Photo Lames 3</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
+                <div className="text-center">
                   <p className="text-white text-xl font-bold">Lames Circulaires Carbure</p>
                   <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Lames circulaires carbure pour scie à table, scie à format, panneaux et bois massif.</p>
                 </div>
