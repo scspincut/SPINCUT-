@@ -47,6 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       unitPrice: Math.round(item.price * 100),
       quantity: item.quantity,
       quantityUnit: 'unit' as const,
+      type: 'sale_of_goods' as const,
+      vatRate: 'FR_2000' as const,
     }))
 
     let orderId: string | null = null
