@@ -47,6 +47,9 @@ export default function LoginPage() {
   const [prospectCompany, setProspectCompany] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [showMailMenu, setShowMailMenu] = useState(false)
+  const [current, setCurrent] = useState(0)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg']
   const { isAuthenticated, login } = useClientAuth()
   const navigate = useNavigate()
 
@@ -95,8 +98,7 @@ export default function LoginPage() {
         <img
           src="/logo.png"
           alt="SPINCUT Outils CNC"
-          className="w-full rounded-2xl"
-          style={{ height: '110px', objectFit: 'cover', objectPosition: 'center' }}
+          style={{ height: '110px', objectFit: 'contain', mixBlendMode: 'screen', width: '100%' }}
         />
 
         {/* Accroche */}
@@ -113,19 +115,57 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Photos strip */}
-        <div className="w-screen overflow-x-auto -mx-4" style={{ scrollbarWidth: 'none' }}>
-          <div className="flex gap-2.5 px-4" style={{ width: 'max-content' }}>
-            {['/photo1.jpg', '/photo2.jpg', '/photo3.jpg'].map((src, i) => (
-              <img
+        {/* Photo carousel */}
+        <div
+          className="w-full relative overflow-hidden"
+          style={{ height: '155px' }}
+          onTouchStart={e => setTouchStart(e.touches[0].clientX)}
+          onTouchEnd={e => {
+            if (touchStart === null) return
+            const delta = touchStart - e.changedTouches[0].clientX
+            if (Math.abs(delta) > 40)
+              setCurrent(c => delta > 0 ? (c + 1) % photos.length : (c - 1 + photos.length) % photos.length)
+            setTouchStart(null)
+          }}
+        >
+          {photos.map((src, i) => {
+            const isCenter = i === current
+            const isPrev = i === (current - 1 + photos.length) % photos.length
+            const isNext = i === (current + 1) % photos.length
+            return (
+              <div
                 key={i}
-                src={src}
-                alt=""
-                className="flex-shrink-0 rounded-xl"
-                style={{ width: '220px', height: '140px', objectFit: 'cover' }}
-              />
-            ))}
-          </div>
+                onClick={() => {
+                  if (isPrev) setCurrent((current - 1 + photos.length) % photos.length)
+                  if (isNext) setCurrent((current + 1) % photos.length)
+                }}
+                style={{
+                  position: 'absolute', top: 0, height: '100%',
+                  transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
+                  ...(isCenter
+                    ? { left: '50%', transform: 'translateX(-50%)', width: '70%', opacity: 1, zIndex: 10 }
+                    : isPrev
+                    ? { left: 0, transform: 'translateX(-22%)', width: '52%', opacity: 0.45, zIndex: 5, cursor: 'pointer' }
+                    : isNext
+                    ? { right: 0, transform: 'translateX(22%)', width: '52%', opacity: 0.45, zIndex: 5, cursor: 'pointer' }
+                    : { display: 'none' }
+                  )
+                }}
+              >
+                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
+              </div>
+            )
+          })}
+        </div>
+        {/* Dots */}
+        <div className="flex items-center justify-center gap-1.5" style={{ marginTop: '-8px' }}>
+          {photos.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              style={{ width: i === current ? '16px' : '6px', height: '6px', borderRadius: '3px', background: i === current ? '#d4780f' : '#333', border: 'none', padding: 0, transition: 'all 0.2s', cursor: 'pointer' }}
+            />
+          ))}
         </div>
 
         {/* Auth card */}
