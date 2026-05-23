@@ -223,44 +223,48 @@ export default function BoutiquePage() {
 
               <p className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: '#444' }}>Boutique</p>
 
-              {/* Fraises CNC */}
+              {/* Fraises CNC — SPINCUT noir/orangé */}
               <button
                 onClick={() => enterTab('cnc')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #1c0e00 0%, #050200 100%)', border: '1px solid #3a1e00' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #1c0e00 0%, #060200 100%)', border: '1px solid #3a1e00' }}
               >
-                <div className="absolute inset-0 flex items-center px-5 gap-4">
+                <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises CNC</p>
                     <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#d4780f' }}>SPINCUT</p>
                   </div>
+                  {/* Accent stripe */}
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e00)', borderRadius: '2px', flexShrink: 0 }} />
                 </div>
               </button>
 
-              {/* Fraises Défonceuse CMT */}
+              {/* Fraises Défonceuse — CMT rouge-orange signature */}
               <button
                 onClick={() => enterTab('cmt')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #001a0d 0%, #000503 100%)', border: '1px solid #003a1a' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #1f0500 0%, #0a0100 100%)', border: '1px solid #7a1a00' }}
               >
-                <div className="absolute inset-0 flex items-center px-5 gap-4">
+                <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises Défonceuse</p>
-                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#4ade80' }}>CMT</p>
+                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#ff5500' }}>CMT</p>
                   </div>
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #ff5500, #7a1a00)', borderRadius: '2px', flexShrink: 0 }} />
                 </div>
               </button>
 
-              {/* Lames Carbure */}
+              {/* Lames Carbure — gris carbure métallique */}
               <button
                 onClick={() => enterTab('lames')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #0a0a18 0%, #020204 100%)', border: '1px solid #1e1e40' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #1a1a1a 0%, #080808 100%)', border: '1px solid #3a3a3a' }}
               >
-                <div className="absolute inset-0 flex items-center px-5 gap-4">
+                <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-black text-xl leading-tight">Lames Carbure</p>
+                    <p className="font-black text-xl leading-tight" style={{ color: '#d0d0d0' }}>Lames Carbure</p>
                   </div>
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #aaaaaa, #3a3a3a)', borderRadius: '2px', flexShrink: 0 }} />
                 </div>
               </button>
 
