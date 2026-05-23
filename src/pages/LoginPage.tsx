@@ -49,7 +49,7 @@ export default function LoginPage() {
   const [showMailMenu, setShowMailMenu] = useState(false)
   const [current, setCurrent] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
-  const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.jpg']
+  const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
   const { isAuthenticated, login } = useClientAuth()
   const navigate = useNavigate()
 
