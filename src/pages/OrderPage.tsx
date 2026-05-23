@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
@@ -30,6 +30,18 @@ export default function OrderPage() {
   const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [orderError, setOrderError] = useState('')
   const [showHistory, setShowHistory] = useState(true)
+  const [lastOrder, setLastOrder] = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(null)
+
+  const favKey = `spincut_favs_${getClientCode() ?? 'guest'}`
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(`spincut_favs_${getClientCode() ?? 'guest'}`) ?? '[]')) } catch { return new Set() }
+  })
+  const toggleFav = (uid: string) => setFavorites(prev => {
+    const next = new Set(prev)
+    next.has(uid) ? next.delete(uid) : next.add(uid)
+    try { localStorage.setItem(favKey, JSON.stringify([...next])) } catch {}
+    return next
+  })
 
   const clientCode = getClientCode()
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
@@ -61,6 +73,24 @@ export default function OrderPage() {
       })
       .catch(() => {})
   }, [])
+
+  const habitualItems = useMemo(() => {
+    if (orderHistory.length === 0 || catalog.length === 0) return []
+    const counts: Record<string, { ref: string; designation: string; price: number; total: number }> = {}
+    orderHistory.forEach(entry => entry.items.forEach(item => {
+      if (!counts[item.ref]) counts[item.ref] = { ref: item.ref, designation: item.designation, price: item.price, total: 0 }
+      counts[item.ref].total += item.quantity
+    }))
+    return Object.values(counts)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 6)
+      .map(h => catalog.find(p => p.ref === h.ref))
+      .filter((p): p is CatalogProduct => !!p && p.stock > 0)
+  }, [orderHistory, catalog])
+
+  const favoriteItems = useMemo(() =>
+    catalog.filter(p => favorites.has(uid(p)) && p.stock > 0),
+  [catalog, favorites])
 
   if (!isAuthenticated) { navigate('/'); return null }
 
@@ -106,6 +136,8 @@ export default function OrderPage() {
       setOrderHistory(newHistory)
       try { localStorage.setItem(historyKey, JSON.stringify(newHistory)) } catch { /* ignore */ }
 
+      const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
+      setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId, isNewBdc })
       setOrderStatus('success')
       setQuantities({})
       try { localStorage.removeItem(cartKey) } catch { /* ignore */ }
@@ -121,6 +153,15 @@ export default function OrderPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
+          <button
+            onClick={() => navigate('/profil')}
+            className="absolute left-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            Profil
+          </button>
           <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
@@ -138,14 +179,34 @@ export default function OrderPage() {
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
 
         {/* Status messages */}
-        {orderStatus === 'success' && (
-          <div className="rounded-xl bg-[#061510] border border-green-800 px-4 py-3 flex items-center gap-3">
-            <span className="text-green-400 text-lg">✓</span>
-            <div className="flex-1">
-              <p className="text-green-400 text-sm font-semibold">Commande envoyée !</p>
-              <p className="text-green-800 text-xs mt-0.5">Votre bon de commande a été créé — SPINCUT vous recontacte sous 24h.</p>
+        {orderStatus === 'success' && lastOrder && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: '#061510', border: '1px solid #1a4a2a' }}>
+            <div className="px-4 py-3 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#0d2a1a' }}>
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
+                <p className="text-xs mt-0.5" style={{ color: '#3a7a3a' }}>
+                  {lastOrder.isNewBdc ? 'Nouveau BDC créé' : 'Ajouté au BDC existant'} · SPINCUT vous recontacte sous 24h
+                </p>
+              </div>
+              <button onClick={() => { setOrderStatus('idle'); setLastOrder(null) }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
             </div>
-            <button onClick={() => setOrderStatus('idle')} className="text-green-800 hover:text-green-400 text-xl leading-none">×</button>
+            <div className="px-4 py-3 space-y-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
+              {lastOrder.items.map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-xs">
+                  <span className="flex-1 mr-2 truncate" style={{ color: '#5a9a5a' }}>{item.quantity}× {item.designation}</span>
+                  <span className="flex-shrink-0" style={{ color: '#3a6a3a' }}>{(item.quantity * item.price).toFixed(2).replace('.', ',')} €</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between text-sm font-bold pt-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
+                <span className="text-green-400">Total</span>
+                <span className="text-green-400">{lastOrder.total.toFixed(2).replace('.', ',')} € HT</span>
+              </div>
+            </div>
           </div>
         )}
         {orderStatus === 'error' && (
@@ -221,6 +282,78 @@ export default function OrderPage() {
             </button>
           </div>
         ) : null}
+
+        {/* Commandes habituelles */}
+        {habitualItems.length > 0 && (
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3">Commandes habituelles</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
+              {habitualItems.map(p => {
+                const key = uid(p)
+                const qty = quantities[key] || 0
+                return (
+                  <div key={key} className="w-40 flex-shrink-0 bg-[#161616] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2">
+                    <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
+                    <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
+                    <p className="text-[#d4780f] font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
+                    {qty === 0 ? (
+                      <button onClick={() => setQty(key, 1, p.stock)}
+                        className="w-full py-2 rounded-lg text-xs font-bold text-center"
+                        style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+                      >+ Ajouter</button>
+                    ) : (
+                      <div className="flex items-center justify-between gap-1">
+                        <button onClick={() => setQty(key, -1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base">−</button>
+                        <span className="w-6 text-center text-[#d4780f] font-bold text-sm">{qty}</span>
+                        <button onClick={() => setQty(key, +1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base hover:bg-[#b86400] transition-colors active:scale-95">+</button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Favoris */}
+        {favoriteItems.length > 0 && (
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3 flex items-center gap-1.5">
+              <svg width="11" height="11" fill="#e03c3c" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              Mes favoris
+            </p>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
+              {favoriteItems.map(p => {
+                const key = uid(p)
+                const qty = quantities[key] || 0
+                return (
+                  <div key={key} className="w-40 flex-shrink-0 bg-[#161616] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="text-white font-mono text-xs font-semibold leading-tight flex-1 mr-1">{p.ref}</p>
+                      <button onClick={() => toggleFav(key)} className="flex-shrink-0" style={{ color: '#e03c3c' }}>
+                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                      </button>
+                    </div>
+                    <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
+                    <p className="text-[#d4780f] font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
+                    {qty === 0 ? (
+                      <button onClick={() => setQty(key, 1, p.stock)}
+                        className="w-full py-2 rounded-lg text-xs font-bold text-center"
+                        style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+                      >+ Ajouter</button>
+                    ) : (
+                      <div className="flex items-center justify-between gap-1">
+                        <button onClick={() => setQty(key, -1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base">−</button>
+                        <span className="w-6 text-center text-[#d4780f] font-bold text-sm">{qty}</span>
+                        <button onClick={() => setQty(key, +1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base hover:bg-[#b86400] transition-colors active:scale-95">+</button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Historique commandes */}
         {orderHistory.length > 0 && (

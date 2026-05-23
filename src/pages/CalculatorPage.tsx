@@ -199,7 +199,20 @@ export default function CalculatorPage() {
   const [savedThisCalc, setSavedThisCalc] = useState(false);
   const [showMailMenu, setShowMailMenu] = useState(false);
   const [showGlossaire, setShowGlossaire] = useState(false);
-  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
+    try { return JSON.parse(localStorage.getItem('spincut_catalog_cache') ?? '[]') } catch { return [] }
+  })
+  const [filterRecoDiam, setFilterRecoDiam] = useState<string | null>(null)
+  const favKey = `spincut_favs_${getClientCode() ?? 'guest'}`
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(`spincut_favs_${getClientCode() ?? 'guest'}`) ?? '[]')) } catch { return new Set() }
+  })
+  const toggleFav = (uid: string) => setFavorites(prev => {
+    const next = new Set(prev)
+    next.has(uid) ? next.delete(uid) : next.add(uid)
+    try { localStorage.setItem(favKey, JSON.stringify([...next])) } catch {}
+    return next
+  })
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
   })
@@ -263,7 +276,12 @@ export default function CalculatorPage() {
   useEffect(() => {
     fetch('/api/catalog')
       .then(r => r.ok ? r.json() : [])
-      .then(data => { if (Array.isArray(data)) setCatalog(data) })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCatalog(data)
+          try { localStorage.setItem('spincut_catalog_cache', JSON.stringify(data)) } catch {}
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -278,6 +296,14 @@ export default function CalculatorPage() {
     const lcMin = thickness ? parseFloat(thickness) : null
     return getRecommendations(catalog, safeMat, lcMin !== null && !isNaN(lcMin) ? lcMin : null, operation)
   }, [catalog, safeMat, thickness, result, operation])
+
+  const recoDiameters = useMemo(() =>
+    [...new Set(recommendations.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)),
+  [recommendations])
+
+  const filteredRecos = useMemo(() =>
+    filterRecoDiam ? recommendations.filter(p => p.diametre === filterRecoDiam) : recommendations,
+  [recommendations, filterRecoDiam])
 
   // Auth guard — after every hook
   if (!isAuthenticated) {
@@ -542,14 +568,29 @@ export default function CalculatorPage() {
                   : ' · Renseigne l\'épaisseur pour filtrer par LC'}
               </p>
             </div>
+            {recoDiameters.length > 1 && (
+              <div className="flex gap-2 px-5 pb-3 flex-wrap">
+                <button onClick={() => setFilterRecoDiam(null)}
+                  className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterRecoDiam === null ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                >Tous</button>
+                {recoDiameters.map(d => (
+                  <button key={d} onClick={() => setFilterRecoDiam(p => p === d ? null : d)}
+                    className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterRecoDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                  >Ø{d}</button>
+                ))}
+              </div>
+            )}
             <div className="overflow-x-auto pb-5">
               <div className="flex gap-3 px-5" style={{ width: 'max-content' }}>
-                {recommendations.map(p => (
+                {filteredRecos.map(p => (
                   <div
                     key={`${p.ref}__${p.row}`}
                     className="w-44 flex-shrink-0 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2"
                   >
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 items-start">
+                      <button onClick={() => toggleFav(`${p.ref}__${p.row}`)} className="ml-auto p-0.5 -mt-0.5 -mr-0.5 flex-shrink-0" style={{ color: favorites.has(`${p.ref}__${p.row}`) ? '#e03c3c' : '#444' }}>
+                        <svg width="14" height="14" fill={favorites.has(`${p.ref}__${p.row}`) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                      </button>
                       {p.diametre && p.diametre !== '/' && (
                         <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#d4780f] px-1.5 py-0.5 rounded">Ø{p.diametre}</span>
                       )}

@@ -60,6 +60,17 @@ export default function BoutiquePage() {
   const [filterDents, setFilterDents] = useState<string | null>(null)
   const [filterPM, setFilterPM] = useState(false)
 
+  const favKey = `spincut_favs_${clientCode ?? 'guest'}`
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(`spincut_favs_${clientCode ?? 'guest'}`) ?? '[]')) } catch { return new Set() }
+  })
+  const toggleFav = (id: string) => setFavorites(prev => {
+    const next = new Set(prev)
+    next.has(id) ? next.delete(id) : next.add(id)
+    try { localStorage.setItem(favKey, JSON.stringify([...next])) } catch {}
+    return next
+  })
+
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(cartKey) ?? '{}') } catch { return {} }
   })
@@ -396,6 +407,9 @@ export default function BoutiquePage() {
                               <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
                               <StockBadge stock={item.stock} />
                               {item.pm && <span className="text-[10px] font-semibold text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Polimiroir</span>}
+                              <button onClick={() => toggleFav(key)} className="ml-0.5" style={{ color: favorites.has(key) ? '#e03c3c' : '#333' }}>
+                                <svg width="13" height="13" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                              </button>
                             </div>
                             <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
                             {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
