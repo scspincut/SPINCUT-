@@ -191,10 +191,6 @@ export default function BoutiquePage() {
                 />
               ))}
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 50%, #000 100%)' }} />
-              <div className="absolute bottom-0 left-0 px-5 pb-5">
-                <p className="text-white font-black text-2xl leading-tight">Outils taillés</p>
-                <p className="font-black text-2xl leading-tight" style={{ color: '#d4780f' }}>pour les pros.</p>
-              </div>
               {/* Photo dots */}
               <div className="absolute bottom-3 right-4 flex gap-1">
                 {HERO_PHOTOS.map((_, i) => (
