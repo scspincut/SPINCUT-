@@ -252,6 +252,16 @@ export default function OrderPage() {
                     </div>
                   </div>
                 ))}
+                <button
+                  onClick={() => {
+                    if (!confirm('Effacer tout l\'historique des commandes ?')) return
+                    setOrderHistory([])
+                    try { localStorage.removeItem(historyKey); localStorage.removeItem(bdcKey) } catch { /* ignore */ }
+                  }}
+                  className="w-full text-center text-[10px] text-[#333] hover:text-[#555] py-2 transition-colors"
+                >
+                  Effacer l'historique
+                </button>
               </div>
             )}
           </div>

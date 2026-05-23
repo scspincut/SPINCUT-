@@ -62,7 +62,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           path: { billingId: existingBdcId },
         })
         const bdc = existingBdc as any
-        if (bdc && bdc.state === 'draft' && bdc.isEditable) {
+        const isOpen = bdc && bdc.state !== 'paid' && bdc.state !== 'cancelled' && bdc.state !== 'archived'
+        if (isOpen) {
           step = 'mise à jour lignes BDC existant'
           const existingLines = (bdc.lines ?? []).map((l: any) => ({
             designation: l.designation,
@@ -70,6 +71,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             unitPrice: l.unitPrice,
             quantity: l.quantity ?? 1,
             quantityUnit: (l.quantityUnit ?? 'unit') as 'unit',
+            type: (l.type ?? 'sale_of_goods') as 'sale_of_goods',
+            vatCode: (l.vatCode ?? 'FR_2000') as 'FR_2000',
           }))
           await (abby.billing.updateLines as any)({
             path: { billingId: existingBdcId },
@@ -118,11 +121,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 5 — Notification ntfy.sh
+    // 5 — Notification ntfy.sh (awaited — Vercel terminates fire-and-forget before send)
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
     const lignes = items.map(i => `${i.quantity}x ${i.ref} (${i.price.toFixed(2)}EUR)`).join(' | ')
     const ntfyMsg = `Client : ${clientName}\n${lignes}\nTotal ajout : ${total.toFixed(2)} EUR HT\nBDC : ${orderId}${!isNewBdc ? ' (enrichi)' : ' (nouveau)'}`
-    fetch('https://ntfy.sh/spincut-commandes-7x4k9', {
+    await fetch('https://ntfy.sh/spincut-commandes-7x4k9', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain', 'Title': 'Nouvelle commande SPINCUT', 'Priority': 'high', 'Tags': 'shopping,fr' },
       body: ntfyMsg,
