@@ -47,14 +47,11 @@ export default function LoginPage() {
   const [prospectCompany, setProspectCompany] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [showMailMenu, setShowMailMenu] = useState(false)
-  const [current, setCurrent] = useState(0)
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
   const { isAuthenticated, login } = useClientAuth()
   const navigate = useNavigate()
 
   if (isAuthenticated) {
-    navigate('/calculator', { replace: true })
+    navigate('/boutique', { replace: true })
     return null
   }
 
@@ -78,13 +75,11 @@ export default function LoginPage() {
     setError('')
     const ok = login(code)
     if (ok) {
-      navigate(lastSection)
+      navigate('/boutique')
     } else {
       setError('Code invalide. Contactez SPINCUT pour obtenir votre accès.')
     }
   }
-
-  const lastSection = localStorage.getItem('spincut_last_section') || '/boutique'
 
   return (
     <div
@@ -111,69 +106,8 @@ export default function LoginPage() {
             Calculateur CNC
           </p>
           <p className="text-xs mt-1" style={{ color: '#666' }}>
-            Boutique 100% en ligne pour votre outillage bois
+            Boutique 100% en ligne pour votre outillage
           </p>
-        </div>
-
-        {/* Photo carousel */}
-        <div
-          className="w-full relative overflow-hidden"
-          style={{ height: '170px' }}
-          onTouchStart={e => setTouchStart(e.touches[0].clientX)}
-          onTouchEnd={e => {
-            if (touchStart === null) return
-            const delta = touchStart - e.changedTouches[0].clientX
-            if (Math.abs(delta) > 40)
-              setCurrent(c => delta > 0 ? (c + 1) % photos.length : (c - 1 + photos.length) % photos.length)
-            setTouchStart(null)
-          }}
-        >
-          {photos.map((src, i) => {
-            const isCenter = i === current
-            const isPrev = i === (current - 1 + photos.length) % photos.length
-            const isNext = i === (current + 1) % photos.length
-            return (
-              <div
-                key={i}
-                onClick={() => {
-                  if (isPrev) setCurrent((current - 1 + photos.length) % photos.length)
-                  if (isNext) setCurrent((current + 1) % photos.length)
-                }}
-                style={{
-                  position: 'absolute',
-                  transition: 'all 0.38s cubic-bezier(0.4,0,0.2,1)',
-                  ...(isCenter ? {
-                    left: '50%', top: '0',
-                    transform: 'translateX(-50%)',
-                    width: '72%', height: '100%',
-                    opacity: 1, zIndex: 10,
-                  } : isPrev ? {
-                    left: '0', top: '50%',
-                    transform: 'translateX(-30%) translateY(-50%)',
-                    width: '52%', height: '68%',
-                    opacity: 0.55, zIndex: 5, cursor: 'pointer',
-                  } : isNext ? {
-                    right: '0', top: '50%',
-                    transform: 'translateX(30%) translateY(-50%)',
-                    width: '52%', height: '68%',
-                    opacity: 0.55, zIndex: 5, cursor: 'pointer',
-                  } : { display: 'none' })
-                }}
-              >
-                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
-              </div>
-            )
-          })}
-        </div>
-        {/* Dots */}
-        <div className="flex items-center justify-center gap-1.5" style={{ marginTop: '-6px' }}>
-          {photos.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              style={{ width: i === current ? '16px' : '6px', height: '6px', borderRadius: '3px', background: i === current ? '#d4780f' : '#333', border: 'none', padding: 0, transition: 'all 0.2s', cursor: 'pointer' }}
-            />
-          ))}
         </div>
 
         {/* Auth card */}

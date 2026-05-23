@@ -71,7 +71,7 @@ export default function BoutiquePage() {
 
   useEffect(() => {
     if (!homeView) return
-    const t = setInterval(() => setHeroBg(i => (i + 1) % HERO_PHOTOS.length), 3500)
+    const t = setInterval(() => setHeroBg(i => (i + 1) % HERO_PHOTOS.length), 2500)
     return () => clearInterval(t)
   }, [homeView])
 
@@ -142,7 +142,7 @@ export default function BoutiquePage() {
               </svg>
             </button>
           )}
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '72px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '100px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -194,7 +194,7 @@ export default function BoutiquePage() {
               <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 50%, #000 100%)' }} />
               <div className="absolute bottom-0 left-0 px-5 pb-5">
                 <p className="text-white font-black text-2xl leading-tight">Outils taillés</p>
-                <p className="font-black text-2xl leading-tight" style={{ color: '#d4780f' }}>pour les pros du bois.</p>
+                <p className="font-black text-2xl leading-tight" style={{ color: '#d4780f' }}>pour les pros.</p>
               </div>
               {/* Photo dots */}
               <div className="absolute bottom-3 right-4 flex gap-1">
@@ -208,33 +208,12 @@ export default function BoutiquePage() {
 
             <div className="px-4 space-y-3 pt-5 pb-6">
 
-              {/* Calculator CTA */}
-              <button
-                onClick={() => navigate('/calculator')}
-                className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-left active:scale-[0.98] transition-all"
-                style={{ background: 'linear-gradient(135deg, #071428 0%, #0d1f3c 100%)', border: '1px solid #1e3a5f' }}
-              >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#1e3a5f' }}>
-                  <svg className="w-5 h-5" fill="none" strokeWidth={1.8} viewBox="0 0 24 24" stroke="#60a5fa">
-                    <rect x="4" y="2" width="16" height="20" rx="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8 7h8M8 11h8M8 15h5" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-bold">Calculateur CNC</p>
-                  <p className="text-xs mt-0.5" style={{ color: '#60a5fa60' }}>Vitesses · Avances · Profondeurs de passe</p>
-                </div>
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="#3b82f6" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
-                </svg>
-              </button>
-
-              {/* Trust badges */}
+                {/* Trust badges */}
               <div className="flex gap-2 pt-1">
                 {[
                   { icon: '⚡', label: 'Expédié sous 24h' },
                   { icon: '✓', label: 'Qualité garantie' },
-                  { icon: '🔧', label: 'Support pro' },
+                  { icon: '💬', label: 'Je vous réponds' },
                 ].map(b => (
                   <div key={b.label} className="flex-1 rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 text-center" style={{ background: '#0d0d0d', border: '1px solid #1e1e1e' }}>
                     <span className="text-base leading-none">{b.icon}</span>
@@ -259,15 +238,6 @@ export default function BoutiquePage() {
                       {catalogLoading ? '…' : `${cncInStock} références en stock`} →
                     </div>
                   </div>
-                  {/* Photo placeholder */}
-                  <div className="w-28 h-24 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1.5"
-                    style={{ border: '2px dashed rgba(212,120,15,0.5)', background: 'rgba(212,120,15,0.07)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="rgba(212,120,15,0.7)" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-[10px] font-black" style={{ color: 'rgba(212,120,15,0.7)' }}>PHOTO CNC</p>
-                  </div>
                 </div>
               </button>
 
@@ -280,19 +250,10 @@ export default function BoutiquePage() {
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises Défonceuse</p>
-                    <p className="text-xs mt-1" style={{ color: '#4ade8050' }}>CMT — Bois massif & dérivés</p>
+                    <p className="text-xs mt-1" style={{ color: '#4ade8050' }}>CMT — Défonceuse & toupie</p>
                     <div className="mt-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(74,222,128,0.08)', color: '#4ade8060' }}>
                       Bientôt disponible
                     </div>
-                  </div>
-                  {/* Photo placeholder */}
-                  <div className="w-28 h-24 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1.5"
-                    style={{ border: '2px dashed rgba(74,222,128,0.5)', background: 'rgba(74,222,128,0.07)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="rgba(74,222,128,0.7)" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-[10px] font-black" style={{ color: 'rgba(74,222,128,0.7)' }}>PHOTO CMT</p>
                   </div>
                 </div>
               </button>
@@ -310,15 +271,6 @@ export default function BoutiquePage() {
                     <div className="mt-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(129,140,248,0.08)', color: '#818cf860' }}>
                       Bientôt disponible
                     </div>
-                  </div>
-                  {/* Photo placeholder */}
-                  <div className="w-28 h-24 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1.5"
-                    style={{ border: '2px dashed rgba(129,140,248,0.5)', background: 'rgba(129,140,248,0.07)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="rgba(129,140,248,0.7)" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-[10px] font-black" style={{ color: 'rgba(129,140,248,0.7)' }}>PHOTO LAMES</p>
                   </div>
                 </div>
               </button>
@@ -414,14 +366,7 @@ export default function BoutiquePage() {
                 {!catalogLoading && !catalogError && !activeCategory && (
                   <div className="px-4 pt-5 space-y-2">
                     {/* Photo grid CNC */}
-                    <div className="flex gap-2 mb-5" style={{ height: '165px' }}>
-                      <img src="/photo1.jpg" alt="" className="rounded-2xl" style={{ width: '56%', objectFit: 'cover' }} />
-                      <div className="flex flex-col gap-2" style={{ width: '42%' }}>
-                        <img src="/photo2.jpg" alt="" className="rounded-xl flex-1" style={{ objectFit: 'cover' }} />
-                        <img src="/photo4.png" alt="" className="rounded-xl flex-1" style={{ objectFit: 'cover' }} />
-                      </div>
-                    </div>
-                    <p className="text-[#555] text-xs uppercase tracking-widest font-bold mb-4">Catégories</p>
+                      <p className="text-[#555] text-xs uppercase tracking-widest font-bold mb-4">Catégories</p>
                     {tabs.map(([id, meta]) => (
                       <button key={id} onClick={() => selectCategory(id)}
                         className="w-full px-4 py-3.5 rounded-xl bg-[#161616] border border-[#2a2a2a] text-left text-sm font-medium text-white hover:border-[#d4780f] hover:bg-[#1a1200] transition-colors flex items-center justify-between active:scale-[0.99]"
@@ -492,38 +437,9 @@ export default function BoutiquePage() {
             {/* ── CMT Tab ── */}
             {shopTab === 'cmt' && (
               <div className="flex flex-col items-center px-4 pt-5 gap-6">
-                {/* Photo grid CMT — placeholders */}
-                <div className="w-full flex gap-2" style={{ height: '150px' }}>
-                  <div className="rounded-2xl flex-1 flex flex-col items-center justify-center gap-1.5"
-                    style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="rgba(74,222,128,0.45)" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-[9px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Photo CMT 1</p>
-                  </div>
-                  <div className="flex flex-col gap-2" style={{ width: '42%' }}>
-                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
-                      style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
-                      <svg className="w-5 h-5" fill="none" stroke="rgba(74,222,128,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                      </svg>
-                      <p className="text-[8px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Photo CMT 2</p>
-                    </div>
-                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
-                      style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
-                      <svg className="w-5 h-5" fill="none" stroke="rgba(74,222,128,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                      </svg>
-                      <p className="text-[8px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Photo CMT 3</p>
-                    </div>
-                  </div>
-                </div>
                 <div className="text-center">
                   <p className="text-white text-xl font-bold">Fraises CMT Défonceuse</p>
-                  <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Fraises CMT pour défonceuse, toupie et CNC portative, bois massif et dérivés.</p>
+                  <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Fraises CMT pour défonceuse, toupie et CNC portative, tous matériaux.</p>
                 </div>
                 <a
                   href="https://wa.me/33767739561?text=Je%20suis%20int%C3%A9ress%C3%A9%20par%20les%20fraises%20CMT%20d%C3%A9fonceuse"
@@ -540,38 +456,9 @@ export default function BoutiquePage() {
             {/* ── Lames Tab ── */}
             {shopTab === 'lames' && (
               <div className="flex flex-col items-center px-4 pt-5 gap-6">
-                {/* Photo grid Lames — placeholders */}
-                <div className="w-full flex gap-2" style={{ height: '150px' }}>
-                  <div className="rounded-2xl flex-1 flex flex-col items-center justify-center gap-1.5"
-                    style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
-                    <svg className="w-7 h-7" fill="none" stroke="rgba(129,140,248,0.45)" strokeWidth={1.5} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                      <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-[9px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Photo Lames 1</p>
-                  </div>
-                  <div className="flex flex-col gap-2" style={{ width: '42%' }}>
-                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
-                      style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
-                      <svg className="w-5 h-5" fill="none" stroke="rgba(129,140,248,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                      </svg>
-                      <p className="text-[8px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Photo Lames 2</p>
-                    </div>
-                    <div className="rounded-xl flex-1 flex flex-col items-center justify-center gap-1"
-                      style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
-                      <svg className="w-5 h-5" fill="none" stroke="rgba(129,140,248,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-                        <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
-                      </svg>
-                      <p className="text-[8px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Photo Lames 3</p>
-                    </div>
-                  </div>
-                </div>
                 <div className="text-center">
                   <p className="text-white text-xl font-bold">Lames Circulaires Carbure</p>
-                  <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Lames circulaires carbure pour scie à table, scie à format, panneaux et bois massif.</p>
+                  <p className="text-[#555] text-sm mt-2 max-w-xs">Bientôt disponible — Lames circulaires carbure pour scie à table, scie à format et découpe de précision.</p>
                 </div>
                 <a
                   href="https://wa.me/33767739561?text=Je%20suis%20int%C3%A9ress%C3%A9%20par%20les%20lames%20circulaires%20carbure"

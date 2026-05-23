@@ -114,7 +114,7 @@ export default function OrderPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '72px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '100px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
