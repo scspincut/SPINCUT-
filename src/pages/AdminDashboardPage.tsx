@@ -154,27 +154,20 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen flex flex-col" style={{ background: '#0d0d0d' }}>
       {/* Header */}
       <header
-        className="sticky top-0 z-10 flex items-center justify-between px-6 py-4"
-        style={{ background: '#161616', borderBottom: '1px solid #2a2a2a' }}
+        className="sticky top-0 z-10 bg-black border-b border-[#1a1a1a]"
       >
-        <div className="flex items-center gap-3">
+        <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
           <SpincutLogo size="lg" />
-          <span
-            className="text-xs font-bold px-2 py-1 rounded"
-            style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+          <button
+            onClick={handleLogout}
+            className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
           >
-            Admin
-          </span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Déconnexion
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-sm px-4 py-2 rounded-lg transition-colors font-medium"
-          style={{ background: '#1e1e1e', color: '#f1f1f1', border: '1px solid #2a2a2a' }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#1e1e1e')}
-        >
-          Déconnexion
-        </button>
       </header>
 
       {/* Main */}
