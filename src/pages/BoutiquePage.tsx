@@ -123,7 +123,6 @@ export default function BoutiquePage() {
   const goHome = () => { setHomeView(true); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
   const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
 
-  const cncInStock = useMemo(() => catalog.filter(p => p.stock > 0).length, [catalog])
 
   if (!isAuthenticated) { navigate('/'); return null }
 
@@ -142,7 +141,7 @@ export default function BoutiquePage() {
               </svg>
             </button>
           )}
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '100px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -213,7 +212,7 @@ export default function BoutiquePage() {
                 {[
                   { icon: '⚡', label: 'Expédié sous 24h' },
                   { icon: '✓', label: 'Qualité garantie' },
-                  { icon: '💬', label: 'Je vous réponds' },
+                  { icon: '⏱', label: 'Réponse < 1h' },
                 ].map(b => (
                   <div key={b.label} className="flex-1 rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 text-center" style={{ background: '#0d0d0d', border: '1px solid #1e1e1e' }}>
                     <span className="text-base leading-none">{b.icon}</span>
@@ -233,10 +232,7 @@ export default function BoutiquePage() {
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises CNC</p>
-                    <p className="text-xs mt-1" style={{ color: '#d4780f70' }}>SPINCUT — Qualité professionnelle</p>
-                    <div className="mt-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(212,120,15,0.15)', color: '#d4780f' }}>
-                      {catalogLoading ? '…' : `${cncInStock} références en stock`} →
-                    </div>
+                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#d4780f' }}>SPINCUT</p>
                   </div>
                 </div>
               </button>
@@ -250,10 +246,7 @@ export default function BoutiquePage() {
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises Défonceuse</p>
-                    <p className="text-xs mt-1" style={{ color: '#4ade8050' }}>CMT — Défonceuse & toupie</p>
-                    <div className="mt-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(74,222,128,0.08)', color: '#4ade8060' }}>
-                      Bientôt disponible
-                    </div>
+                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#4ade80' }}>CMT</p>
                   </div>
                 </div>
               </button>
@@ -267,10 +260,6 @@ export default function BoutiquePage() {
                 <div className="absolute inset-0 flex items-center px-5 gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Lames Carbure</p>
-                    <p className="text-xs mt-1" style={{ color: '#818cf850' }}>Circulaires — Scie à table & format</p>
-                    <div className="mt-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold" style={{ background: 'rgba(129,140,248,0.08)', color: '#818cf860' }}>
-                      Bientôt disponible
-                    </div>
                   </div>
                 </div>
               </button>

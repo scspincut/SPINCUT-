@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
         style={{ background: '#161616', borderBottom: '1px solid #2a2a2a' }}
       >
         <div className="flex items-center gap-3">
-          <SpincutLogo size="sm" />
+          <SpincutLogo size="md" />
           <span
             className="text-xs font-bold px-2 py-1 rounded"
             style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
