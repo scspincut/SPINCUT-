@@ -48,7 +48,9 @@ export default function BoutiquePage() {
   const [homeView, setHomeView] = useState(true)
   const [heroBg, setHeroBg] = useState(0)
   const [shopTab, setShopTab] = useState<'cnc' | 'cmt' | 'lames'>('cnc')
-  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
+    try { return JSON.parse(localStorage.getItem('spincut_catalog_cache') ?? '[]') } catch { return [] }
+  })
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -83,8 +85,10 @@ export default function BoutiquePage() {
     fetch('/api/catalog')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) setCatalog(data)
-        else setCatalogError(data?.error ?? 'Erreur catalogue')
+        if (Array.isArray(data)) {
+          setCatalog(data)
+          try { localStorage.setItem('spincut_catalog_cache', JSON.stringify(data)) } catch { /* ignore */ }
+        } else setCatalogError(data?.error ?? 'Erreur catalogue')
         setCatalogLoading(false)
       })
       .catch(() => { setCatalogError('Impossible de charger le catalogue'); setCatalogLoading(false) })

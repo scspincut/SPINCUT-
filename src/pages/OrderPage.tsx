@@ -24,7 +24,9 @@ export default function OrderPage() {
   const navigate = useNavigate()
   const { isAuthenticated, logout } = useClientAuth()
 
-  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
+    try { return JSON.parse(localStorage.getItem('spincut_catalog_cache') ?? '[]') } catch { return [] }
+  })
   const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [orderError, setOrderError] = useState('')
   const [showHistory, setShowHistory] = useState(true)
@@ -51,7 +53,12 @@ export default function OrderPage() {
   useEffect(() => {
     fetch('/api/catalog')
       .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setCatalog(data) })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCatalog(data)
+          try { localStorage.setItem('spincut_catalog_cache', JSON.stringify(data)) } catch { /* ignore */ }
+        }
+      })
       .catch(() => {})
   }, [])
 
