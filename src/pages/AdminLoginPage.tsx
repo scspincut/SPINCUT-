@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
           className="w-full flex items-center justify-center py-5 px-6 rounded-xl"
           style={{ background: '#111', border: '1px solid #1e1e1e' }}
         >
-          <SpincutLogo size="md" />
+          <SpincutLogo size="lg" />
         </div>
 
         {/* Auth card */}
