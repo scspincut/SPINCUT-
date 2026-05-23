@@ -229,6 +229,20 @@ export default function BoutiquePage() {
                 </svg>
               </button>
 
+              {/* Trust badges */}
+              <div className="flex gap-2 pt-1">
+                {[
+                  { icon: '⚡', label: 'Expédié sous 24h' },
+                  { icon: '✓', label: 'Qualité garantie' },
+                  { icon: '🔧', label: 'Support pro' },
+                ].map(b => (
+                  <div key={b.label} className="flex-1 rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 text-center" style={{ background: '#0d0d0d', border: '1px solid #1e1e1e' }}>
+                    <span className="text-base leading-none">{b.icon}</span>
+                    <span className="text-[9px] font-semibold leading-tight" style={{ color: '#555' }}>{b.label}</span>
+                  </div>
+                ))}
+              </div>
+
               <p className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: '#444' }}>Boutique</p>
 
               {/* Fraises CNC */}
@@ -246,13 +260,13 @@ export default function BoutiquePage() {
                     </div>
                   </div>
                   {/* Photo placeholder */}
-                  <div className="w-24 h-20 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1"
-                    style={{ border: '1.5px dashed rgba(212,120,15,0.35)', background: 'rgba(212,120,15,0.05)' }}>
-                    <svg className="w-6 h-6" fill="none" stroke="rgba(212,120,15,0.5)" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <div className="w-28 h-24 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1.5"
+                    style={{ border: '2px dashed rgba(212,120,15,0.5)', background: 'rgba(212,120,15,0.07)' }}>
+                    <svg className="w-7 h-7" fill="none" stroke="rgba(212,120,15,0.7)" strokeWidth={1.5} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                       <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
                     </svg>
-                    <p className="text-[9px] font-bold" style={{ color: 'rgba(212,120,15,0.5)' }}>Votre photo</p>
+                    <p className="text-[10px] font-black" style={{ color: 'rgba(212,120,15,0.7)' }}>PHOTO CNC</p>
                   </div>
                 </div>
               </button>
@@ -272,13 +286,13 @@ export default function BoutiquePage() {
                     </div>
                   </div>
                   {/* Photo placeholder */}
-                  <div className="w-24 h-20 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1"
-                    style={{ border: '1.5px dashed rgba(74,222,128,0.3)', background: 'rgba(74,222,128,0.04)' }}>
-                    <svg className="w-6 h-6" fill="none" stroke="rgba(74,222,128,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <div className="w-28 h-24 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1.5"
+                    style={{ border: '2px dashed rgba(74,222,128,0.5)', background: 'rgba(74,222,128,0.07)' }}>
+                    <svg className="w-7 h-7" fill="none" stroke="rgba(74,222,128,0.7)" strokeWidth={1.5} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                       <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
                     </svg>
-                    <p className="text-[9px] font-bold" style={{ color: 'rgba(74,222,128,0.4)' }}>Votre photo</p>
+                    <p className="text-[10px] font-black" style={{ color: 'rgba(74,222,128,0.7)' }}>PHOTO CMT</p>
                   </div>
                 </div>
               </button>
@@ -298,13 +312,13 @@ export default function BoutiquePage() {
                     </div>
                   </div>
                   {/* Photo placeholder */}
-                  <div className="w-24 h-20 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1"
-                    style={{ border: '1.5px dashed rgba(129,140,248,0.3)', background: 'rgba(129,140,248,0.04)' }}>
-                    <svg className="w-6 h-6" fill="none" stroke="rgba(129,140,248,0.4)" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <div className="w-28 h-24 rounded-xl flex-shrink-0 flex flex-col items-center justify-center gap-1.5"
+                    style={{ border: '2px dashed rgba(129,140,248,0.5)', background: 'rgba(129,140,248,0.07)' }}>
+                    <svg className="w-7 h-7" fill="none" stroke="rgba(129,140,248,0.7)" strokeWidth={1.5} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                       <circle cx="12" cy="13" r="3" strokeLinecap="round"/>
                     </svg>
-                    <p className="text-[9px] font-bold" style={{ color: 'rgba(129,140,248,0.4)' }}>Votre photo</p>
+                    <p className="text-[10px] font-black" style={{ color: 'rgba(129,140,248,0.7)' }}>PHOTO LAMES</p>
                   </div>
                 </div>
               </button>
