@@ -5,6 +5,12 @@ function toAscii(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x00-\x7F]/g, '')
 }
 
+function serializeError(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (typeof err === 'string') return err
+  try { return JSON.stringify(err) } catch { return String(err) }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -21,10 +27,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.ABBY_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'ABBY_API_KEY non configurée' })
 
+  let step = 'initialisation'
   try {
     const abby = new Abby(apiKey)
 
     // 1 — Chercher le contact existant par nom
+    step = 'recherche contact'
     const { data: contacts } = await abby.contact.retrieveContacts({
       query: { search: clientName, limit: 5 },
     })
@@ -47,11 +55,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 2 — Si un BDC ouvert est fourni, essayer de l'enrichir
     if (existingBdcId) {
       try {
+        step = 'récupération BDC existant'
         const { data: existingBdc } = await abby.billing.getBillingById({
           path: { billingId: existingBdcId },
         })
         const bdc = existingBdc as any
         if (bdc && bdc.state === 'draft' && bdc.isEditable) {
+          step = 'mise à jour lignes BDC existant'
           const existingLines = (bdc.lines ?? []).map((l: any) => ({
             designation: l.designation,
             reference: l.reference,
@@ -67,26 +77,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       } catch {
         // BDC introuvable ou expiré — on crée un nouveau
+        orderId = null
       }
     }
 
     // 3 — Créer un nouveau BDC si nécessaire
     if (!orderId) {
+      step = 'création bon de commande'
       const { data: order } = await abby.estimate.createEstimateByContactOrOrganizationId({
         path: { customerId: contact.id },
         body: { estimateType: 'purchase_order' },
       })
-      if (order?.id) {
-        orderId = order.id
-        isNewBdc = true
-        await (abby.billing.updateLines as any)({
-          path: { billingId: order.id },
-          body: { lines: newLines },
-        })
+      if (!order?.id) {
+        return res.status(500).json({ error: 'Abby n\'a pas retourné d\'identifiant de bon de commande' })
       }
+      orderId = order.id
+      isNewBdc = true
+      step = 'ajout lignes nouveau BDC'
+      await (abby.billing.updateLines as any)({
+        path: { billingId: order.id },
+        body: { lines: newLines },
+      })
     }
 
-    // 4 — Déduire le stock uniquement si le BDC est validé
+    // 4 — Déduire le stock
     const sheetsUrl = process.env.SHEETS_API_URL
     const sheetsSecret = process.env.SHEETS_SECRET
     if (orderId && sheetsUrl && sheetsSecret) {
@@ -115,7 +129,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, orderId, isNewBdc })
 
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Erreur inconnue'
-    return res.status(500).json({ error: `Erreur Abby : ${msg}` })
+    return res.status(500).json({ error: `Erreur Abby (${step}) : ${serializeError(err)}` })
   }
 }
