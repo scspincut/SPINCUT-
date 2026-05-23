@@ -321,9 +321,9 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white">
+    <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="border-b border-[#1e1e1e] px-4 py-3 sticky top-0 bg-[#0d0d0d] z-10">
+      <header className="border-b border-[#1e1e1e] px-4 py-3 sticky top-0 bg-black z-10">
         <div className="max-w-4xl mx-auto relative flex items-center justify-center">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '50px', objectFit: 'contain', mixBlendMode: 'screen' }} />
@@ -839,7 +839,7 @@ export default function CalculatorPage() {
       )}
 
       {/* Barre de contact fixe en bas */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-[#0d0d0d]/95 backdrop-blur border-t border-[#1e1e1e] px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-black/95 backdrop-blur border-t border-[#1e1e1e] px-4 py-3">
         <div className="max-w-4xl mx-auto flex gap-2">
 
           {/* Commander */}

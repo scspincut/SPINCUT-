@@ -89,7 +89,7 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{ background: '#0d0d0d' }}
+      style={{ background: '#000' }}
     >
       <div className="w-full max-w-sm flex flex-col items-center gap-5">
 
@@ -118,7 +118,7 @@ export default function LoginPage() {
         {/* Photo carousel */}
         <div
           className="w-full relative overflow-hidden"
-          style={{ height: '155px' }}
+          style={{ height: '170px' }}
           onTouchStart={e => setTouchStart(e.touches[0].clientX)}
           onTouchEnd={e => {
             if (touchStart === null) return
@@ -140,16 +140,24 @@ export default function LoginPage() {
                   if (isNext) setCurrent((current + 1) % photos.length)
                 }}
                 style={{
-                  position: 'absolute', top: 0, height: '100%',
-                  transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
-                  ...(isCenter
-                    ? { left: '50%', transform: 'translateX(-50%)', width: '70%', opacity: 1, zIndex: 10 }
-                    : isPrev
-                    ? { left: 0, transform: 'translateX(-22%)', width: '52%', opacity: 0.45, zIndex: 5, cursor: 'pointer' }
-                    : isNext
-                    ? { right: 0, transform: 'translateX(22%)', width: '52%', opacity: 0.45, zIndex: 5, cursor: 'pointer' }
-                    : { display: 'none' }
-                  )
+                  position: 'absolute',
+                  transition: 'all 0.38s cubic-bezier(0.4,0,0.2,1)',
+                  ...(isCenter ? {
+                    left: '50%', top: '0',
+                    transform: 'translateX(-50%)',
+                    width: '72%', height: '100%',
+                    opacity: 1, zIndex: 10,
+                  } : isPrev ? {
+                    left: '0', top: '50%',
+                    transform: 'translateX(-30%) translateY(-50%)',
+                    width: '52%', height: '68%',
+                    opacity: 0.55, zIndex: 5, cursor: 'pointer',
+                  } : isNext ? {
+                    right: '0', top: '50%',
+                    transform: 'translateX(30%) translateY(-50%)',
+                    width: '52%', height: '68%',
+                    opacity: 0.55, zIndex: 5, cursor: 'pointer',
+                  } : { display: 'none' })
                 }}
               >
                 <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} />
@@ -158,7 +166,7 @@ export default function LoginPage() {
           })}
         </div>
         {/* Dots */}
-        <div className="flex items-center justify-center gap-1.5" style={{ marginTop: '-8px' }}>
+        <div className="flex items-center justify-center gap-1.5" style={{ marginTop: '-6px' }}>
           {photos.map((_, i) => (
             <button
               key={i}

@@ -109,10 +109,10 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col">
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
+      <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
           <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '50px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button

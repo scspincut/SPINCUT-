@@ -114,10 +114,10 @@ export default function BoutiquePage() {
   if (!isAuthenticated) { navigate('/'); return null }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col">
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#0d0d0d] border-b border-[#1a1a1a]">
+      <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
           <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '50px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
@@ -258,7 +258,7 @@ export default function BoutiquePage() {
                   const outOfStock = item.stock === 0
                   return (
                     <div key={key}
-                      className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-[#0d0d0d]'} ${outOfStock ? 'opacity-40' : ''}`}
+                      className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-black'} ${outOfStock ? 'opacity-40' : ''}`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap mb-1">
