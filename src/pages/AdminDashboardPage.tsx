@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAdminAuth, getAccessCodes, saveAccessCodes } from '../hooks/useAuth'
 import { AccessCode } from '../types'
@@ -38,6 +38,44 @@ export default function AdminDashboardPage() {
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [importMsg, setImportMsg] = useState('')
 
+  // Remise en stock
+  interface CatalogProduct { sheet: string; row: number; ref: string; designation: string; stock: number }
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([])
+  const [restoreSearch, setRestoreSearch] = useState('')
+  const [restoreSelected, setRestoreSelected] = useState<CatalogProduct | null>(null)
+  const [restoreQty, setRestoreQty] = useState('')
+  const [restoreStatus, setRestoreStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [restoreMsg, setRestoreMsg] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const restoreRef = useRef<HTMLDivElement>(null)
+
+  const suggestions = restoreSearch.length >= 2
+    ? catalog.filter(p =>
+        p.ref.toLowerCase().includes(restoreSearch.toLowerCase()) ||
+        p.designation.toLowerCase().includes(restoreSearch.toLowerCase())
+      ).slice(0, 6)
+    : []
+
+  const handleRestore = async () => {
+    if (!restoreSelected || !restoreQty || Number(restoreQty) <= 0) return
+    setRestoreStatus('loading')
+    setRestoreMsg('')
+    try {
+      const r = await fetch('/api/restore-stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheet: restoreSelected.sheet, row: restoreSelected.row, quantity: Number(restoreQty) }),
+      })
+      if (!r.ok) throw new Error((await r.json()).error ?? 'Erreur serveur')
+      setRestoreStatus('success')
+      setRestoreMsg(`+${restoreQty} remis en stock pour ${restoreSelected.ref}`)
+      setRestoreSearch(''); setRestoreSelected(null); setRestoreQty('')
+    } catch (e) {
+      setRestoreStatus('error')
+      setRestoreMsg(e instanceof Error ? e.message : 'Erreur inconnue')
+    }
+  }
+
   const copyLink = (code: string) => {
     const url = `${window.location.origin}/?activate=${code}`
     navigator.clipboard.writeText(url)
@@ -51,6 +89,7 @@ export default function AdminDashboardPage() {
       return
     }
     setCodes(getAccessCodes())
+    fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
   }, [isAdmin, navigate])
 
   const refreshCodes = () => setCodes(getAccessCodes())
@@ -233,6 +272,67 @@ export default function AdminDashboardPage() {
               />
             </div>
           </form>
+        </div>
+
+        {/* Remise en stock */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <h2 className="text-base font-semibold text-white mb-4">Remise en stock</h2>
+          <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>À utiliser quand un BDC est annulé/supprimé dans Abby</p>
+          <div className="space-y-3">
+            <div ref={restoreRef} className="relative">
+              <input
+                type="text"
+                value={restoreSelected ? `${restoreSelected.ref} — ${restoreSelected.designation}` : restoreSearch}
+                onChange={e => { setRestoreSearch(e.target.value); setRestoreSelected(null); setShowSuggestions(true) }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                placeholder="Rechercher un article (ref ou désignation)..."
+                className="w-full px-3 py-2.5 rounded-lg text-white text-sm outline-none"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 rounded-lg overflow-hidden" style={{ background: '#1e1e1e', border: '1px solid #3a3a3a' }}>
+                  {suggestions.map(p => (
+                    <button
+                      key={`${p.ref}__${p.row}`}
+                      className="w-full text-left px-3 py-2.5 hover:bg-[#2a2a2a] transition-colors"
+                      onMouseDown={() => { setRestoreSelected(p); setRestoreSearch(''); setShowSuggestions(false) }}
+                    >
+                      <span className="font-mono text-xs text-[#d4780f] font-semibold">{p.ref}</span>
+                      <span className="text-xs text-[#aaa] ml-2">{p.designation}</span>
+                      <span className="text-xs text-[#555] ml-2">Stock: {p.stock}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {restoreSelected && (
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={restoreQty}
+                  onChange={e => setRestoreQty(e.target.value)}
+                  placeholder="Quantité à remettre"
+                  className="flex-1 px-3 py-2.5 rounded-lg text-white text-sm outline-none"
+                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                />
+                <button
+                  onClick={handleRestore}
+                  disabled={restoreStatus === 'loading' || !restoreQty || Number(restoreQty) <= 0}
+                  className="px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                  style={{ background: '#d4780f' }}
+                >
+                  {restoreStatus === 'loading' ? '…' : '+ Remettre'}
+                </button>
+              </div>
+            )}
+            {restoreMsg && (
+              <p className="text-xs px-3 py-2 rounded-lg" style={{ background: restoreStatus === 'error' ? '#2a0000' : '#0a1f0a', color: restoreStatus === 'error' ? '#f87171' : '#4ade80' }}>
+                {restoreMsg}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Import Abby */}
