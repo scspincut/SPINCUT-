@@ -148,7 +148,7 @@ export default function OrderPage() {
             </svg>
             Profil
           </button>
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '160px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '200px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -163,6 +163,39 @@ export default function OrderPage() {
 
       {/* Main */}
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
+
+        {/* Dashboard résumé */}
+        {orderHistory.length > 0 && (
+          <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+            <p className="text-[10px] uppercase tracking-wider px-4 pt-4 pb-3" style={{ color: '#555' }}>Tableau de bord</p>
+            <div className="grid grid-cols-3 divide-x divide-[#2a2a2a] border-t border-[#2a2a2a]">
+              <div className="px-3 py-4 text-center">
+                <p className="text-[#d4780f] font-black text-2xl">{orderHistory.length}</p>
+                <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Commandes</p>
+              </div>
+              <div className="px-3 py-4 text-center">
+                <p className="text-[#d4780f] font-black text-2xl">{orderHistory.reduce((s, e) => s + e.total, 0).toFixed(0).replace('.', ',')}€</p>
+                <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Total HT</p>
+              </div>
+              <div className="px-3 py-4 text-center">
+                <p className="text-white font-black text-2xl">{orderHistory.reduce((s, e) => s + e.items.reduce((ss, i) => ss + i.quantity, 0), 0)}</p>
+                <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Articles</p>
+              </div>
+            </div>
+            {(() => {
+              const currentBdcId: string | null = (() => { try { return JSON.parse(localStorage.getItem(`spincut_bdc_${clientCode ?? 'guest'}`) ?? 'null') } catch { return null } })()
+              return currentBdcId ? (
+                <div className="px-4 py-3 border-t border-[#2a2a2a] flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>Bon de commande actif</p>
+                    <p className="text-white font-mono text-sm mt-0.5">{currentBdcId}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#d4780f]/20 text-[#d4780f]">En cours</span>
+                </div>
+              ) : null
+            })()}
+          </div>
+        )}
 
         {/* Status messages */}
         {orderStatus === 'success' && lastOrder && (

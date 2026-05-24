@@ -166,7 +166,7 @@ export default function BoutiquePage() {
               </svg>
             </button>
           )}
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '160px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '200px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -201,7 +201,7 @@ export default function BoutiquePage() {
         {homeView && (
           <>
             {/* Hero with rotating photos */}
-            <div className="relative overflow-hidden" style={{ height: '220px' }}>
+            <div className="relative overflow-hidden" style={{ height: '300px', background: '#000' }}>
               {HERO_PHOTOS.map((src, i) => (
                 <img
                   key={i}
@@ -213,7 +213,7 @@ export default function BoutiquePage() {
                     position: 'absolute',
                     top: 0, left: 0,
                     width: '100%', height: '100%',
-                    objectFit: 'cover',
+                    objectFit: 'contain',
                     display: 'block',
                   }}
                 />
@@ -330,12 +330,23 @@ export default function BoutiquePage() {
             </div>
 
             {favoriteItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
-                <svg className="w-12 h-12 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                </svg>
-                <p className="text-[#444] text-sm">Aucun outil en favori</p>
-                <p className="text-[#333] text-xs">Appuyez sur ♥ sur un produit pour l'ajouter</p>
+              <div className="flex flex-col items-center justify-center py-20 gap-4 text-center px-6">
+                <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
+                  <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-bold text-base">Vous n'avez pas encore d'outils favoris</p>
+                  <p className="text-[#444] text-sm mt-1">Appuyez sur ♥ sur un produit pour le sauvegarder ici</p>
+                </div>
+                <button
+                  onClick={goHome}
+                  className="py-3 px-6 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+                  style={{ background: '#d4780f' }}
+                >
+                  Découvrir la boutique →
+                </button>
               </div>
             ) : (
               <div className="divide-y divide-[#161616]">
