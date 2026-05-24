@@ -116,7 +116,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     res.setHeader('Cache-Control', 'no-store')
-    return res.status(200).json([...deduped.values()])
+    // Feuilles B : masquer définitivement quand stock épuisé
+    const visible = [...deduped.values()].filter(p => !(p.sheet.startsWith('B') && p.stock <= 0))
+    return res.status(200).json(visible)
   } catch {
     return res.status(500).json({ error: 'Erreur catalogue' })
   }
