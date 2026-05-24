@@ -274,7 +274,7 @@ export default function OrderPage() {
         {/* Commandes habituelles */}
         {habitualItems.length > 0 && (
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3">Commandes habituelles</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3">Mes derniers achats</p>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
               {habitualItems.map(p => {
                 const key = uid(p)
