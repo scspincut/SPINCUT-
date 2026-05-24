@@ -1,9 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Abby from '@abby-inc/node'
 
-function toAscii(s: string) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x00-\x7F]/g, '')
-}
 
 function serializeError(err: unknown): string {
   if (err instanceof Error) return err.message
@@ -42,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const newLines = items.map(item => ({
-      designation: toAscii(item.queue ? `${item.designation} - Queue ${item.queue}` : item.designation),
+      designation: item.queue ? `${item.designation} - Queue ${item.queue}` : item.designation,
       reference: item.ref,
       unitPrice: Math.round(item.price * 100),
       quantity: item.quantity,
