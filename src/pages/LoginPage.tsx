@@ -412,6 +412,23 @@ export default function LoginPage() {
               </span>
             </a>
 
+            <a
+              href={`mailto:scspincut@gmail.com?subject=${encodeURIComponent('Demande accès SPINCUT')}&body=${encodeURIComponent(buildMessage())}`}
+              className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
+              style={{ background: '#2a2a2a' }}
+              onClick={() => setShowMailMenu(false)}
+            >
+              <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: '#2a2a2a', border: '1px solid #3a3a3a' }}>
+                <svg width="22" height="22" fill="none" stroke="#aaa" strokeWidth="1.8" viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+                </svg>
+              </span>
+              <span>
+                <span className="block font-semibold" style={{ color: '#ccc' }}>Autre application</span>
+                <span className="block text-xs" style={{ color: '#888' }}>Ouvre l'app mail par défaut du téléphone</span>
+              </span>
+            </a>
+
             <button
               onClick={() => setShowMailMenu(false)}
               className="w-full py-3 rounded-xl text-sm"
