@@ -110,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .filter(item => item.sheet && item.row)
         .map(item => ({ sheet: item.sheet, row: item.row, qty: item.quantity }))
       if (updates.length > 0) {
-        fetch(sheetsUrl, {
+        await fetch(sheetsUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ secret: sheetsSecret, updates }),
