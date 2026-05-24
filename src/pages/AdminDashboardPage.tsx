@@ -76,10 +76,12 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const copyLink = (code: string) => {
-    const url = `${window.location.origin}/?activate=${code}`
+  const copyLink = (entry: AccessCode) => {
+    const params = new URLSearchParams({ activate: entry.code })
+    if (entry.clientName) params.set('name', entry.clientName)
+    const url = `${window.location.origin}/?${params.toString()}`
     navigator.clipboard.writeText(url)
-    setCopiedId(code)
+    setCopiedId(entry.code)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -195,7 +197,7 @@ export default function AdminDashboardPage() {
         className="sticky top-0 z-10 bg-black border-b border-[#1a1a1a]"
       >
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          <img src="/logo.png" alt="SPINCUT" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
           <button
             onClick={handleLogout}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -438,7 +440,7 @@ export default function AdminDashboardPage() {
                       <td className="py-3">
                         <div className="flex items-center justify-end gap-2 flex-wrap">
                           <button
-                            onClick={() => copyLink(c.code)}
+                            onClick={() => copyLink(c)}
                             className="text-xs px-3 py-1 rounded transition-colors"
                             style={{ background: '#0a1628', color: copiedId === c.code ? '#4ade80' : '#60a5fa', border: `1px solid ${copiedId === c.code ? '#166534' : '#1e3a5f'}` }}
                           >

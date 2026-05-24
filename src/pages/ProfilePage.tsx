@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
+import { useClientAuth, getAccessCodes, saveAccessCodes, getClientCode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
 
 interface AbbyAddress {
@@ -38,7 +38,6 @@ export default function ProfilePage() {
 
   const historyKey = `spincut_orders_${clientCode ?? 'guest'}`
   const bdcKey = `spincut_bdc_${clientCode ?? 'guest'}`
-  const favKey = `spincut_favs_${clientCode ?? 'guest'}`
 
   const orderHistory: OrderHistoryEntry[] = (() => {
     try { return JSON.parse(localStorage.getItem(historyKey) ?? '[]') } catch { return [] }
@@ -46,9 +45,8 @@ export default function ProfilePage() {
   const currentBdcId: string | null = (() => {
     try { return JSON.parse(localStorage.getItem(bdcKey) ?? 'null') } catch { return null }
   })()
-  const favCount: number = (() => {
-    try { return JSON.parse(localStorage.getItem(favKey) ?? '[]').length } catch { return 0 }
-  })()
+  const [manualName, setManualName] = useState('')
+  const [manualNameError, setManualNameError] = useState('')
 
   const [profile, setProfile] = useState<AbbyProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
@@ -156,7 +154,7 @@ export default function ProfilePage() {
             </svg>
             Retour
           </button>
-          <img src="/logo.png" alt="SPINCUT" style={{ height: '160px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT" style={{ height: '160px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
           <button onClick={() => { logout(); navigate('/') }} className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -184,15 +182,9 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-3 text-center">
-            <p className="text-[#d4780f] font-bold text-2xl">{orderHistory.length}</p>
-            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Commandes</p>
-          </div>
-          <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-3 text-center">
-            <p className="text-[#d4780f] font-bold text-2xl">{favCount}</p>
-            <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Favoris</p>
-          </div>
+        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-3 text-center">
+          <p className="text-[#d4780f] font-bold text-2xl">{orderHistory.length}</p>
+          <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Commandes passées</p>
         </div>
 
         {/* Active BDC */}
@@ -213,6 +205,33 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
+
+          {!clientName && !profileLoading && !profile && (
+            <div className="px-4 pb-4 space-y-2">
+              <p className="text-xs" style={{ color: '#888' }}>Saisissez votre nom tel qu'il apparaît dans votre compte Abby pour charger vos informations.</p>
+              <div className="flex gap-2">
+                <input
+                  value={manualName}
+                  onChange={e => { setManualName(e.target.value); setManualNameError('') }}
+                  placeholder="Votre nom complet"
+                  className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#d4780f] placeholder-[#444]"
+                />
+                <button
+                  onClick={() => {
+                    if (!manualName.trim()) { setManualNameError('Nom requis'); return }
+                    const codes = getAccessCodes()
+                    if (clientCode) {
+                      saveAccessCodes(codes.map(c => c.code === clientCode ? { ...c, clientName: manualName.trim() } : c))
+                      window.location.reload()
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-lg text-sm font-bold text-white"
+                  style={{ background: '#d4780f' }}
+                >OK</button>
+              </div>
+              {manualNameError && <p className="text-xs text-red-400">{manualNameError}</p>}
+            </div>
+          )}
 
           {profileLoading && (
             <div className="px-4 pb-5 flex items-center gap-2 text-[#444] text-sm">

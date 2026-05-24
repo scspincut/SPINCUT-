@@ -19,11 +19,16 @@ function CodeActivator() {
     const code = params.get('activate')
     if (!code) return
 
+    const name = params.get('name') ?? undefined
     const codes = getAccessCodes()
     const exists = codes.find(c => c.code === code.toUpperCase())
     if (!exists) {
-      const newCode = { id: Date.now().toString(), code: code.toUpperCase(), active: true, createdAt: new Date().toISOString() }
+      const d = new Date()
+      const createdAt = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
+      const newCode = { id: Date.now().toString(), code: code.toUpperCase(), active: true, createdAt, clientName: name }
       saveAccessCodes([...codes, newCode])
+    } else if (name && !exists.clientName) {
+      saveAccessCodes(codes.map(c => c.code === code.toUpperCase() ? { ...c, clientName: name } : c))
     }
     navigate('/', { replace: true })
   }, [])
