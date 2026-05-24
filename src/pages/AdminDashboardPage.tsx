@@ -38,6 +38,32 @@ export default function AdminDashboardPage() {
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [importMsg, setImportMsg] = useState('')
 
+  // Import BDC Abby
+  const [bdcId, setBdcId] = useState('')
+  const [bdcStatus, setBdcStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [bdcResult, setBdcResult] = useState<{ deducted: { ref: string; designation: string; quantity: number }[]; unmatched: string[] } | null>(null)
+  const [bdcError, setBdcError] = useState('')
+
+  const handleImportBdc = async () => {
+    if (!bdcId.trim()) return
+    setBdcStatus('loading'); setBdcResult(null); setBdcError('')
+    try {
+      const r = await fetch('/api/import-bdc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bdcId: bdcId.trim() }),
+      })
+      const data = await r.json()
+      if (!r.ok) throw new Error(data.error ?? 'Erreur serveur')
+      setBdcResult(data)
+      setBdcStatus('success')
+      setBdcId('')
+    } catch (e) {
+      setBdcError(e instanceof Error ? e.message : 'Erreur inconnue')
+      setBdcStatus('error')
+    }
+  }
+
   // Remise en stock
   interface CatalogProduct { sheet: string; row: number; ref: string; designation: string; stock: number }
   const [catalog, setCatalog] = useState<CatalogProduct[]>([])
@@ -274,6 +300,61 @@ export default function AdminDashboardPage() {
               />
             </div>
           </form>
+        </div>
+
+        {/* Import BDC Abby */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <h2 className="text-base font-semibold text-white mb-1">Déduire stock depuis un BDC Abby</h2>
+          <p className="text-xs mb-4" style={{ color: '#8a8a8a' }}>Colle l'ID du BDC ou de la facture Abby — le stock se déduit automatiquement</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={bdcId}
+              onChange={e => { setBdcId(e.target.value); setBdcStatus('idle'); setBdcResult(null); setBdcError('') }}
+              placeholder="ex: BDC-2026-0001"
+              className="flex-1 px-3 py-2.5 rounded-lg text-white text-sm outline-none font-mono"
+              style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+              onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+              onKeyDown={e => e.key === 'Enter' && handleImportBdc()}
+            />
+            <button
+              onClick={handleImportBdc}
+              disabled={bdcStatus === 'loading' || !bdcId.trim()}
+              className="px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-colors disabled:opacity-50"
+              style={{ background: '#d4780f' }}
+            >
+              {bdcStatus === 'loading' ? '…' : 'Déduire'}
+            </button>
+          </div>
+
+          {bdcError && (
+            <p className="text-xs mt-3 px-3 py-2 rounded-lg" style={{ background: '#2a0000', color: '#f87171' }}>{bdcError}</p>
+          )}
+
+          {bdcResult && bdcStatus === 'success' && (
+            <div className="mt-3 space-y-2">
+              {bdcResult.deducted.length > 0 && (
+                <div className="px-3 py-2 rounded-lg" style={{ background: '#0a1f0a' }}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: '#4ade80' }}>✓ Stock déduit ({bdcResult.deducted.length} article{bdcResult.deducted.length > 1 ? 's' : ''})</p>
+                  {bdcResult.deducted.map((d, i) => (
+                    <p key={i} className="text-xs" style={{ color: '#86efac' }}>−{d.quantity}× <span className="font-mono">{d.ref}</span> {d.designation}</p>
+                  ))}
+                </div>
+              )}
+              {bdcResult.unmatched.length > 0 && (
+                <div className="px-3 py-2 rounded-lg" style={{ background: '#1a1200' }}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: '#fbbf24' }}>⚠ Références non trouvées dans le stock</p>
+                  {bdcResult.unmatched.map((u, i) => (
+                    <p key={i} className="text-xs font-mono" style={{ color: '#fcd34d' }}>{u}</p>
+                  ))}
+                </div>
+              )}
+              {bdcResult.deducted.length === 0 && bdcResult.unmatched.length === 0 && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>Aucune ligne avec référence trouvée dans ce BDC</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Remise en stock */}
