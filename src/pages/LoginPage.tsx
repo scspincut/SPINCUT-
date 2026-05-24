@@ -240,7 +240,7 @@ export default function LoginPage() {
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
             <div className="mt-3 space-y-1.5">
               {[
-                'Calculateur CNC — vitesses, avances et profondeurs optimisées pour votre machine',
+                'Calculateur CNC — vitesse de broche, avance et profondeur de passe calculées pour votre outil et votre matériau',
                 'Boutique en ligne — commandez vos outils en quelques clics, 24h/24',
                 'Gestion de compte — historique et suivi de vos commandes',
               ].map(txt => (

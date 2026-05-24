@@ -30,11 +30,6 @@ export default function AdminLoginPage() {
     >
       <div className="w-full max-w-sm flex flex-col items-center gap-6">
 
-        {/* Logo */}
-        <div className="w-full flex items-center justify-center" style={{ background: '#000' }}>
-          <img src="/logo.png" alt="SPINCUT" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
-        </div>
-
         {/* Auth card */}
         <div
           className="w-full rounded-xl p-6 flex flex-col gap-5"
