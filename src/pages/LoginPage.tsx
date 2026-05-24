@@ -109,7 +109,7 @@ export default function LoginPage() {
         <img
           src="/logo.png"
           alt="SPINCUT Outils CNC"
-          style={{ height: '140px', objectFit: 'contain', mixBlendMode: 'screen', width: '100%' }}
+          style={{ width: '100%', maxWidth: '420px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block' }}
         />
 
         {/* Accroche */}
