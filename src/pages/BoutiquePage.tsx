@@ -204,7 +204,7 @@ export default function BoutiquePage() {
                   }}
                 />
               ))}
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 50%, #000 100%)' }} />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 78%, #000 100%)' }} />
               {/* Photo dots */}
               <div className="absolute bottom-3 right-4 flex gap-1">
                 {HERO_PHOTOS.map((_, i) => (

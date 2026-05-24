@@ -1,7 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAdminAuth } from '../hooks/useAuth'
-import SpincutLogo from '../components/SpincutLogo'
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
@@ -31,12 +30,9 @@ export default function AdminLoginPage() {
     >
       <div className="w-full max-w-sm flex flex-col items-center gap-6">
 
-        {/* Logo card */}
-        <div
-          className="w-full flex items-center justify-center py-5 px-6 rounded-xl"
-          style={{ background: '#111', border: '1px solid #1e1e1e' }}
-        >
-          <SpincutLogo size="lg" />
+        {/* Logo */}
+        <div className="w-full flex items-center justify-center" style={{ background: '#000' }}>
+          <img src="/logo.png" alt="SPINCUT" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
         </div>
 
         {/* Auth card */}

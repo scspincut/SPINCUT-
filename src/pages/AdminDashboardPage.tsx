@@ -2,7 +2,6 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAdminAuth, getAccessCodes, saveAccessCodes } from '../hooks/useAuth'
 import { AccessCode } from '../types'
-import SpincutLogo from '../components/SpincutLogo'
 
 function generateCode(name: string, existing: string[]): string {
   const normalized = name.toUpperCase()
@@ -157,7 +156,7 @@ export default function AdminDashboardPage() {
         className="sticky top-0 z-10 bg-black border-b border-[#1a1a1a]"
       >
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          <SpincutLogo size="lg" />
+          <img src="/logo.png" alt="SPINCUT" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
           <button
             onClick={handleLogout}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
