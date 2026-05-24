@@ -172,7 +172,7 @@ export default function AdminDashboardPage() {
       {/* Main */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 flex flex-col gap-6">
         {/* Title */}
-        <div>
+        <div className="text-center">
           <h1 className="text-2xl font-bold text-white">Gestion des codes d'accès</h1>
           <p className="text-sm mt-1" style={{ color: '#8a8a8a' }}>
             Créez et gérez les codes d'accès pour vos clients
