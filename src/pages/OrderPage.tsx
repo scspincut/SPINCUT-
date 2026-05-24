@@ -175,9 +175,6 @@ export default function OrderPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                <p className="text-xs mt-0.5" style={{ color: '#3a7a3a' }}>
-                  {lastOrder.isNewBdc ? 'Nouveau BDC créé' : 'Ajouté au BDC existant'} · SPINCUT vous recontacte sous 24h
-                </p>
               </div>
               <button onClick={() => { setOrderStatus('idle'); setLastOrder(null) }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
             </div>
@@ -189,8 +186,12 @@ export default function OrderPage() {
                 </div>
               ))}
               <div className="flex items-center justify-between text-sm font-bold pt-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
-                <span className="text-green-400">Total</span>
-                <span className="text-green-400">{lastOrder.total.toFixed(2).replace('.', ',')} € HT</span>
+                <span className="text-green-400">Total HT</span>
+                <span className="text-green-400">{lastOrder.total.toFixed(2).replace('.', ',')} €</span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-0.5" style={{ color: '#3a7a3a' }}>
+                <span>Total TTC (TVA 20%)</span>
+                <span>{(lastOrder.total * 1.2).toFixed(2).replace('.', ',')} €</span>
               </div>
             </div>
           </div>
@@ -238,6 +239,7 @@ export default function OrderPage() {
               <div>
                 <p className="text-[#555] text-xs">{itemCount} article{itemCount > 1 ? 's' : ''}</p>
                 <p className="text-[#d4780f] font-bold text-xl">{fmt(total)} € HT</p>
+                <p className="text-[#888] text-xs">{fmt(total * 1.2)} € TTC</p>
               </div>
               <button onClick={sendOrder} disabled={orderStatus === 'loading'}
                 className="py-3 px-6 rounded-xl bg-[#d4780f] text-white text-sm font-bold hover:bg-[#b86400] active:scale-95 transition-all flex items-center gap-2 disabled:opacity-60"
