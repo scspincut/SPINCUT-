@@ -201,16 +201,18 @@ export default function BoutiquePage() {
         {homeView && (
           <>
             {/* Hero with rotating photos */}
-            <div className="relative overflow-hidden" style={{ height: '210px' }}>
+            <div className="relative overflow-hidden">
               {HERO_PHOTOS.map((src, i) => (
-                <div
+                <img
                   key={i}
-                  className="absolute inset-0 transition-opacity duration-1000"
+                  src={src}
+                  alt=""
+                  className="w-full transition-opacity duration-1000"
                   style={{
                     opacity: i === heroBg ? 1 : 0,
-                    backgroundImage: `url(${src})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    position: i === 0 ? 'relative' : 'absolute',
+                    top: 0, left: 0,
+                    display: 'block',
                   }}
                 />
               ))}
