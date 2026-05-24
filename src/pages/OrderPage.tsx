@@ -32,17 +32,6 @@ export default function OrderPage() {
   const [showHistory, setShowHistory] = useState(true)
   const [lastOrder, setLastOrder] = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(null)
 
-  const favKey = `spincut_favs_${getClientCode() ?? 'guest'}`
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(`spincut_favs_${getClientCode() ?? 'guest'}`) ?? '[]')) } catch { return new Set() }
-  })
-  const toggleFav = (uid: string) => setFavorites(prev => {
-    const next = new Set(prev)
-    next.has(uid) ? next.delete(uid) : next.add(uid)
-    try { localStorage.setItem(favKey, JSON.stringify([...next])) } catch {}
-    return next
-  })
-
   const clientCode = getClientCode()
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
   const clientName = clientInfo?.clientName ?? null
@@ -88,9 +77,6 @@ export default function OrderPage() {
       .filter((p): p is CatalogProduct => !!p && p.stock > 0)
   }, [orderHistory, catalog])
 
-  const favoriteItems = useMemo(() =>
-    catalog.filter(p => favorites.has(uid(p)) && p.stock > 0),
-  [catalog, favorites])
 
   if (!isAuthenticated) { navigate('/'); return null }
 
@@ -294,46 +280,6 @@ export default function OrderPage() {
                 return (
                   <div key={key} className="w-40 flex-shrink-0 bg-[#161616] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2">
                     <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
-                    <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
-                    <p className="text-[#d4780f] font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
-                    {qty === 0 ? (
-                      <button onClick={() => setQty(key, 1, p.stock)}
-                        className="w-full py-2 rounded-lg text-xs font-bold text-center"
-                        style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
-                      >+ Ajouter</button>
-                    ) : (
-                      <div className="flex items-center justify-between gap-1">
-                        <button onClick={() => setQty(key, -1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base">−</button>
-                        <span className="w-6 text-center text-[#d4780f] font-bold text-sm">{qty}</span>
-                        <button onClick={() => setQty(key, +1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base hover:bg-[#b86400] transition-colors active:scale-95">+</button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Favoris */}
-        {favoriteItems.length > 0 && (
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3 flex items-center gap-1.5">
-              <svg width="11" height="11" fill="#e03c3c" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-              Mes favoris
-            </p>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
-              {favoriteItems.map(p => {
-                const key = uid(p)
-                const qty = quantities[key] || 0
-                return (
-                  <div key={key} className="w-40 flex-shrink-0 bg-[#161616] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2">
-                    <div className="flex items-start justify-between gap-1">
-                      <p className="text-white font-mono text-xs font-semibold leading-tight flex-1 mr-1">{p.ref}</p>
-                      <button onClick={() => toggleFav(key)} className="flex-shrink-0" style={{ color: '#e03c3c' }}>
-                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                      </button>
-                    </div>
                     <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
                     <p className="text-[#d4780f] font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
                     {qty === 0 ? (

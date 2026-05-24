@@ -237,34 +237,33 @@ export default function BoutiquePage() {
 
               <p className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: '#444' }}>Boutique</p>
 
-              {/* Fraises CNC — SPINCUT noir/orangé */}
+              {/* Fraises CNC — noir/orange pur */}
               <button
                 onClick={() => enterTab('cnc')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #1c0e00 0%, #060200 100%)', border: '1px solid #3a1e00' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #1a0800 0%, #030100 100%)', border: '1px solid #d4780f44' }}
               >
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises CNC</p>
                     <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#d4780f' }}>SPINCUT</p>
                   </div>
-                  {/* Accent stripe */}
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e00)', borderRadius: '2px', flexShrink: 0 }} />
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e0044)', borderRadius: '2px', flexShrink: 0 }} />
                 </div>
               </button>
 
-              {/* Fraises Défonceuse — CMT rouge-orange signature */}
+              {/* Fraises Défonceuse — blanc/orange CMT */}
               <button
                 onClick={() => enterTab('cmt')}
                 className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #1f0500 0%, #0a0100 100%)', border: '1px solid #7a1a00' }}
+                style={{ height: '130px', background: 'linear-gradient(135deg, #1e1c14 0%, #0c0b08 100%)', border: '1px solid #f0dbb044' }}
               >
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises Défonceuse</p>
-                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#ff5500' }}>CMT</p>
+                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#f0dbb0' }}>CMT</p>
                   </div>
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #ff5500, #7a1a00)', borderRadius: '2px', flexShrink: 0 }} />
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #f0dbb0, #3a3420)', borderRadius: '2px', flexShrink: 0 }} />
                 </div>
               </button>
 
@@ -289,15 +288,14 @@ export default function BoutiquePage() {
                   className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
                   style={{ height: '90px', background: 'linear-gradient(135deg, #1a0507 0%, #080002 100%)', border: '1px solid #5a1a20' }}
                 >
-                  <div className="absolute inset-0 flex items-center px-5 gap-4">
-                    <svg width="22" height="22" fill="#e03c3c" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                    </svg>
+                  <div className="absolute inset-0 flex items-center px-5">
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-black text-lg leading-tight">Mes outils favoris</p>
                       <p className="text-xs mt-1 font-semibold" style={{ color: '#e03c3c' }}>{favorites.size} outil{favorites.size > 1 ? 's' : ''} sauvegardé{favorites.size > 1 ? 's' : ''}</p>
                     </div>
-                    <div style={{ width: '4px', height: '44px', background: 'linear-gradient(to bottom, #e03c3c, #5a1a20)', borderRadius: '2px', flexShrink: 0 }} />
+                    <svg width="30" height="30" fill="#e03c3c" viewBox="0 0 24 24" style={{ flexShrink: 0, opacity: 0.9 }}>
+                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                    </svg>
                   </div>
                 </button>
               )}
