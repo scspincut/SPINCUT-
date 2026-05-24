@@ -238,9 +238,6 @@ export default function LoginPage() {
           {/* Accroche — toujours visible */}
           <div className="px-5 pt-5 pb-4">
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
-            <p className="text-sm mt-1.5" style={{ color: '#8a8a8a' }}>
-              Boutique 100% en ligne — Accédez à votre compte, passez commande et gérez vos bons de commande
-            </p>
             <div className="mt-3 space-y-1.5">
               {[
                 'Calculateur CNC — vitesses, avances et profondeurs optimisées pour votre machine',

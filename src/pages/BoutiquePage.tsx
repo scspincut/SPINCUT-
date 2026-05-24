@@ -46,6 +46,7 @@ export default function BoutiquePage() {
   const cartKey = `spincut_cart_${clientCode ?? 'guest'}`
 
   const [homeView, setHomeView] = useState(true)
+  const [favsView, setFavsView] = useState(false)
   const [heroBg, setHeroBg] = useState(0)
   const [shopTab, setShopTab] = useState<'cnc' | 'cmt' | 'lames'>('cnc')
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
@@ -134,9 +135,12 @@ export default function BoutiquePage() {
   const setQtyDirect = (key: string, val: string, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
+  const favoriteItems = useMemo(() => catalog.filter(p => favorites.has(uid(p))), [catalog, favorites])
+
   const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
-  const goHome = () => { setHomeView(true); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
-  const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
+  const goHome = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
+  const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
+  const enterFavs = () => { setHomeView(false); setFavsView(true); setActiveCategory(null); resetFilters() }
 
 
   if (!isAuthenticated) { navigate('/'); return null }
@@ -168,8 +172,8 @@ export default function BoutiquePage() {
           </button>
         </div>
 
-        {/* Shop tabs — only in shop view */}
-        {!homeView && (
+        {/* Shop tabs — only in shop view, not in favs view */}
+        {!homeView && !favsView && (
           <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
             {SHOP_TABS.map(t => (
               <button
@@ -278,12 +282,105 @@ export default function BoutiquePage() {
                 </div>
               </button>
 
+              {/* Mes outils favoris — uniquement si favoris */}
+              {favorites.size > 0 && (
+                <button
+                  onClick={enterFavs}
+                  className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
+                  style={{ height: '90px', background: 'linear-gradient(135deg, #1a0507 0%, #080002 100%)', border: '1px solid #5a1a20' }}
+                >
+                  <div className="absolute inset-0 flex items-center px-5 gap-4">
+                    <svg width="22" height="22" fill="#e03c3c" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                    </svg>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-black text-lg leading-tight">Mes outils favoris</p>
+                      <p className="text-xs mt-1 font-semibold" style={{ color: '#e03c3c' }}>{favorites.size} outil{favorites.size > 1 ? 's' : ''} sauvegardé{favorites.size > 1 ? 's' : ''}</p>
+                    </div>
+                    <div style={{ width: '4px', height: '44px', background: 'linear-gradient(to bottom, #e03c3c, #5a1a20)', borderRadius: '2px', flexShrink: 0 }} />
+                  </div>
+                </button>
+              )}
+
             </div>
           </>
         )}
 
+        {/* ── FAVORIS VIEW ── */}
+        {!homeView && favsView && (
+          <>
+            <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+              <button onClick={goHome} className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Boutique
+              </button>
+              <span className="text-[#333] text-xs">·</span>
+              <span className="flex items-center gap-1 text-xs" style={{ color: '#e03c3c' }}>
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                Mes outils favoris
+              </span>
+            </div>
+
+            {favoriteItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
+                <svg className="w-12 h-12 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                <p className="text-[#444] text-sm">Aucun outil en favori</p>
+                <p className="text-[#333] text-xs">Appuyez sur ♥ sur un produit pour l'ajouter</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#161616]">
+                {favoriteItems.map(item => {
+                  const key = uid(item)
+                  const qty = quantities[key] || 0
+                  const selected = qty > 0
+                  const outOfStock = item.stock === 0
+                  return (
+                    <div key={key} className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-black'} ${outOfStock ? 'opacity-40' : ''}`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                          <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
+                          <StockBadge stock={item.stock} />
+                          <button onClick={() => toggleFav(key)} style={{ color: '#e03c3c', marginLeft: '2px' }}>
+                            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                          </button>
+                        </div>
+                        <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
+                        {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
+                      </div>
+                      <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                        {item.prix > 0
+                          ? <span className={`font-bold text-base ${selected ? 'text-[#d4780f]' : 'text-[#d4780f]/70'}`}>{fmt(item.prix)}€</span>
+                          : <span className="text-[#444] text-xs">Sur devis</span>
+                        }
+                        {!outOfStock && item.prix > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => setQty(key, -1, item.stock)}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
+                            >−</button>
+                            {qty > 0 && (
+                              <input type="number" min={0} max={item.stock} value={qty}
+                                onChange={e => setQtyDirect(key, e.target.value, item.stock)}
+                                className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
+                              />
+                            )}
+                            <button onClick={() => setQty(key, +1, item.stock)}
+                              className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
+                            >+</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
+
         {/* ── SHOP VIEW ── */}
-        {!homeView && (
+        {!homeView && !favsView && (
           <>
             {/* ── CNC Tab ── */}
             {shopTab === 'cnc' && (
