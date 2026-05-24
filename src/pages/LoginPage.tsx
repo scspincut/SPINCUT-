@@ -240,9 +240,9 @@ export default function LoginPage() {
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
             <div className="mt-3 space-y-1.5">
               {[
-                'Calculateur CNC — vitesse de broche, avance et profondeur de passe calculées pour votre outil et votre matériau',
-                'Boutique en ligne — commandez vos outils en quelques clics, 24h/24',
-                'Gestion de compte — historique et suivi de vos commandes',
+                'Calculateur CNC — les bons paramètres, du premier coup',
+                'Boutique en ligne — commandez en 30 secondes, 24h/24',
+                'Compte client — historique et suivi de vos commandes',
               ].map(txt => (
                 <div key={txt} className="flex items-start gap-2">
                   <span style={{ color: '#d4780f' }} className="mt-0.5 text-sm">✓</span>
