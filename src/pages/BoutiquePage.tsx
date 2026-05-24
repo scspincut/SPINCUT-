@@ -387,27 +387,23 @@ export default function BoutiquePage() {
               <>
                 {/* Filter bar */}
                 {!catalogLoading && !catalogError && activeCategory && (
-                  <div className="px-4 pt-4 pb-1 flex flex-col gap-2">
-                    {/* Row 1 — retour */}
+                  <div className="px-4 pt-4 pb-1 flex items-center gap-2">
                     <button
                       onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
-                      className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors self-start"
+                      className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
                       {CATEGORY_META[activeCategory]?.label}
                     </button>
-                    {/* Row 2 — filtres */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setFiltersOpen(o => !o)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
-                        Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-                      </button>
-                      {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
-                      <span className="ml-auto text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
-                    </div>
+                    {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
+                    <span className="text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
+                    <button
+                      onClick={() => setFiltersOpen(o => !o)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
+                      Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                    </button>
                   </div>
                 )}
 
