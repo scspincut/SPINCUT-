@@ -107,9 +107,9 @@ export default function BoutiquePage() {
   }, [])
 
   const activeTabCatalog = useMemo(() => {
-    if (shopTab === 'cnc') return catalog.filter(p => ['A0', 'B0', 'A2', 'B2'].includes(p.sheet))
-    if (shopTab === 'cmt') return catalog.filter(p => ['A1', 'B1'].includes(p.sheet))
-    return catalog.filter(p => ['A3', 'B3'].includes(p.sheet))
+    if (shopTab === 'cnc') return catalog.filter(p => ['STOCK A0', 'STOCK B0', 'STOCK A2', 'STOCK B2'].includes(p.sheet))
+    if (shopTab === 'cmt') return catalog.filter(p => ['STOCK A1', 'STOCK B1'].includes(p.sheet))
+    return catalog.filter(p => ['STOCK A3', 'STOCK B3'].includes(p.sheet))
   }, [shopTab, catalog])
 
   const tabs = useMemo(() => {
