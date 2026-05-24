@@ -17,7 +17,7 @@ interface AbbyProfile {
   lastname: string
   emails: string[]
   phone: string
-  deliveryAddress: AbbyAddress | null
+  billingAddress: AbbyAddress | null
 }
 
 interface OrderHistoryEntry {
@@ -75,10 +75,10 @@ export default function ProfilePage() {
         setProfile(data)
         setEditEmail(data.emails?.[0] ?? '')
         setEditPhone(data.phone ?? '')
-        setEditAddr(data.deliveryAddress?.address ?? '')
-        setEditComplement(data.deliveryAddress?.complement ?? '')
-        setEditCity(data.deliveryAddress?.city ?? '')
-        setEditZip(data.deliveryAddress?.zipCode ?? '')
+        setEditAddr(data.billingAddress?.address ?? '')
+        setEditComplement(data.billingAddress?.complement ?? '')
+        setEditCity(data.billingAddress?.city ?? '')
+        setEditZip(data.billingAddress?.zipCode ?? '')
       })
       .catch(() => setProfileError('Impossible de charger le profil'))
       .finally(() => setProfileLoading(false))
@@ -89,10 +89,10 @@ export default function ProfilePage() {
     if (!profile) return
     setEditEmail(profile.emails?.[0] ?? '')
     setEditPhone(profile.phone ?? '')
-    setEditAddr(profile.deliveryAddress?.address ?? '')
-    setEditComplement(profile.deliveryAddress?.complement ?? '')
-    setEditCity(profile.deliveryAddress?.city ?? '')
-    setEditZip(profile.deliveryAddress?.zipCode ?? '')
+    setEditAddr(profile.billingAddress?.address ?? '')
+    setEditComplement(profile.billingAddress?.complement ?? '')
+    setEditCity(profile.billingAddress?.city ?? '')
+    setEditZip(profile.billingAddress?.zipCode ?? '')
     setEditing(false)
   }
 
@@ -107,12 +107,12 @@ export default function ProfilePage() {
           id: profile.id,
           emails: editEmail ? [editEmail] : profile.emails,
           phone: editPhone || undefined,
-          deliveryAddress: {
+          billingAddress: {
             address: editAddr || null,
             complement: editComplement || null,
             city: editCity || null,
             zipCode: editZip || null,
-            country: profile.deliveryAddress?.country ?? 'FR',
+            country: profile.billingAddress?.country ?? 'FR',
           },
         }),
       })
@@ -122,7 +122,7 @@ export default function ProfilePage() {
         ...prev,
         emails: editEmail ? [editEmail] : prev.emails,
         phone: editPhone,
-        deliveryAddress: { address: editAddr || null, complement: editComplement || null, city: editCity || null, zipCode: editZip || null, country: prev.deliveryAddress?.country ?? 'FR' },
+        billingAddress: { address: editAddr || null, complement: editComplement || null, city: editCity || null, zipCode: editZip || null, country: prev.billingAddress?.country ?? 'FR' },
       } : prev)
       setEditing(false)
       setSaveOk(true)
@@ -223,15 +223,15 @@ export default function ProfilePage() {
             <div className="px-4 pb-4 space-y-3">
               <InfoRow label="Email" value={profile.emails?.[0] || '—'} />
               <InfoRow label="Téléphone" value={profile.phone || '—'} />
-              {profile.deliveryAddress && (
+              {profile.billingAddress && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Adresse de livraison</p>
-                  <p className="text-white text-sm">{profile.deliveryAddress.address || '—'}</p>
-                  {profile.deliveryAddress.complement && <p className="text-[#888] text-xs">{profile.deliveryAddress.complement}</p>}
-                  <p className="text-[#888] text-xs mt-0.5">{[profile.deliveryAddress.zipCode, profile.deliveryAddress.city].filter(Boolean).join(' ')}</p>
+                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Adresse</p>
+                  <p className="text-white text-sm">{profile.billingAddress.address || '—'}</p>
+                  {profile.billingAddress.complement && <p className="text-[#888] text-xs">{profile.billingAddress.complement}</p>}
+                  <p className="text-[#888] text-xs mt-0.5">{[profile.billingAddress.zipCode, profile.billingAddress.city].filter(Boolean).join(' ')}</p>
                 </div>
               )}
-              {!profile.deliveryAddress && <InfoRow label="Adresse de livraison" value="—" />}
+              {!profile.billingAddress && <InfoRow label="Adresse" value="—" />}
             </div>
           )}
 
@@ -240,7 +240,7 @@ export default function ProfilePage() {
               <EditField label="Email" value={editEmail} onChange={setEditEmail} type="email" placeholder="exemple@email.com" />
               <EditField label="Téléphone" value={editPhone} onChange={setEditPhone} type="tel" placeholder="06 XX XX XX XX" />
               <div>
-                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: '#555' }}>Adresse de livraison</p>
+                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: '#555' }}>Adresse</p>
                 <div className="space-y-2">
                   <EditField label="Rue / N°" value={editAddr} onChange={setEditAddr} placeholder="12 rue de la Forêt" />
                   <EditField label="Complément" value={editComplement} onChange={setEditComplement} placeholder="Bâtiment, étage… (optionnel)" />

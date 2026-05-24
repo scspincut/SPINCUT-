@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         lastname: contact.lastname ?? '',
         emails: contact.emails ?? [],
         phone: contact.phone ?? '',
-        deliveryAddress: contact.deliveryAddress ?? null,
+        billingAddress: (contact as any).billingAddress ?? null,
       })
     } catch (err) {
       return res.status(500).json({ error: err instanceof Error ? err.message : 'Erreur inconnue' })
@@ -35,11 +35,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // PATCH — met à jour le contact dans Abby
   if (req.method === 'PATCH') {
-    const { id, emails, phone, deliveryAddress } = req.body as {
+    const { id, emails, phone, billingAddress } = req.body as {
       id: string
       emails?: string[]
       phone?: string
-      deliveryAddress?: { address: string | null; complement?: string | null; city: string | null; zipCode: string | null; country: string }
+      billingAddress?: { address: string | null; complement?: string | null; city: string | null; zipCode: string | null; country: string }
     }
     if (!id) return res.status(400).json({ error: 'id requis' })
     try {
@@ -51,9 +51,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lastname: current.lastname,
           emails: emails ?? current.emails,
           phone: phone ?? current.phone,
-          deliveryAddress: deliveryAddress
-            ? { ...deliveryAddress, country: deliveryAddress.country as any }
-            : current.deliveryAddress,
+          billingAddress: billingAddress
+            ? { ...billingAddress, country: billingAddress.country as any }
+            : (current as any).billingAddress,
         },
       })
       return res.status(200).json({ ok: true })
