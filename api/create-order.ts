@@ -118,15 +118,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 5 — Notification ntfy.sh (awaited — Vercel terminates fire-and-forget before send)
+    // 5 — Email de notification via Resend
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
-    const lignes = items.map(i => `${i.quantity}x ${i.ref} (${i.price.toFixed(2)}EUR)`).join(' | ')
-    const ntfyMsg = `Client : ${clientName}\n${lignes}\nTotal ajout : ${total.toFixed(2)} EUR HT\nBDC : ${orderId}${!isNewBdc ? ' (enrichi)' : ' (nouveau)'}`
-    await fetch('https://ntfy.sh/spincut-commandes-7x4k9', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain', 'Title': 'Nouvelle commande SPINCUT', 'Priority': 'high', 'Tags': 'shopping,fr' },
-      body: ntfyMsg,
-    }).catch(() => {})
+    const resendKey = process.env.RESEND_API_KEY
+    if (resendKey) {
+      const lignesHtml = items.map(i =>
+        `<tr><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.quantity}×</td><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.ref}</td><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.designation}</td><td style="padding:4px 8px;border-bottom:1px solid #222;text-align:right;">${(i.price * i.quantity).toFixed(2)} €</td></tr>`
+      ).join('')
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'SPINCUT <onboarding@resend.dev>',
+          to: ['scspincut@gmail.com'],
+          subject: `🛒 Nouvelle commande — ${clientName}`,
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#111;color:#eee;border-radius:12px;padding:24px;">
+              <h2 style="color:#d4780f;margin-top:0;">Nouvelle commande SPINCUT</h2>
+              <p><strong>Client :</strong> ${clientName}</p>
+              <p><strong>BDC :</strong> ${orderId} ${isNewBdc ? '(nouveau)' : '(enrichi)'}</p>
+              <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+                <thead><tr style="color:#888;font-size:12px;">
+                  <th style="text-align:left;padding:4px 8px;">Qté</th>
+                  <th style="text-align:left;padding:4px 8px;">Réf</th>
+                  <th style="text-align:left;padding:4px 8px;">Désignation</th>
+                  <th style="text-align:right;padding:4px 8px;">Montant</th>
+                </tr></thead>
+                <tbody>${lignesHtml}</tbody>
+              </table>
+              <p style="text-align:right;font-size:16px;"><strong>Total HT : ${total.toFixed(2)} €</strong></p>
+              <p style="text-align:right;font-size:13px;color:#888;">Total TTC : ${(total * 1.2).toFixed(2)} €</p>
+            </div>`,
+        }),
+      }).catch(() => {})
+    }
 
     return res.status(200).json({ success: true, orderId, isNewBdc })
 
