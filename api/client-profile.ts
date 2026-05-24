@@ -35,8 +35,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // PATCH — met à jour le contact dans Abby
   if (req.method === 'PATCH') {
-    const { id, emails, phone, billingAddress } = req.body as {
+    const { id, firstname, lastname, emails, phone, billingAddress } = req.body as {
       id: string
+      firstname?: string
+      lastname?: string
       emails?: string[]
       phone?: string
       billingAddress?: { address: string | null; complement?: string | null; city: string | null; zipCode: string | null; country: string }
@@ -47,8 +49,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await abby.contact.updateContact({
         path: { id },
         body: {
-          firstname: current.firstname,
-          lastname: current.lastname,
+          firstname: firstname ?? current.firstname,
+          lastname: lastname ?? current.lastname,
           emails: emails ?? current.emails,
           phone: phone ?? current.phone,
           billingAddress: billingAddress

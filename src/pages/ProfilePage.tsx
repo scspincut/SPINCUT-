@@ -58,6 +58,8 @@ export default function ProfilePage() {
   const [saveOk, setSaveOk] = useState(false)
 
   // Editable fields
+  const [editFirstname, setEditFirstname] = useState('')
+  const [editLastname, setEditLastname] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [editAddr, setEditAddr] = useState('')
@@ -73,6 +75,8 @@ export default function ProfilePage() {
       .then(data => {
         if (data.error) { setProfileError(data.error); return }
         setProfile(data)
+        setEditFirstname(data.firstname ?? '')
+        setEditLastname(data.lastname ?? '')
         setEditEmail(data.emails?.[0] ?? '')
         setEditPhone(data.phone ?? '')
         setEditAddr(data.billingAddress?.address ?? '')
@@ -87,6 +91,8 @@ export default function ProfilePage() {
   const startEdit = () => { setSaveOk(false); setEditing(true) }
   const cancelEdit = () => {
     if (!profile) return
+    setEditFirstname(profile.firstname ?? '')
+    setEditLastname(profile.lastname ?? '')
     setEditEmail(profile.emails?.[0] ?? '')
     setEditPhone(profile.phone ?? '')
     setEditAddr(profile.billingAddress?.address ?? '')
@@ -105,6 +111,8 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: profile.id,
+          firstname: editFirstname || undefined,
+          lastname: editLastname || undefined,
           emails: editEmail ? [editEmail] : profile.emails,
           phone: editPhone || undefined,
           billingAddress: {
@@ -120,6 +128,8 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(data.error ?? 'Erreur serveur')
       setProfile(prev => prev ? {
         ...prev,
+        firstname: editFirstname || prev.firstname,
+        lastname: editLastname || prev.lastname,
         emails: editEmail ? [editEmail] : prev.emails,
         phone: editPhone,
         billingAddress: { address: editAddr || null, complement: editComplement || null, city: editCity || null, zipCode: editZip || null, country: prev.billingAddress?.country ?? 'FR' },
@@ -221,6 +231,10 @@ export default function ProfilePage() {
 
           {profile && !editing && (
             <div className="px-4 pb-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <InfoRow label="Prénom" value={profile.firstname || '—'} />
+                <InfoRow label="Nom" value={profile.lastname || '—'} />
+              </div>
               <InfoRow label="Email" value={profile.emails?.[0] || '—'} />
               <InfoRow label="Téléphone" value={profile.phone || '—'} />
               {profile.billingAddress && (
@@ -237,6 +251,10 @@ export default function ProfilePage() {
 
           {profile && editing && (
             <div className="px-4 pb-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <EditField label="Prénom" value={editFirstname} onChange={setEditFirstname} placeholder="Ibrahim" />
+                <EditField label="Nom" value={editLastname} onChange={setEditLastname} placeholder="TAMEGA" />
+              </div>
               <EditField label="Email" value={editEmail} onChange={setEditEmail} type="email" placeholder="exemple@email.com" />
               <EditField label="Téléphone" value={editPhone} onChange={setEditPhone} type="tel" placeholder="06 XX XX XX XX" />
               <div>
