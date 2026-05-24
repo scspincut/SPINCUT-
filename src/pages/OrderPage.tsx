@@ -148,7 +148,7 @@ export default function OrderPage() {
             </svg>
             Profil
           </button>
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '200px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '90px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"

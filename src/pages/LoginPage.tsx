@@ -99,10 +99,10 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-4"
       style={{ background: '#000' }}
     >
-      <div className="w-full max-w-sm flex flex-col items-center gap-5">
+      <div className="w-full max-w-sm flex flex-col items-center gap-2">
 
         {/* ── HERO ── */}
         {/* Logo réel */}
