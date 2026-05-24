@@ -109,7 +109,7 @@ export default function LoginPage() {
         <img
           src="/logo.png"
           alt="SPINCUT Outils CNC"
-          style={{ width: '100%', maxWidth: '420px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }}
+          style={{ width: '100%', maxWidth: '420px', maxHeight: '130px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }}
         />
 
         {/* Accroche */}
@@ -129,7 +129,7 @@ export default function LoginPage() {
         {/* Photo carousel */}
         <div
           className="w-full relative overflow-hidden"
-          style={{ height: '170px' }}
+          style={{ height: '240px' }}
           onTouchStart={e => setTouchStart(e.touches[0].clientX)}
           onTouchEnd={e => {
             if (touchStart === null) return
