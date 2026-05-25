@@ -69,8 +69,9 @@ function makeDesignation(p: SheetRow): string {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
-  const url = process.env.SHEETS_API_URL ?? 'https://script.google.com/macros/s/AKfycbw8ux3tMJv_5emOUcfd4c18YMRoHbKAgrLvyYP6OmAKcja7to-nBjtltWlvrzacfxC3Qg/exec'
-  const secret = process.env.SHEETS_SECRET ?? 'SPINCUT-STOCK-2025'
+  const url = process.env.SHEETS_API_URL
+  const secret = process.env.SHEETS_SECRET
+  if (!url || !secret) return res.status(500).json({ error: 'Google Sheets non configuré' })
 
   try {
     const response = await fetch(`${url}?secret=${encodeURIComponent(secret)}`)

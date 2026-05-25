@@ -8,9 +8,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!bdcId?.trim()) return res.status(400).json({ error: 'ID du BDC requis' })
 
   const apiKey = process.env.ABBY_API_KEY
-  const sheetsUrl = process.env.SHEETS_API_URL ?? 'https://script.google.com/macros/s/AKfycbw8ux3tMJv_5emOUcfd4c18YMRoHbKAgrLvyYP6OmAKcja7to-nBjtltWlvrzacfxC3Qg/exec'
-  const sheetsSecret = process.env.SHEETS_SECRET ?? 'SPINCUT-STOCK-2025'
+  const sheetsUrl = process.env.SHEETS_API_URL
+  const sheetsSecret = process.env.SHEETS_SECRET
   if (!apiKey) return res.status(500).json({ error: 'ABBY_API_KEY non configurée' })
+  if (!sheetsUrl || !sheetsSecret) return res.status(500).json({ error: 'Google Sheets non configuré' })
 
   try {
     const abby = new Abby(apiKey)
