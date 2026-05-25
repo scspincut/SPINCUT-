@@ -8,27 +8,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Merge vers main et déployer
+      - name: Déclencher déploiement Vercel
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git fetch origin main
-          git checkout main
-          git merge --no-ff origin/claude/add-french-support-dUuix \
-            -m "deploy: merge claude/add-french-support-dUuix → main"
-          git push origin main
-
-          echo "Merge vers main OK — déclenchement Vercel..."
-          curl -s -X POST "$VERCEL_DEPLOY_HOOK"
+          echo "Déclenchement Vercel deploy hook..."
+          curl -sf -X POST "$VERCEL_DEPLOY_HOOK"
           echo "Déploiement déclenché ✅"
