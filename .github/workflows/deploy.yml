@@ -9,25 +9,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Déclencher déploiement Vercel
+      - uses: actions/checkout@v4
+
+      - name: Deploy via Vercel CLI
         env:
-          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "=== Vérification secret ==="
-          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
-            echo "❌ VERCEL_DEPLOY_HOOK est vide ou non défini dans les secrets GitHub"
-            exit 1
-          fi
-          echo "✅ Secret présent (longueur: ${#VERCEL_DEPLOY_HOOK})"
+          # Récupère l'orgId depuis l'API Vercel (= userId pour compte Hobby)
+          ORG_ID=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+            https://api.vercel.com/v2/user | \
+            python3 -c "import sys,json; print(json.load(sys.stdin)['user']['id'])")
 
-          echo "=== Appel deploy hook ==="
-          HTTP_CODE=$(curl -s -o /tmp/vercel_response.txt -w "%{http_code}" -X POST "$VERCEL_DEPLOY_HOOK")
-          echo "HTTP code: $HTTP_CODE"
-          echo "Réponse: $(cat /tmp/vercel_response.txt)"
+          echo "OrgId: $ORG_ID"
 
-          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-            echo "✅ Déploiement déclenché avec succès"
-          else
-            echo "❌ Erreur HTTP $HTTP_CODE depuis Vercel"
-            exit 1
-          fi
+          # Crée la config projet Vercel directement
+          mkdir -p .vercel
+          printf '{"projectId":"prj_dJ8TDPGexRLRogCvc7vJq0plMplp","orgId":"%s"}' "$ORG_ID" > .vercel/project.json
+
+          # Déploiement production
+          npx vercel@latest --prod --yes --token "$VERCEL_TOKEN"
