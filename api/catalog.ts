@@ -77,10 +77,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const response = await fetch(`${url}?secret=${encodeURIComponent(secret)}`)
     if (!response.ok) return res.status(502).json({ error: 'Erreur Google Sheets' })
 
-    const raw: (SheetRow & { error?: string })[] = await response.json()
-    if ('error' in raw) return res.status(403).json({ error: 'Accès Google Sheets refusé' })
+    const raw: unknown = await response.json()
+    if (!Array.isArray(raw)) {
+      const errMsg = (raw as Record<string, unknown>)?.error ?? JSON.stringify(raw)
+      return res.status(403).json({ error: `Accès Google Sheets refusé: ${errMsg}` })
+    }
 
-    const products = (raw as SheetRow[]).map(p => {
+    const products = (raw as SheetRow[]).map((p: SheetRow) => {
       const designation = makeDesignation(p)
       const pm = isPMProduct(p)
       return {
