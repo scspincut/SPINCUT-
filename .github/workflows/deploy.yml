@@ -13,6 +13,21 @@ jobs:
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          echo "Déclenchement Vercel deploy hook..."
-          curl -sf -X POST "$VERCEL_DEPLOY_HOOK"
-          echo "Déploiement déclenché ✅"
+          echo "=== Vérification secret ==="
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "❌ VERCEL_DEPLOY_HOOK est vide ou non défini dans les secrets GitHub"
+            exit 1
+          fi
+          echo "✅ Secret présent (longueur: ${#VERCEL_DEPLOY_HOOK})"
+
+          echo "=== Appel deploy hook ==="
+          HTTP_CODE=$(curl -s -o /tmp/vercel_response.txt -w "%{http_code}" -X POST "$VERCEL_DEPLOY_HOOK")
+          echo "HTTP code: $HTTP_CODE"
+          echo "Réponse: $(cat /tmp/vercel_response.txt)"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Déploiement déclenché avec succès"
+          else
+            echo "❌ Erreur HTTP $HTTP_CODE depuis Vercel"
+            exit 1
+          fi
