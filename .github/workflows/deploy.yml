@@ -11,37 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Get Vercel Org ID
-        id: org
+      - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           ORG_ID=$(curl -sf -H "Authorization: Bearer $VERCEL_TOKEN" \
             https://api.vercel.com/v2/user | \
             python3 -c "import sys,json; print(json.load(sys.stdin)['user']['id'])")
-          echo "id=$ORG_ID" >> $GITHUB_OUTPUT
 
-      - name: Pull Vercel project & env vars
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ steps.org.outputs.id }}
-          VERCEL_PROJECT_ID: prj_dJ8TDPGexRLRogCvc7vJq0plMplp
-        run: npx vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+          mkdir -p .vercel
+          printf '{"projectId":"prj_dJ8TDPGexRLRogCvc7vJq0plMplp","orgId":"%s"}' "$ORG_ID" > .vercel/project.json
 
-      - name: Build
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ steps.org.outputs.id }}
-          VERCEL_PROJECT_ID: prj_dJ8TDPGexRLRogCvc7vJq0plMplp
-        run: npx vercel@latest build --prod --token "$VERCEL_TOKEN"
-
-      - name: Deploy
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ steps.org.outputs.id }}
-          VERCEL_PROJECT_ID: prj_dJ8TDPGexRLRogCvc7vJq0plMplp
-        run: npx vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+          VERCEL_ORG_ID="$ORG_ID" \
+          VERCEL_PROJECT_ID="prj_dJ8TDPGexRLRogCvc7vJq0plMplp" \
+          npx vercel@latest --prod --yes --token "$VERCEL_TOKEN"
