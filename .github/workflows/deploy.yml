@@ -10,70 +10,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Check secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Trigger Vercel deployment
         run: |
-          echo "VERCEL_TOKEN  : $([ -n "$VERCEL_TOKEN"   ] && echo 'SET' || echo '*** MISSING ***')"
-          echo "VERCEL_ORG_ID : $([ -n "$VERCEL_ORG_ID"  ] && echo 'SET' || echo '*** MISSING ***')"
-          echo "VERCEL_PROJECT_ID: $([ -n "$VERCEL_PROJECT_ID" ] && echo 'SET' || echo '*** MISSING ***')"
-
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo ""
-            echo "ERROR: Secrets manquants dans GitHub → Settings → Secrets → Actions"
-            echo "Ajoutez VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID"
-            exit 1
-          fi
-
-          echo ""
-          echo "=== Vérification token Vercel ==="
-          HTTP=$(curl -s -o /tmp/vercel_check.json -w "%{http_code}" \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v2/user")
-          echo "HTTP status: $HTTP"
-          if [ "$HTTP" != "200" ]; then
-            echo "Token invalide ou expiré:"
-            cat /tmp/vercel_check.json
-            exit 1
-          fi
-          python3 -c "import json; d=json.load(open('/tmp/vercel_check.json')); print('Connecté en tant que:', d.get('user',{}).get('email','?'))"
-
-          echo ""
-          echo "=== Projet Vercel ==="
-          curl -s \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID" \
-            | python3 -c "import sys,json; d=json.load(sys.stdin); print('Projet:', d.get('name', d.get('error','?')))"
-
-      - name: Pull Vercel config
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-
-      - name: Build
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel build --prod --token=$VERCEL_TOKEN
-
-      - name: Deploy
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          echo "Déclenchement du déploiement..."
+          RESPONSE=$(curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK }}")
+          echo "Réponse Vercel: $RESPONSE"
