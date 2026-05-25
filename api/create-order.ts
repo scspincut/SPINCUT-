@@ -103,8 +103,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 4 — Déduire le stock
-    const sheetsUrl = process.env.SHEETS_API_URL
-    const sheetsSecret = process.env.SHEETS_SECRET
+    const sheetsUrl = process.env.SHEETS_API_URL ?? 'https://script.google.com/macros/s/AKfycbw8ux3tMJv_5emOUcfd4c18YMRoHbKAgrLvyYP6OmAKcja7to-nBjtltWlvrzacfxC3Qg/exec'
+    const sheetsSecret = process.env.SHEETS_SECRET ?? 'SPINCUT-STOCK-2025'
     if (orderId && sheetsUrl && sheetsSecret) {
       const updates = items
         .filter(item => item.sheet && item.row)

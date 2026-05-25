@@ -9,8 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'sheet, row et quantity (> 0) requis' })
   }
 
-  const sheetsUrl = process.env.SHEETS_API_URL
-  const sheetsSecret = process.env.SHEETS_SECRET
+  const sheetsUrl = process.env.SHEETS_API_URL ?? 'https://script.google.com/macros/s/AKfycbw8ux3tMJv_5emOUcfd4c18YMRoHbKAgrLvyYP6OmAKcja7to-nBjtltWlvrzacfxC3Qg/exec'
+  const sheetsSecret = process.env.SHEETS_SECRET ?? 'SPINCUT-STOCK-2025'
   if (!sheetsUrl || !sheetsSecret) {
     return res.status(500).json({ error: 'Google Sheets non configuré' })
   }
