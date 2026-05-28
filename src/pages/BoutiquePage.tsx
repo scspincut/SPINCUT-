@@ -11,15 +11,20 @@ interface CatalogProduct {
 }
 
 const CATEGORY_META: Record<string, { label: string; order: number }> = {
-  classique:   { label: 'Fraise Classique',   order: 1 },
-  polimiroir:  { label: 'Fraise Polimiroir',  order: 2 },
-  compression: { label: 'Fraise Compression', order: 3 },
-  diamant:     { label: 'Diamant (PCD)',       order: 4 },
-  ravageuse:   { label: 'Ravageuse',           order: 5 },
-  alu:         { label: 'Aluminium',           order: 6 },
-  gravure:     { label: 'Fraise Gravure',      order: 7 },
-  percage:     { label: 'Perçage',             order: 8 },
-  accessoires: { label: 'Accessoires',         order: 9 },
+  classique:   { label: 'Fraise Classique',        order: 1 },
+  polimiroir:  { label: 'Fraise Polimiroir',        order: 2 },
+  compression: { label: 'Fraise Compression',       order: 3 },
+  diamant:     { label: 'Diamant (PCD)',             order: 4 },
+  ravageuse:   { label: 'Ravageuse',                order: 5 },
+  alu:         { label: 'Aluminium',                order: 6 },
+  gravure:     { label: 'Fraise Gravure',           order: 7 },
+  percage:     { label: 'Perçage',                  order: 8 },
+  rainurer:    { label: 'Fraise à Rainurer',        order: 9 },
+  affleurer:   { label: 'Fraise à Affleurer',       order: 10 },
+  feuillure:   { label: 'Fraise à Feuillure',       order: 11 },
+  faconner:    { label: 'Fraise à Façonner',        order: 12 },
+  plaquette:   { label: 'Fraise à Plaquette',       order: 13 },
+  accessoires: { label: 'Accessoires',              order: 14 },
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
@@ -117,7 +122,7 @@ export default function BoutiquePage() {
     return Object.entries(CATEGORY_META).filter(([id]) => cats.has(id)).sort((a, b) => a[1].order - b[1].order)
   }, [activeTabCatalog])
 
-  const usesCategories = shopTab === 'cnc'
+  const usesCategories = shopTab === 'cnc' || shopTab === 'cmt'
 
   const categoryProducts = useMemo(() =>
     usesCategories

@@ -24,6 +24,8 @@ function isPMProduct(p: SheetRow): boolean {
 
 function categorize(p: SheetRow): string {
   const f = p.famille.trim()
+  const desig = (p.designation || '').toUpperCase()
+
   if (isPMProduct(p)) return 'polimiroir'
   if (f.includes('GRAV')) return 'gravure'
   if (f.startsWith('FD')) return 'diamant'
@@ -32,6 +34,18 @@ function categorize(p: SheetRow): string {
   if (f === 'COLLET' || f.includes('DUST') || f.includes('EXTRACTION')) return 'accessoires'
   if (f.includes('ALU') || p.ref.toUpperCase().includes('ALU')) return 'alu'
   if (p.sens === 'UP AND DOWN') return 'compression'
+
+  // Fraises CMT — détection par désignation
+  if (desig.includes('RAINUR') || desig.includes('RAINER')) return 'rainurer'
+  if (desig.includes('AFFLEUR')) return 'affleurer'
+  if (desig.includes('FEUILLUR') || desig.includes('FEUILLERE') || desig.includes('FEUILLU')) return 'feuillure'
+  if (desig.includes('FAÇONN') || desig.includes('FACON') || desig.includes('FACONN')) return 'faconner'
+  if (desig.includes('PLAQUETTE') || desig.includes('COUTEAU')) return 'plaquette'
+
+  // Cônes et kits nettoyage → Accessoires
+  if (desig.includes('CONE') || desig.includes('CÔNE') || desig.includes('RÉDUCT')) return 'accessoires'
+  if (desig.includes('KIT') || desig.includes('NETTOYAGE') || desig.includes('NETTOY')) return 'accessoires'
+
   return 'classique'
 }
 
