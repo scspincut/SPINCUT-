@@ -11,21 +11,21 @@ export const TOOL_TYPE_LABELS: Record<ToolType, string> = {
 };
 
 export const MATERIAL_LABELS: Record<Material, string> = {
-  bois_tendre:   'Bois tendre (pin, sapin, épicéa, peuplier)',
-  bois_dur:      'Bois dur (chêne, hêtre, noyer, frêne)',
-  bois_exotique: 'Bois exotique / dense (ipé, ébène, wengé)',
-  mdf:           'MDF / Médium',
-  ctp:           'Contreplaqué (CTP bouleau, peuplier)',
-  melamine:      'Mélaminé / HDF / Stratifié',
-  alu_2017:      'Aluminium 2017A / 2024 (dural)',
-  alu_7075:      'Aluminium 7075 (avionique)',
-  alu_6060:      'Aluminium 6060 / 6082 (profilé)',
-  alu_coule:     'Aluminium coulé / fonderie (AS7, AS9)',
-  pvc_expanse:   'PVC expansé (Forex, Sintra)',
-  pvc_massif:    'PVC massif / rigide',
-  pmma:          'PMMA / Plexiglass / Acrylique',
-  pc:            'Polycarbonate (PC / Makrolon)',
-  abs_pom:       'ABS / POM / Nylon',
+  bois_tendre:        'Bois tendre (pin, sapin, épicéa, peuplier)',
+  bois_dur:           'Bois dur (chêne, hêtre, noyer, frêne, érable)',
+  bois_exotique:      'Bois exotique / dense (ipé, teck, wengé, ébène)',
+  mdf:                'MDF / Médium',
+  ctp:                'Contreplaqué (CTP bouleau, peuplier)',
+  melamine:           'Mélaminé / HDF mélaminé',
+  panneau_stratifie:  'Stratifié HPL (Formica, Trespa, Abet Laminati)',
+  alu_2017:           'Aluminium 2017A / 2024 (dural)',
+  alu_7075:           'Aluminium 7075 (avionique)',
+  alu_6060:           'Aluminium 6060 / 6082 (profilé)',
+  alu_coule:          'Aluminium coulé / fonderie (AS7, AS9)',
+  pvc:                'PVC (expansé Forex/Sintra — massif rigide)',
+  pmma:               'PMMA / Plexiglass / Acrylique',
+  pc:                 'Polycarbonate (PC / Makrolon)',
+  abs_pom:            'ABS / POM / Nylon',
 };
 
 export const OPERATION_LABELS: Record<string, string> = {
@@ -62,11 +62,11 @@ export const COATING_LABELS: Record<string, string> = {
 
 export const TOOL_MATERIALS: Record<ToolType, Material[]> = {
   carbure_monobloc: [
-    'bois_tendre','bois_dur','bois_exotique','mdf','ctp','melamine',
+    'bois_tendre','bois_dur','bois_exotique','mdf','ctp','melamine','panneau_stratifie',
     'alu_2017','alu_7075','alu_6060','alu_coule',
-    'pvc_expanse','pvc_massif','pmma','pc','abs_pom',
+    'pvc','pmma','pc','abs_pom',
   ],
-  diamant_coupe: ['bois_tendre','bois_dur','bois_exotique','mdf','ctp','melamine'],
+  diamant_coupe: ['bois_tendre','bois_dur','bois_exotique','mdf','ctp','melamine','panneau_stratifie'],
   compression:   ['bois_tendre','bois_dur','mdf','ctp','melamine'],
   ravageuse:     ['bois_tendre','bois_dur','mdf','ctp','alu_2017','alu_6060'],
   hss:           ['bois_tendre','bois_dur','ctp','mdf','alu_2017'],
@@ -91,72 +91,57 @@ type VcEntry = [number, number];
 
 export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
   // Carbure monobloc — sources: Onsrud, Vortex Tool, Amana Tool, Leuco, Harvey Performance
-  // VALIDATION: Vc_cible = (min+max)/2 → n = Vc×1000/(π×D)
-  // Ø8mm @ 18 000 tr/min = Vc 452 m/min → Vc_cible doit être ~450-480 pour bois courant
-  // Référence étalon terrain confirmé: compression mélaminé [380,530] → Vc_cible 455 → n Ø8 = 18 112 ✓
   carbure_monobloc: {
-    bois_tendre:   [300, 650],   // Vc_cible=475 → n Ø8=18 900, Ø6=20 000 (plafonné) ✓
-    bois_dur:      [250, 550],   // Vc_cible=400 → n Ø8=15 900 (bois dur = Vc -15%)
-    bois_exotique: [150, 350],   // Vc_cible=250 → n Ø8=9 950 (ipé/ébène très dur, carbure seulement)
-    mdf:           [280, 600],   // Vc_cible=440 → n Ø8=17 500 ✓ (abrasif mais coupe à grande Vc)
-    ctp:           [300, 650],   // Vc_cible=475 → n Ø8=18 900 ✓ (similaire bois tendre)
-    melamine:      [260, 520],   // Vc_cible=390 → n Ø8=15 500 (corindon abrasif, carbure use vite)
-    alu_2017:      [150, 350],   // 2017A/2024 dural — Harvey: 150-300 m/min router
-    alu_7075:      [100, 280],   // plus dur que 2017 — 75-85% Vc du 6061
-    alu_6060:      [200, 480],   // 6060/6082 profilé — souple, Vc plus élevée possible
-    alu_coule:     [100, 260],   // AS7/AS9 — Si abrasif, carbure grain fin
-    // Plastiques — sources: Onsrud Routing Plastics, Onsrud PC routing guide,
-    // Carbide3D forum, ChiefDelphi, HPL Machining, Cancam.ca
-    // NOTE: Onsrud PMMA = 300-700 SFM = 91-213 m/min (carbure 2 dents, pas O-flute)
-    // Vc élevée sur thermoplastiques = fusion irréversible → conservateur = correct
-    // Sources vérifiées : Onsrud CNC Production Routing Guide, ACRYLITE (Röhm),
-    // Techno CNC Chip Load Data, JustPolycarbonate, Cancam.ca
-    pvc_expanse:   [150, 400],   // OK — Carbide3D/Onsrud plastics ✓
-    pvc_massif:    [150, 350],   // min 150 (Cancam) → Vc_cible=250 → n Ø8=9 947 ✓
-    pmma:          [150, 460],   // Onsrud acrylic 500-1500 SFM = 152-457 m/min courant
-                                 // ACRYLITE (Röhm) : 1000-1500 SFM pour routing CNC
-                                 // → Vc_cible=305 → n Ø8=12 134 tr/min ✓
-    pc:            [150, 380],   // JustPolycarbonate : 8 000-15 000 RPM Ø8 recommandé
-                                 // Onsrud PC chipload 0.004-0.012 IPT → Vc_cible=265 → n Ø8=10 544 ✓
-    abs_pom:       [100, 320],   // ABS 400-800 SFM, POM 600-1000 SFM — OK ✓
+    bois_tendre:       [300, 650],
+    bois_dur:          [250, 550],
+    bois_exotique:     [150, 350],
+    mdf:               [280, 600],
+    ctp:               [300, 650],
+    melamine:          [260, 520],
+    panneau_stratifie: [180, 400],   // HPL ultra-abrasif (Formica/Trespa) — Vc réduite vs mélaminé
+    alu_2017:          [150, 350],
+    alu_7075:          [100, 280],
+    alu_6060:          [200, 480],
+    alu_coule:         [100, 260],
+    pvc:               [150, 400],   // PVC expansé (Forex) ou massif — fusion si Vc trop haute
+    pmma:              [150, 460],
+    pc:                [150, 380],
+    abs_pom:           [100, 320],
   },
-  // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250, Onsrud MDF data,
-  // Wirutex, Smarter Production nesting guide, zydiamondtools guide
-  // NOTE: Ø12mm @ 18 000 tr/min = 679 m/min → les bornes max doivent l'inclure
+  // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250, Onsrud, Wirutex
   diamant_coupe: {
-    bois_tendre:   [400, 900],   // Ø12 @ 24k RPM = 905 m/min — bornes larges pour couvrir tous Ø
-    bois_dur:      [350, 700],   // chêne/hêtre — Ø12 @ 18k = 679 m/min dans la plage
-    bois_exotique: [300, 600],   // ipé/wengé — dense, Ø10 @ 18k = 565 m/min inclus
-    mdf:           [400, 900],   // MDF = application principale PCD, Smarter Production confirme
-    ctp:           [400, 900],   // CTP — similaire MDF, Vc élevée possible
-    melamine:      [380, 750],   // mélaminé abrasif — Ø12 @ 18k = 679 m/min inclus
+    bois_tendre:       [400, 900],
+    bois_dur:          [350, 700],
+    bois_exotique:     [300, 600],
+    mdf:               [400, 900],
+    ctp:               [400, 900],
+    melamine:          [380, 750],
+    panneau_stratifie: [350, 700],   // HPL — PCD FORTEMENT RECOMMANDÉ (corindon ultra-abrasif)
   },
-  // Compression — Vortex Tool, Amana Tool, confirmé terrain Jeremy MAGGIO (18 000 RPM mélaminé Ø8)
+  // Compression — Vortex Tool, Amana Tool, confirmé terrain
   compression: {
-    bois_tendre: [350, 600],   // Vc_cible=475 → n Ø8=18 900 ✓ (plus souple que mélaminé)
-    bois_dur:    [280, 540],   // Vc_cible=410 → n Ø8=16 300
-    mdf:         [300, 560],   // Vc_cible=430 → n Ø8=17 100
-    ctp:         [350, 600],   // Vc_cible=475 → n Ø8=18 900 ✓
-    melamine:    [380, 530],   // Vc_cible=455 → n Ø8=18 112 ✓ CONFIRMÉ TERRAIN (Jeremy MAGGIO)
+    bois_tendre: [350, 600],
+    bois_dur:    [280, 540],
+    mdf:         [300, 560],
+    ctp:         [350, 600],
+    melamine:    [380, 530],   // CONFIRMÉ TERRAIN
   },
-  // Ravageuse — Amana chipbreaker recommande 20 000-21 000 RPM
-  // Vc_cible ~460 → n Ø8 ≈ 18 300 ✓
+  // Ravageuse — Amana chipbreaker
   ravageuse: {
-    bois_tendre: [320, 600],   // Vc_cible=460 → n Ø8=18 300 ✓
-    bois_dur:    [260, 500],   // Vc_cible=380 → n Ø8=15 100
-    mdf:         [280, 540],   // Vc_cible=410 → n Ø8=16 300
-    ctp:         [320, 600],   // Vc_cible=460 → n Ø8=18 300 ✓
-    alu_2017:    [100, 220],   // aluminium sans refroidissement
-    alu_6060:    [150, 280],   // 6060 plus tendre que 2017
+    bois_tendre: [320, 600],
+    bois_dur:    [260, 500],
+    mdf:         [280, 540],
+    ctp:         [320, 600],
+    alu_2017:    [100, 220],
+    alu_6060:    [150, 280],
   },
-  // HSS — sources: Practical Machinist, STEPCRAFT, Drill-Service.co.uk
-  // HSS rare en CNC pro — carbure 10× plus rentable en production
+  // HSS — rare en CNC pro
   hss: {
-    bois_tendre: [80,  130],   // ~91 m/min pratique max selon Practical Machinist
-    bois_dur:    [60,  100],   // dur + résines → usure très rapide
-    ctp:         [60,  100],   // colles abrasives = non recommandé pour HSS
-    mdf:         [50,   90],   // MDF = HSS inutilisable en série
-    alu_2017:    [60,  100],   // HSS alu: 60-90 m/min (Drill-Service.co.uk)
+    bois_tendre: [80,  130],
+    bois_dur:    [60,  100],
+    ctp:         [60,  100],
+    mdf:         [50,   90],
+    alu_2017:    [60,  100],
   },
 };
 
@@ -164,42 +149,34 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
 
 export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
   // Carbure monobloc — steps [2,3,4,6,8,10,12,16,20]
-  // Référence: règle ~1-2% du diamètre, Onsrud, Vortex Tool, Techno CNC
   carbure_monobloc: {
-    bois_tendre:   [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
-    bois_dur:      [0.025, 0.035, 0.045, 0.070, 0.090, 0.115, 0.140, 0.170, 0.210],
-    bois_exotique: [0.018, 0.025, 0.032, 0.050, 0.068, 0.085, 0.100, 0.125, 0.155],
-    mdf:           [0.030, 0.045, 0.058, 0.088, 0.110, 0.140, 0.168, 0.208, 0.255],   // Freud: MDF ≥ bois tendre (silice → chip load élevé anti-friction)
-    ctp:           [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
-    melamine:      [0.022, 0.032, 0.042, 0.065, 0.085, 0.105, 0.130, 0.160, 0.195],
-    // Aluminium — sources: Harvey Performance, Garr Tool, Machining Doctor
-    // fz minimum anti-BUE (alu gummy si fz trop faible)
-    alu_2017:      [0.006, 0.010, 0.013, 0.022, 0.030, 0.040, 0.050, 0.065, 0.080],
-    alu_7075:      [0.005, 0.008, 0.011, 0.018, 0.025, 0.033, 0.042, 0.053, 0.065],
-    alu_6060:      [0.008, 0.012, 0.016, 0.028, 0.040, 0.055, 0.065, 0.085, 0.105],
-    alu_coule:     [0.005, 0.008, 0.011, 0.018, 0.024, 0.030, 0.038, 0.048, 0.058],
-    // Plastiques — fz élevé = moins de chaleur = pas de fusion
-    // Plastiques — Onsrud PC 0.004-0.012 IPT, ACRYLITE 0.004-0.015 IPT
-    // Amana Spektra Ø6mm = 0.008-0.012 IPT (0.20-0.30 mm/dent, 1 dent O-flute)
-    // fz MIN critique : trop bas → frottement → FUSION. fz élevé = bons copeaux.
-    pvc_expanse:   [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],   // OK
-    pvc_massif:    [0.044, 0.063, 0.081, 0.120, 0.150, 0.190, 0.228, 0.283, 0.338],   // +25%
-    pmma:          [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.201, 0.248, 0.301],   // +24%
-    pc:            [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.195, 0.236, 0.283],   // +24%
-    abs_pom:       [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],   // OK
+    bois_tendre:       [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
+    bois_dur:          [0.025, 0.035, 0.045, 0.070, 0.090, 0.115, 0.140, 0.170, 0.210],
+    bois_exotique:     [0.018, 0.025, 0.032, 0.050, 0.068, 0.085, 0.100, 0.125, 0.155],
+    mdf:               [0.030, 0.045, 0.058, 0.088, 0.110, 0.140, 0.168, 0.208, 0.255],
+    ctp:               [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
+    melamine:          [0.022, 0.032, 0.042, 0.065, 0.085, 0.105, 0.130, 0.160, 0.195],
+    panneau_stratifie: [0.018, 0.028, 0.036, 0.055, 0.073, 0.092, 0.113, 0.140, 0.170],   // HPL — fz prudent, ultra-abrasif
+    alu_2017:          [0.006, 0.010, 0.013, 0.022, 0.030, 0.040, 0.050, 0.065, 0.080],
+    alu_7075:          [0.005, 0.008, 0.011, 0.018, 0.025, 0.033, 0.042, 0.053, 0.065],
+    alu_6060:          [0.008, 0.012, 0.016, 0.028, 0.040, 0.055, 0.065, 0.085, 0.105],
+    alu_coule:         [0.005, 0.008, 0.011, 0.018, 0.024, 0.030, 0.038, 0.048, 0.058],
+    pvc:               [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],   // fz ÉLEVÉ anti-fusion
+    pmma:              [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.201, 0.248, 0.301],
+    pc:                [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.195, 0.236, 0.283],
+    abs_pom:           [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
   },
   // Diamant PCD — steps [3,6,8,10,12,16,20]
-  // Vc bien plus élevée qu'en carbure → fz reste dans les mêmes ordres de grandeur
   diamant_coupe: {
-    bois_tendre:   [0.045, 0.090, 0.125, 0.160, 0.190, 0.230, 0.275],
-    bois_dur:      [0.035, 0.070, 0.100, 0.125, 0.150, 0.185, 0.220],
-    bois_exotique: [0.028, 0.058, 0.082, 0.105, 0.128, 0.155, 0.188],
-    mdf:           [0.045, 0.090, 0.125, 0.158, 0.185, 0.220, 0.265],
-    ctp:           [0.045, 0.090, 0.135, 0.160, 0.195, 0.230, 0.275],
-    melamine:      [0.035, 0.070, 0.100, 0.128, 0.158, 0.195, 0.230],
+    bois_tendre:       [0.045, 0.090, 0.125, 0.160, 0.190, 0.230, 0.275],
+    bois_dur:          [0.035, 0.070, 0.100, 0.125, 0.150, 0.185, 0.220],
+    bois_exotique:     [0.028, 0.058, 0.082, 0.105, 0.128, 0.155, 0.188],
+    mdf:               [0.045, 0.090, 0.125, 0.158, 0.185, 0.220, 0.265],
+    ctp:               [0.045, 0.090, 0.135, 0.160, 0.195, 0.230, 0.275],
+    melamine:          [0.035, 0.070, 0.100, 0.128, 0.158, 0.195, 0.230],
+    panneau_stratifie: [0.028, 0.060, 0.088, 0.112, 0.138, 0.170, 0.205],   // HPL — PCD fortement recommandé
   },
   // Compression — steps [3,6,8,10,12,16,20]
-  // Référence: Vortex Tool, Amana Tool, Onsrud — validé terrain
   compression: {
     bois_tendre: [0.032, 0.078, 0.112, 0.135, 0.168, 0.202, 0.248],
     bois_dur:    [0.027, 0.062, 0.090, 0.112, 0.135, 0.168, 0.202],
@@ -208,17 +185,15 @@ export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
     melamine:    [0.027, 0.068, 0.100, 0.125, 0.148, 0.180, 0.215],
   },
   // Ravageuse — steps [6,8,10,12,16,20]
-  // Festons permettent fz plus élevé que carbure standard
   ravageuse: {
     bois_tendre: [0.115, 0.160, 0.195, 0.230, 0.285, 0.340],
     bois_dur:    [0.090, 0.125, 0.150, 0.182, 0.228, 0.275],
     mdf:         [0.100, 0.138, 0.170, 0.205, 0.252, 0.300],
     ctp:         [0.115, 0.160, 0.195, 0.230, 0.285, 0.340],
-    alu_2017:    [0.035, 0.065, 0.075, 0.095, 0.125, 0.155],   // Ø8: 0.055→0.065 (PracticalMachinist: fz trop bas = friction)
-    alu_6060:    [0.048, 0.085, 0.095, 0.115, 0.148, 0.178],   // Ø8: 0.075→0.085 (PracticalMachinist: 6060 souple = fz + élevé)
+    alu_2017:    [0.035, 0.065, 0.075, 0.095, 0.125, 0.155],
+    alu_6060:    [0.048, 0.085, 0.095, 0.115, 0.148, 0.178],
   },
   // HSS — steps [3,6,8,10,12]
-  // HSS moins rigide que carbure → fz conservateur pour éviter chatter/casse
   hss: {
     bois_tendre: [0.025, 0.050, 0.072, 0.095, 0.120],
     bois_dur:    [0.018, 0.035, 0.052, 0.070, 0.092],
@@ -273,7 +248,7 @@ export const OPERATION_PARAMS: Record<string, OpParams> = {
   poche_finition:      { apFactor: 0.25, aeFactor: 0.10,  apLabel: '0.25×D', aeLabel: '10%', isFinition: true, noRctf: false },
 };
 
-// ─── Coating Vc multipliers (section 4.1) ────────────────────────────────────
+// ─── Coating Vc multipliers ───────────────────────────────────────────────────
 
 export const COATING_COEFF: Record<string, number> = {
   none:  1.00,
@@ -298,7 +273,7 @@ export const NOTATION_FZ_COEFF: Record<ToolNotation, number> = {
   '3+3': 0.80,
 };
 
-// ─── Vf_Z coefficient by material (section 9) ────────────────────────────────
+// ─── Vf_Z coefficient by material ────────────────────────────────────────────
 
 export interface VfzInfo {
   coeff: number;
@@ -306,21 +281,21 @@ export interface VfzInfo {
 }
 
 export const VFZ_TABLE: Record<Material, VfzInfo> = {
-  bois_tendre:   { coeff: 0.50, mode: 'Plongée directe OK' },
-  bois_dur:      { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
-  bois_exotique: { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
-  mdf:           { coeff: 0.50, mode: 'Plongée directe OK' },
-  ctp:           { coeff: 0.50, mode: 'Plongée directe OK' },
-  melamine:      { coeff: 0.40, mode: 'Rampe linéaire 3-5°' },
-  alu_2017:      { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
-  alu_7075:      { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
-  alu_6060:      { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
-  alu_coule:     { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
-  pvc_expanse:   { coeff: 0.50, mode: 'Plongée directe OK' },
-  pvc_massif:    { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
-  pmma:          { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
-  pc:            { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
-  abs_pom:       { coeff: 0.50, mode: 'Plongée directe OK' },
+  bois_tendre:       { coeff: 0.50, mode: 'Plongée directe OK' },
+  bois_dur:          { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
+  bois_exotique:     { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
+  mdf:               { coeff: 0.50, mode: 'Plongée directe OK' },
+  ctp:               { coeff: 0.50, mode: 'Plongée directe OK' },
+  melamine:          { coeff: 0.40, mode: 'Rampe linéaire 3-5°' },
+  panneau_stratifie: { coeff: 0.40, mode: 'Rampe linéaire 3-5°' },
+  alu_2017:          { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
+  alu_7075:          { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
+  alu_6060:          { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
+  alu_coule:         { coeff: 0.25, mode: 'Rampe hélicoïdale OBLIGATOIRE' },
+  pvc:               { coeff: 0.50, mode: 'Plongée directe OK' },
+  pmma:              { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
+  pc:                { coeff: 0.33, mode: 'Rampe linéaire 3-5°' },
+  abs_pom:           { coeff: 0.50, mode: 'Plongée directe OK' },
 };
 
 // ─── Forbidden combinations ───────────────────────────────────────────────────
@@ -333,7 +308,7 @@ export const FORBIDDEN_COMBOS: Array<{ tool: ToolType; materials: Material[]; ms
   },
   {
     tool: 'diamant_coupe',
-    materials: ['pvc_expanse','pvc_massif','pmma','pc','abs_pom'],
+    materials: ['pvc','pmma','pc','abs_pom'],
     msg: 'INTERDIT — Fraise diamant incompatible avec les plastiques.',
   },
   {
@@ -343,7 +318,7 @@ export const FORBIDDEN_COMBOS: Array<{ tool: ToolType; materials: Material[]; ms
   },
 ];
 
-// ─── Conseils par outil (section 14) ──────────────────────────────────────────
+// ─── Conseils par outil ───────────────────────────────────────────────────────
 
 export const CONSEILS_OUTIL: Record<ToolType, string[]> = {
   carbure_monobloc: [
@@ -357,7 +332,7 @@ export const CONSEILS_OUTIL: Record<ToolType, string[]> = {
   diamant_coupe: [
     'Vc élevée recommandée — géométrie faite pour la vitesse sur bois.',
     'Soufflage copeaux impératif.',
-    'Surveiller usure sur mélaminé/HDF (très abrasif).',
+    'Surveiller usure sur HPL/mélaminé (très abrasif).',
     'Z dans la formule = total des arêtes (2+2 → Z=4).',
     'JAMAIS sur métal ou plastique.',
   ],
@@ -382,7 +357,7 @@ export const CONSEILS_OUTIL: Record<ToolType, string[]> = {
   ],
 };
 
-// ─── Conseils par matière (section 15) ────────────────────────────────────────
+// ─── Conseils par matière ─────────────────────────────────────────────────────
 
 export const CONSEILS_MATIERE: Record<Material, string[]> = {
   bois_tendre: [
@@ -396,7 +371,7 @@ export const CONSEILS_MATIERE: Record<Material, string[]> = {
     'Aspiration copeaux recommandée.',
   ],
   bois_exotique: [
-    'ASPIRATION OBLIGATOIRE — poussières toxiques.',
+    'ASPIRATION OBLIGATOIRE — poussières toxiques (ipé, wengé).',
     'Carbure grain fin ou diamant UNIQUEMENT.',
     'HSS inutilisable (usure en quelques secondes).',
     'Chip load 1% de D.',
@@ -417,6 +392,13 @@ export const CONSEILS_MATIERE: Record<Material, string[]> = {
     'Fraise compression 2+2 ou 3+3 = meilleur résultat deux faces.',
     'fz réduit de 15% vs bois dur.',
     'Arrachement décor irréparable → ne pas forcer fz.',
+  ],
+  panneau_stratifie: [
+    'HPL ultra-abrasif (corindon) — FRAISE DIAMANT PCD fortement recommandée.',
+    'Carbure monobloc possible mais durée de vie très courte.',
+    'fz prudent, Vc modérée vs mélaminé standard.',
+    'Trespa / Formica : couper en découpe nette, pas de stries.',
+    'Jamais de fraise compression ou HSS.',
   ],
   alu_2017: [
     'MICROLUBRIFICATION ou arrosage continu OBLIGATOIRE.',
@@ -441,16 +423,12 @@ export const CONSEILS_MATIERE: Record<Material, string[]> = {
     'Arrosage obligatoire.',
     'Carbure grain fin spécial fonderie recommandé.',
   ],
-  pvc_expanse: [
+  pvc: [
     "Basse broche + haute avance = règle d'or.",
-    'Air comprimé (évacuation des copeaux).',
+    'fz élevé (1.5-2% D), n modéré.',
+    'Air comprimé uniquement (évacuation copeaux).',
     'Risque fusion si Vc trop élevée — IRREVERSIBLE.',
-    'Si fonte → réduire n de 30%, augmenter Vf de 20%.',
-  ],
-  pvc_massif: [
-    'Sec ou air comprimé.',
-    'fz élevé, n modéré.',
-    'Comportement meilleur que PVC expansé.',
+    'PVC massif : meilleur comportement que Forex.',
   ],
   pmma: [
     "Air comprimé UNIQUEMENT — JAMAIS d'eau (fissuration).",
@@ -470,7 +448,7 @@ export const CONSEILS_MATIERE: Record<Material, string[]> = {
   ],
 };
 
-// ─── Diagnostic (section 16) ──────────────────────────────────────────────────
+// ─── Diagnostic ───────────────────────────────────────────────────────────────
 
 export const DIAGNOSTIC = [
   { symptome: 'Traces noires / brûlures bois',    cause: 'n trop élevé OU fz trop faible',           solution: 'Réduire n, augmenter Vf' },
@@ -486,5 +464,172 @@ export const DIAGNOSTIC = [
   { symptome: 'Arrachement sur compression',     cause: 'ap < longueur zone upcut',                 solution: 'Augmenter ap ou changer outil' },
   { symptome: 'Surface striée après ravageuse',   cause: 'Normal — denture festonnée',               solution: 'Passe de finition outil lisse obligatoire' },
   { symptome: 'Fissures PMMA',                    cause: 'Vf trop élevée ou outil émoussé',          solution: 'Réduire Vf, changer outil' },
-  { symptome: 'Arrachement mélaminé',            cause: 'fz trop élevé ou outil inadapté',          solution: 'Réduire fz de 15%, utiliser compression' },
+  { symptome: 'Arrachement mélaminé / HPL',       cause: 'fz trop élevé ou outil inadapté',          solution: 'Réduire fz, utiliser diamant ou compression' },
 ];
+
+// ─── Guide Matières & Outils (référence pro) ──────────────────────────────────
+
+export interface MatGuide {
+  nom: string
+  cat: string
+  premier: ToolType[]
+  aussi: ToolType[]
+  eviter: string
+  astuce: string
+}
+
+export const MATERIAL_GUIDE: MatGuide[] = [
+  // ── BOIS RÉSINEUX ──
+  { nom: 'Pin / Sapin / Épicéa', cat: 'Bois résineux',
+    premier: ['carbure_monobloc', 'ravageuse'], aussi: ['compression'],
+    eviter: 'HSS (usure rapide)',
+    astuce: 'Z=2, fz 2% D, Vc 350-600 m/min. Copeaux longs = bon signe.' },
+  { nom: 'Peuplier', cat: 'Bois résineux',
+    premier: ['carbure_monobloc', 'ravageuse'], aussi: ['compression'],
+    eviter: 'HSS',
+    astuce: 'Bois tendre homogène. Vc élevée possible, excellent copeau.' },
+
+  // ── BOIS FEUILLUS ──
+  { nom: 'Bouleau', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc'], aussi: ['compression', 'ravageuse'],
+    eviter: 'HSS',
+    astuce: 'Bois homogène, beau copeau. Standard.' },
+  { nom: 'Aulne / Tilleul', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc'], aussi: ['ravageuse'],
+    eviter: '',
+    astuce: 'Bois tendres feuillus, usinabilité facile.' },
+  { nom: 'Hêtre', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc'], aussi: ['diamant_coupe', 'ravageuse'],
+    eviter: 'HSS',
+    astuce: 'Attention vapeur eau à haute T° → ne pas brûler. Bois homogène.' },
+  { nom: 'Chêne', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc', 'diamant_coupe'], aussi: ['ravageuse'],
+    eviter: 'HSS inutilisable',
+    astuce: 'Tanins agressifs pour les outils. Vc -15% vs résineux. Aspiration.' },
+  { nom: 'Frêne', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc'], aussi: ['compression'],
+    eviter: 'HSS',
+    astuce: 'Fibres longues → aspiration. Carbure grain fin.' },
+  { nom: 'Noyer / Merisier', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc'], aussi: ['diamant_coupe'],
+    eviter: '',
+    astuce: 'Résines huileux → carbure grain fin. Beau copeau.' },
+  { nom: 'Érable / Robinier', cat: 'Bois feuillus',
+    premier: ['carbure_monobloc', 'diamant_coupe'], aussi: ['ravageuse'],
+    eviter: 'HSS',
+    astuce: 'Très durs. Vc -20% vs résineux. Carbure qualité premium.' },
+
+  // ── BOIS EXOTIQUES ──
+  { nom: 'Ipé / Teck', cat: 'Bois exotiques',
+    premier: ['carbure_monobloc', 'diamant_coupe'], aussi: [],
+    eviter: 'HSS, fraise compression',
+    astuce: 'Contient silice et huiles. Carbure grain fin UNIQUEMENT. Aspiration P3.' },
+  { nom: 'Wengé / Iroko', cat: 'Bois exotiques',
+    premier: ['carbure_monobloc', 'diamant_coupe'], aussi: [],
+    eviter: 'HSS',
+    astuce: 'ASPIRATION OBLIGATOIRE. Poussières toxiques. Vc -30% vs bois dur.' },
+  { nom: 'Ébène / Bois de rose', cat: 'Bois exotiques',
+    premier: ['diamant_coupe', 'carbure_monobloc'], aussi: [],
+    eviter: 'HSS, ravageuse',
+    astuce: 'Le + dur des bois. fz 1% D max. Diamant ou carbure ultra-fin.' },
+
+  // ── PANNEAUX ──
+  { nom: 'MDF / Médium', cat: 'Panneaux dérivés',
+    premier: ['carbure_monobloc', 'diamant_coupe'], aussi: ['compression'],
+    eviter: 'HSS inutilisable',
+    astuce: 'Silice + formaldéhyde = ASPIRATION OBLIGATOIRE. Outil use vite → changer souvent.' },
+  { nom: 'Contreplaqué bouleau', cat: 'Panneaux dérivés',
+    premier: ['compression', 'diamant_coupe'], aussi: ['carbure_monobloc'],
+    eviter: '',
+    astuce: 'Compression 2+2/3+3 = deux faces nettes. Colles entre plis très abrasives.' },
+  { nom: 'Contreplaqué peuplier', cat: 'Panneaux dérivés',
+    premier: ['compression', 'carbure_monobloc'], aussi: ['diamant_coupe'],
+    eviter: '',
+    astuce: 'Plus souple que bouleau. Compression recommandée pour découpe.' },
+  { nom: 'Mélaminé / HDF', cat: 'Panneaux dérivés',
+    premier: ['compression', 'diamant_coupe'], aussi: ['carbure_monobloc'],
+    eviter: 'HSS, ravageuse',
+    astuce: 'Corindon très abrasif. Compression 2+2 ou 3+3 = meilleur résultat. fz -15% vs bois.' },
+  { nom: 'Stratifié HPL (Formica, Trespa, Abet…)', cat: 'Panneaux dérivés',
+    premier: ['diamant_coupe'], aussi: ['carbure_monobloc'],
+    eviter: 'HSS, compression, ravageuse',
+    astuce: 'Ultra-abrasif (corindon phénolique). PCD FORTEMENT RECOMMANDÉ. Carbure = durée de vie très courte.' },
+
+  // ── ALUMINIUM ──
+  { nom: 'Alu 2017A / 2024 (dural)', cat: 'Aluminium',
+    premier: ['carbure_monobloc'], aussi: ['ravageuse'],
+    eviter: 'Diamant PCD, compression, HSS à sec',
+    astuce: '1-2 dents, microlubrification OBLIGATOIRE. Rampe hélicoïdale. En avalant uniquement.' },
+  { nom: 'Alu 7075 (avionique)', cat: 'Aluminium',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: 'Diamant PCD, compression',
+    astuce: 'Plus dur que 2017. Mêmes règles. Arrosage obligatoire.' },
+  { nom: 'Alu 6060 / 6082 (profilé)', cat: 'Aluminium',
+    premier: ['carbure_monobloc'], aussi: ['ravageuse'],
+    eviter: 'Diamant PCD, compression',
+    astuce: 'Plus tendre et souple. Vc possible plus élevée. Microlubrification recommandée.' },
+  { nom: 'Alu coulé AS7 / AS9', cat: 'Aluminium',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: 'Diamant PCD, compression',
+    astuce: 'Silicium abrasif. Carbure grain fin spécial fonderie. Arrosage.' },
+
+  // ── PLASTIQUES ──
+  { nom: 'PVC expansé (Forex, Sintra)', cat: 'Plastiques',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: 'Vc trop élevée = fusion IRREVERSIBLE',
+    astuce: 'Basse broche + haute avance. fz 1.5-2% D. Air comprimé.' },
+  { nom: 'PVC massif / rigide', cat: 'Plastiques',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: 'Vc élevée',
+    astuce: 'fz élevé, n modéré. Meilleur comportement que PVC expansé.' },
+  { nom: 'PMMA / Acrylique', cat: 'Plastiques',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: "EAU (fissuration), Vc élevée",
+    astuce: '1 dent O-flute idéal. Air comprimé UNIQUEMENT. Arête parfaite.' },
+  { nom: 'Polycarbonate (PC)', cat: 'Plastiques',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: '',
+    astuce: 'Matière gommeuse. fz élevé anti-bouchonnage. 1-2 dents.' },
+  { nom: 'ABS', cat: 'Plastiques',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: 'Vc élevée (fusion facile)',
+    astuce: 'fz élevé. Soufflage air. Fusion facile.' },
+  { nom: 'POM (Delrin) / Nylon', cat: 'Plastiques',
+    premier: ['carbure_monobloc'], aussi: [],
+    eviter: '',
+    astuce: 'POM = excellent comportement, copeau propre. Nylon = hygroscopique.' },
+];
+
+export interface ToolGuide {
+  matieres_optimales: string
+  eviter: string
+  conseil: string
+}
+
+export const TOOL_GUIDE: Record<ToolType, ToolGuide> = {
+  carbure_monobloc: {
+    matieres_optimales: 'Tous bois massifs (résineux, feuillus, exotiques), MDF, CTP, Mélaminé, HPL, Aluminium, tous plastiques',
+    eviter: 'Inox, acier, titane',
+    conseil: 'Outil universel. 1-2 dents pour plastiques/alu, 2-3 dents pour bois. Grain fin pour matières dures.',
+  },
+  diamant_coupe: {
+    matieres_optimales: 'HPL Formica/Trespa (idéal), Mélaminé, MDF, CTP, Bois exotiques denses',
+    eviter: 'Aluminium (INTERDIT), plastiques (INTERDIT), inox',
+    conseil: 'Investissement sur matières ultra-abrasives. Durée de vie 5-10× carbure sur MDF/HPL. Vc élevée recommandée.',
+  },
+  compression: {
+    matieres_optimales: 'Mélaminé (meilleur résultat deux faces), CTP bouleau, MDF, Bois massif épaisseur pleine',
+    eviter: 'Aluminium (INTERDIT), plastiques, HPL',
+    conseil: 'ap DOIT dépasser zone upcut. Idéal = épaisseur totale en une passe. Vérifier fiche outil.',
+  },
+  ravageuse: {
+    matieres_optimales: 'Bois tendre/dur en ébauche rapide, MDF ébauche, CTP, Alu 6060/2017',
+    eviter: 'Finition impossible (stries), plastiques, HPL',
+    conseil: 'Toujours passe de finition outil lisse après. ap 0.6×D possible. Sur alu : arrosage + ae réduit.',
+  },
+  hss: {
+    matieres_optimales: 'Bois tendre petites séries uniquement',
+    eviter: 'MDF (usure immédiate), mélaminé, bois exotiques, aluminium sans lubrification, HPL',
+    conseil: 'Carbure 10× plus rentable en production CNC. Réserver au bois tendre en série très courte.',
+  },
+};

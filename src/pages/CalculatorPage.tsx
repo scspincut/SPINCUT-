@@ -42,6 +42,7 @@ import {
   TOOL_TYPE_LABELS, MATERIAL_LABELS, OPERATION_LABELS,
   TOOL_MATERIALS, DIAMETER_OPTIONS, TEETH_OPTIONS,
   CONSEILS_OUTIL, CONSEILS_MATIERE, DIAGNOSTIC,
+  MATERIAL_GUIDE, TOOL_GUIDE,
 } from '../utils/cncData';
 import BottomNav from '../components/BottomNav';
 import { useClientAuth, getClientCode } from '../hooks/useAuth';
@@ -81,13 +82,14 @@ function getRecommendations(products: CatalogProduct[], material: string, lcMin:
     bois_tendre:   p => (p.category === 'classique' && !p.pm && parseDents(p.dents) === 2) || p.category === 'ravageuse',
     bois_dur:      p => (p.category === 'classique' && !p.pm) || p.category === 'ravageuse',
     bois_exotique: p => (p.category === 'classique' && !p.pm) || p.category === 'diamant',
-    alu_2017:      p => p.category === 'alu' || (p.category === 'classique' && p.pm),
-    alu_6060:      p => p.category === 'alu' || (p.category === 'classique' && p.pm),
-    alu_coule:     p => p.category === 'alu' || (p.category === 'classique' && p.pm),
-    pvc:           p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
-    pmma:          p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
-    polycarbonate: p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
-    nylon_pa:      p => p.category === 'classique',
+    alu_2017:          p => p.category === 'alu' || (p.category === 'classique' && p.pm),
+    alu_6060:          p => p.category === 'alu' || (p.category === 'classique' && p.pm),
+    alu_coule:         p => p.category === 'alu' || (p.category === 'classique' && p.pm),
+    panneau_stratifie: p => p.category === 'diamant' || p.category === 'classique',
+    pvc:               p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
+    pmma:              p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
+    polycarbonate:     p => p.category === 'classique' && (p.pm || parseDents(p.dents) === 1),
+    nylon_pa:          p => p.category === 'classique',
   }
   const rule = rules[material]
   if (!rule) return []
@@ -194,6 +196,8 @@ export default function CalculatorPage() {
   const [thickness, setThickness] = useState(saved.thickness ?? '');
   const [showConseils, setShowConseils] = useState(false);
   const [showDiag, setShowDiag] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [guideTab, setGuideTab] = useState<'matiere' | 'fraise'>('matiere');
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
   const [savedThisCalc, setSavedThisCalc] = useState(false);
@@ -762,6 +766,84 @@ export default function CalculatorPage() {
                   ))}</tbody>
                 </table>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Guide Matières & Outils */}
+        <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+          <button onClick={() => setShowGuide(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
+            <h2 className="text-[#d4780f] font-semibold text-base">📋 Guide Matières &amp; Outils</h2>
+            <svg className={`w-5 h-5 text-[#555] transition-transform ${showGuide ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showGuide && (
+            <div className="px-5 pb-5">
+              {/* Tabs */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setGuideTab('matiere')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${guideTab === 'matiere' ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa]'}`}
+                >Par Matière → Fraise</button>
+                <button
+                  onClick={() => setGuideTab('fraise')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${guideTab === 'fraise' ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa]'}`}
+                >Par Fraise → Matières</button>
+              </div>
+
+              {guideTab === 'matiere' && (() => {
+                const cats = [...new Set(MATERIAL_GUIDE.map(m => m.cat))]
+                const TOOL_SHORT: Record<string, string> = {
+                  carbure_monobloc: 'Carbure', diamant_coupe: 'Diamant',
+                  compression: 'Compression', ravageuse: 'Ravageuse', hss: 'HSS',
+                }
+                return (
+                  <div className="space-y-4">
+                    {cats.map(cat => (
+                      <div key={cat}>
+                        <p className="text-[#d4780f] text-xs font-bold uppercase tracking-wider mb-2">{cat}</p>
+                        <div className="space-y-1.5">
+                          {MATERIAL_GUIDE.filter(m => m.cat === cat).map(m => (
+                            <div key={m.nom} className="bg-[#1a1a1a] rounded-lg p-3 border border-[#252525]">
+                              <div className="flex items-start justify-between gap-2 mb-1.5">
+                                <span className="text-white text-sm font-medium leading-snug">{m.nom}</span>
+                                <div className="flex gap-1 flex-shrink-0 flex-wrap justify-end">
+                                  {m.premier.map(t => (
+                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#d4780f22] text-[#d4780f] border border-[#d4780f44]">{TOOL_SHORT[t]}</span>
+                                  ))}
+                                  {m.aussi.map(t => (
+                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#777] border border-[#333]">{TOOL_SHORT[t]}</span>
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-[#666] text-[11px] leading-relaxed">{m.astuce}</p>
+                              {m.eviter && (
+                                <p className="text-red-500/70 text-[10px] mt-1">⚠ Éviter : {m.eviter}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+
+              {guideTab === 'fraise' && (
+                <div className="space-y-3">
+                  {(Object.keys(TOOL_GUIDE) as (keyof typeof TOOL_GUIDE)[]).map(tool => (
+                    <div key={tool} className="bg-[#1a1a1a] rounded-lg p-3 border border-[#252525]">
+                      <p className="text-[#d4780f] font-semibold text-sm mb-1.5">{TOOL_TYPE_LABELS[tool]}</p>
+                      <p className="text-[#aaa] text-xs mb-1"><span className="text-green-400/80 font-medium">✓ Optimales :</span> {TOOL_GUIDE[tool].matieres_optimales}</p>
+                      <p className="text-[#aaa] text-xs mb-1.5"><span className="text-[#d4780f]/80 font-medium">☛ Conseil :</span> {TOOL_GUIDE[tool].conseil}</p>
+                      {TOOL_GUIDE[tool].eviter && (
+                        <p className="text-red-500/70 text-[10px]">⚠ Éviter : {TOOL_GUIDE[tool].eviter}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

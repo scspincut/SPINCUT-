@@ -2,9 +2,9 @@ export type ToolType = 'carbure_monobloc' | 'diamant_coupe' | 'compression' | 'r
 export type ToolNotation = '1+1' | '2+2' | '3+3';
 export type Material =
   | 'bois_tendre' | 'bois_dur' | 'bois_exotique'
-  | 'mdf' | 'ctp' | 'melamine'
+  | 'mdf' | 'ctp' | 'melamine' | 'panneau_stratifie'
   | 'alu_2017' | 'alu_7075' | 'alu_6060' | 'alu_coule'
-  | 'pvc_expanse' | 'pvc_massif' | 'pmma' | 'pc' | 'abs_pom';
+  | 'pvc' | 'pmma' | 'pc' | 'abs_pom';
 export type Operation = 'decoupe' | 'rainure' | 'poche' | 'gravure';
 export type MachineType = 'hobby' | 'semi_pro' | 'pro_portique' | 'centre_usinage';
 export type Coating = 'none' | 'tin' | 'tialn' | 'altin' | 'dlc' | 'zrn';
