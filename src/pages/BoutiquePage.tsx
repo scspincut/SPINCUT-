@@ -117,9 +117,13 @@ export default function BoutiquePage() {
     return Object.entries(CATEGORY_META).filter(([id]) => cats.has(id)).sort((a, b) => a[1].order - b[1].order)
   }, [activeTabCatalog])
 
+  const usesCategories = shopTab === 'cnc'
+
   const categoryProducts = useMemo(() =>
-    activeCategory ? activeTabCatalog.filter(p => p.category === activeCategory) : [],
-  [activeTabCatalog, activeCategory])
+    usesCategories
+      ? (activeCategory ? activeTabCatalog.filter(p => p.category === activeCategory) : [])
+      : activeTabCatalog,
+  [activeTabCatalog, activeCategory, usesCategories])
 
   const diameters = useMemo(() => [...new Set(categoryProducts.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
   const lcValues  = useMemo(() => [...new Set(categoryProducts.map(p => p.lc).filter(l => l && l !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
@@ -386,17 +390,21 @@ export default function BoutiquePage() {
             {(true) && (
               <>
                 {/* Filter bar */}
-                {!catalogLoading && !catalogError && activeCategory && (
+                {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
                   <div className="px-4 pt-4 pb-1 flex items-center gap-2">
-                    <button
-                      onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
-                      className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                      {CATEGORY_META[activeCategory]?.label}
-                    </button>
+                    {usesCategories ? (
+                      <button
+                        onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
+                        className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        {CATEGORY_META[activeCategory]?.label}
+                      </button>
+                    ) : (
+                      <span className="flex-1 text-xs text-[#555]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
+                    )}
                     {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
-                    <span className="text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
+                    {usesCategories && <span className="text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>}
                     <button
                       onClick={() => setFiltersOpen(o => !o)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}
@@ -408,7 +416,7 @@ export default function BoutiquePage() {
                 )}
 
                 {/* Filters panel */}
-                {activeCategory && filtersOpen && (
+                {(activeCategory || !usesCategories) && filtersOpen && (
                   <div className="border-t border-[#1a1a1a] bg-[#111]">
                     <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
                       {diameters.length > 1 && (
@@ -454,8 +462,8 @@ export default function BoutiquePage() {
 
                 {catalogError && <div className="m-4 rounded-xl bg-[#2a0000] border border-red-800 px-4 py-3"><p className="text-red-400 text-sm">{catalogError}</p></div>}
 
-                {/* Category picker */}
-                {!catalogLoading && !catalogError && !activeCategory && (
+                {/* Category picker — CNC uniquement */}
+                {!catalogLoading && !catalogError && !activeCategory && usesCategories && (
                   <div className="px-4 pt-5 space-y-2">
                     {activeTabCatalog.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
@@ -488,7 +496,7 @@ export default function BoutiquePage() {
                 )}
 
                 {/* Product list */}
-                {!catalogLoading && !catalogError && activeCategory && (
+                {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
                   <div className="divide-y divide-[#161616]">
                     {filtered.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-16 gap-2">
