@@ -5,6 +5,7 @@ interface SheetRow {
   row: number
   famille: string
   ref: string
+  designation: string
   diametre: string
   lc: string
   lt: string
@@ -17,13 +18,12 @@ interface SheetRow {
 }
 
 function isPMProduct(p: SheetRow): boolean {
-  const fields = [p.famille, p.ref, p.diametre, p.lc, p.lt, p.dents, p.angle, p.queue, p.sens]
+  const fields = [p.famille, p.ref, p.designation, p.diametre, p.lc, p.lt, p.dents, p.angle, p.queue, p.sens]
   return fields.some(v => typeof v === 'string' && v.toUpperCase().includes('PM'))
 }
 
 function categorize(p: SheetRow): string {
   const f = p.famille.trim()
-  if (isPMProduct(p)) return 'classique'
   if (f.includes('GRAV')) return 'gravure'
   if (f.startsWith('FD')) return 'diamant'
   if (f.includes('RAV')) return 'ravageuse'
@@ -35,6 +35,9 @@ function categorize(p: SheetRow): string {
 }
 
 function makeDesignation(p: SheetRow): string {
+  if (p.designation && p.designation.trim() !== '' && p.designation.trim() !== '/') {
+    return p.designation.trim()
+  }
   const f = p.famille.trim()
   const d = p.diametre && p.diametre !== '/' ? `Ø${p.diametre}` : ''
   const lc = p.lc && p.lc !== '/' ? ` LC${p.lc}` : ''
