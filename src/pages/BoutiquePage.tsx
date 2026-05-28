@@ -398,7 +398,7 @@ export default function BoutiquePage() {
                         className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        {CATEGORY_META[activeCategory]?.label}
+                        {activeCategory ? CATEGORY_META[activeCategory]?.label : ''}
                       </button>
                     ) : (
                       <span className="flex-1 text-xs text-[#555]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
