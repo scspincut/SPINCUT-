@@ -807,7 +807,13 @@ export default function CalculatorPage() {
                           {MATERIAL_GUIDE.filter(m => m.cat === cat).map(m => (
                             <div key={m.nom} className="bg-[#1a1a1a] rounded-lg p-3 border border-[#252525]">
                               <div className="flex items-start justify-between gap-2 mb-1.5">
-                                <span className="text-white text-sm font-medium leading-snug">{m.nom}</span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-white text-sm font-medium leading-snug">{m.nom}</span>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-[#1e2a1e] text-green-400 border border-green-800/40">{m.z}</span>
+                                  {m.pm && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#0d2a0d] text-green-300 border border-green-700/50">Polimiroir</span>
+                                  )}
+                                </div>
                                 <div className="flex gap-1 flex-shrink-0 flex-wrap justify-end">
                                   {m.premier.map(t => (
                                     <span key={t} className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#d4780f22] text-[#d4780f] border border-[#d4780f44]">{TOOL_SHORT[t]}</span>
