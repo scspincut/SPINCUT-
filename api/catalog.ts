@@ -24,6 +24,7 @@ function isPMProduct(p: SheetRow): boolean {
 
 function categorize(p: SheetRow): string {
   const f = p.famille.trim()
+  if (isPMProduct(p)) return 'polimiroir'
   if (f.includes('GRAV')) return 'gravure'
   if (f.startsWith('FD')) return 'diamant'
   if (f.includes('RAV')) return 'ravageuse'

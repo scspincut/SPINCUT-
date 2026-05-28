@@ -12,13 +12,14 @@ interface CatalogProduct {
 
 const CATEGORY_META: Record<string, { label: string; order: number }> = {
   classique:   { label: 'Fraise Classique',   order: 1 },
-  compression: { label: 'Fraise Compression', order: 2 },
-  diamant:     { label: 'Diamant (PCD)',       order: 3 },
-  ravageuse:   { label: 'Ravageuse',           order: 4 },
-  alu:         { label: 'Aluminium',           order: 5 },
-  gravure:     { label: 'Fraise Gravure',      order: 6 },
-  percage:     { label: 'Perçage',             order: 7 },
-  accessoires: { label: 'Accessoires',         order: 8 },
+  polimiroir:  { label: 'Fraise Polimiroir',  order: 2 },
+  compression: { label: 'Fraise Compression', order: 3 },
+  diamant:     { label: 'Diamant (PCD)',       order: 4 },
+  ravageuse:   { label: 'Ravageuse',           order: 5 },
+  alu:         { label: 'Aluminium',           order: 6 },
+  gravure:     { label: 'Fraise Gravure',      order: 7 },
+  percage:     { label: 'Perçage',             order: 8 },
+  accessoires: { label: 'Accessoires',         order: 9 },
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
@@ -59,7 +60,6 @@ export default function BoutiquePage() {
   const [filterDiam, setFilterDiam] = useState<string | null>(null)
   const [filterLC, setFilterLC] = useState<string | null>(null)
   const [filterDents, setFilterDents] = useState<string | null>(null)
-  const [filterPM, setFilterPM] = useState(false)
 
   const favKey = `spincut_favs_${clientCode ?? 'guest'}`
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -124,17 +124,14 @@ export default function BoutiquePage() {
   const diameters = useMemo(() => [...new Set(categoryProducts.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
   const lcValues  = useMemo(() => [...new Set(categoryProducts.map(p => p.lc).filter(l => l && l !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
   const dentsValues = useMemo(() => [...new Set(categoryProducts.map(p => p.dents).filter(d => d && d !== '/'))].sort(), [categoryProducts])
-  const hasPM = useMemo(() => categoryProducts.some(p => p.pm), [categoryProducts])
-
   const filtered = useMemo(() => categoryProducts.filter(p =>
     (filterDiam === null || p.diametre === filterDiam) &&
     (filterLC === null || p.lc === filterLC) &&
-    (filterDents === null || p.dents === filterDents) &&
-    (!filterPM || p.pm)
-  ), [categoryProducts, filterDiam, filterLC, filterDents, filterPM])
+    (filterDents === null || p.dents === filterDents)
+  ), [categoryProducts, filterDiam, filterLC, filterDents])
 
-  const activeFilterCount = [filterDiam, filterLC, filterDents, filterPM || null].filter(Boolean).length
-  const resetFilters = () => { setFilterDiam(null); setFilterLC(null); setFilterDents(null); setFilterPM(false) }
+  const activeFilterCount = [filterDiam, filterLC, filterDents].filter(Boolean).length
+  const resetFilters = () => { setFilterDiam(null); setFilterLC(null); setFilterDents(null) }
 
   const setQty = (key: string, delta: number, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
@@ -444,14 +441,6 @@ export default function BoutiquePage() {
                           ))}
                         </div>
                       )}
-                      {hasPM && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">PM</span>
-                          <button onClick={() => setFilterPM(p => !p)}
-                            className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterPM ? 'bg-purple-600 border-purple-600 text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                          >Polimiroir</button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -519,7 +508,6 @@ export default function BoutiquePage() {
                             <div className="flex items-center gap-1.5 flex-wrap mb-1">
                               <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
                               <StockBadge stock={item.stock} />
-                              {item.pm && <span className="text-[10px] font-semibold text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Polimiroir</span>}
                               <button onClick={() => toggleFav(key)} className="ml-0.5" style={{ color: favorites.has(key) ? '#e03c3c' : '#333' }}>
                                 <svg width="13" height="13" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                               </button>
