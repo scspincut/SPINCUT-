@@ -124,7 +124,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     res.setHeader('Cache-Control', 'no-store')
     // Uniquement feuilles A0 et A2
-    const visible = [...deduped.values()].filter(p => p.sheet === 'STOCK A0' || p.sheet === 'STOCK A2')
+    const visible = [...deduped.values()].filter(p =>
+      p.sheet === 'STOCK A0' || p.sheet === 'STOCK A2' ||
+      p.sheet === 'STOCK A1' || p.sheet === 'STOCK A3'
+    )
     return res.status(200).json(visible)
   } catch {
     return res.status(500).json({ error: 'Erreur catalogue' })
