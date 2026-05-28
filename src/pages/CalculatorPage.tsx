@@ -41,7 +41,7 @@ import { calculate } from '../utils/calculations';
 import {
   TOOL_TYPE_LABELS, MATERIAL_LABELS, OPERATION_LABELS,
   TOOL_MATERIALS, DIAMETER_OPTIONS, TEETH_OPTIONS,
-  CONSEILS_OUTIL, CONSEILS_MATIERE, DIAGNOSTIC,
+  CONSEILS_OUTIL, CONSEILS_MATIERE,
   MATERIAL_GUIDE, TOOL_GUIDE,
 } from '../utils/cncData';
 import BottomNav from '../components/BottomNav';
@@ -195,7 +195,6 @@ export default function CalculatorPage() {
   const [vfMax, setVfMax] = useState(saved.vfMax ?? '');
   const [thickness, setThickness] = useState(saved.thickness ?? '');
   const [showConseils, setShowConseils] = useState(false);
-  const [showDiag, setShowDiag] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [guideTab, setGuideTab] = useState<'matiere' | 'fraise'>('matiere');
   const [showHistory, setShowHistory] = useState(false);
@@ -740,36 +739,6 @@ export default function CalculatorPage() {
           )}
         </div>
 
-        {/* Diagnostic */}
-        <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
-          <button onClick={() => setShowDiag(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
-            <h2 className="text-[#d4780f] font-semibold text-base">🎯 TIPS</h2>
-            <svg className={`w-5 h-5 text-[#555] transition-transform ${showDiag ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {showDiag && (
-            <div className="px-5 pb-5">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="border-b border-[#2a2a2a]">
-                    <th className="text-left text-[#888] font-medium py-2 pr-4">Symptôme</th>
-                    <th className="text-left text-[#888] font-medium py-2 pr-4">Cause</th>
-                    <th className="text-left text-[#888] font-medium py-2">Solution</th>
-                  </tr></thead>
-                  <tbody>{DIAGNOSTIC.map((d, i) => (
-                    <tr key={i} className="border-b border-[#1a1a1a]">
-                      <td className="py-2 pr-4 text-white">{d.symptome}</td>
-                      <td className="py-2 pr-4 text-[#aaa]">{d.cause}</td>
-                      <td className="py-2 text-[#d4780f]">{d.solution}</td>
-                    </tr>
-                  ))}</tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Guide Matières & Outils */}
         <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
           <button onClick={() => setShowGuide(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
@@ -821,7 +790,7 @@ export default function CalculatorPage() {
                                   ))}
                                   {m.aussi.map(t => (
                                     <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#777] border border-[#333]">
-                                      {t === 'carbure_monobloc' ? `Carbure ${m.z}` : TOOL_SHORT[t]}
+                                      {TOOL_SHORT[t]}
                                     </span>
                                   ))}
                                 </div>
