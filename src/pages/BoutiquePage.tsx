@@ -350,7 +350,7 @@ export default function BoutiquePage() {
               </svg>
             </button>
           )}
-          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '120px', objectFit: 'contain', mixBlendMode: 'screen' }} />
+          <img src="/logo.png" alt="SPINCUT Outils CNC" style={{ height: '90px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
@@ -475,6 +475,13 @@ export default function BoutiquePage() {
                 </svg>
                 <p className="text-[#444] text-sm">Aucun outil en favori</p>
                 <p className="text-[#333] text-xs">Appuyez sur ♥ sur un produit pour l'ajouter</p>
+                <button
+                  onClick={() => { setFavsView(false); setHomeView(false) }}
+                  className="mt-2 py-2.5 px-6 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+                  style={{ background: '#d4780f' }}
+                >
+                  Voir la boutique
+                </button>
               </div>
             ) : (
               <div className="divide-y divide-[#161616]">
