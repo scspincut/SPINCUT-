@@ -27,6 +27,43 @@ const CATEGORY_META: Record<string, { label: string; order: number }> = {
   accessoires: { label: 'Accessoires',              order: 14 },
 }
 
+// Photos: déposer dans /public/images/categories/
+// Formats acceptés : .jpg .png .webp  —  Taille recommandée : 800×800px fond blanc
+const CATEGORY_IMAGES: Record<string, string> = {
+  classique:   '/images/categories/classique.jpg',
+  polimiroir:  '/images/categories/classique.jpg',   // même visuel que classique
+  compression: '/images/categories/compression.jpg',
+  diamant:     '/images/categories/diamant.jpg',
+  ravageuse:   '/images/categories/ravageuse.jpg',
+  alu:         '/images/categories/alu.jpg',
+  gravure:     '/images/categories/gravure.jpg',
+  percage:     '/images/categories/percage.jpg',
+  rainurer:    '/images/categories/classique.jpg',
+  affleurer:   '/images/categories/classique.jpg',
+  feuillure:   '/images/categories/classique.jpg',
+  faconner:    '/images/categories/classique.jpg',
+  plaquette:   '/images/categories/classique.jpg',
+  accessoires: '/images/categories/accessoires.jpg',
+  lame:        '/images/categories/lame.jpg',
+}
+
+const CATEGORY_DESC: Record<string, string> = {
+  classique:   'Bois massif, panneaux, MDF',
+  polimiroir:  'PVC, acrylique, plastiques',
+  compression: 'Mélaminé, CTP double face',
+  diamant:     'HPL, MDF, panneaux abrasifs',
+  ravageuse:   'Ébauche bois et aluminium',
+  alu:         'Aluminium toutes nuances',
+  gravure:     'Gravure V-carve, marquage',
+  percage:     'Perçage vertical CNC',
+  rainurer:    'Rainures et assemblages',
+  affleurer:   'Affleurage et défonçage',
+  feuillure:   'Feuillures et panneaux',
+  faconner:    'Profils décoratifs',
+  plaquette:   'Fraisage indexable',
+  accessoires: 'Collets, aspiration, kits',
+}
+
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
 function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 
@@ -36,10 +73,92 @@ function StockBadge({ stock }: { stock: number }) {
   return <span className="flex items-center gap-1 text-[10px] text-[#555]"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />En stock ({stock})</span>
 }
 
+// ── Schéma technique automatique ──────────────────────────────────────────────
+function ToolDiagramSVG({ d, lc, lt, q }: { d: string; lc: string; lt: string; q: string }) {
+  const D  = Math.max(parseFloat(d)  || 8,  1)
+  const LC = Math.max(parseFloat(lc) || 32, 1)
+  const LT = Math.max(parseFloat(lt) || 65, LC)
+  const Q  = Math.max(parseFloat(q)  || D,  1)
+
+  const W = 260, H = 96
+  const ml = 26, mr = 26, mt = 10, mb = 36
+  const drawW = W - ml - mr
+  const drawH = H - mt - mb
+  const scale = Math.min(drawW / LT, drawH / Math.max(D, Q))
+
+  const ltPx = LT * scale
+  const lcPx = LC * scale
+  const shPx = (LT - LC) * scale
+  const dPx  = D * scale
+  const qPx  = Q * scale
+
+  const x0 = ml
+  const x1 = x0 + lcPx
+  const x2 = x0 + ltPx
+  const cy = mt + drawH / 2
+
+  const lcY = cy + Math.max(dPx, qPx) / 2 + 7
+  const ltY = lcY + 14
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {/* Zone de coupe — orange */}
+      <rect x={x0} y={cy - dPx/2} width={lcPx} height={dPx}
+        fill="#d4780f1a" stroke="#d4780f" strokeWidth="1.5" rx="2"/>
+      {/* Queue — gris */}
+      <rect x={x1} y={cy - qPx/2} width={shPx} height={qPx}
+        fill="#1e1e1e" stroke="#3a3a3a" strokeWidth="1" rx="2"/>
+
+      {/* Annotation Ø (gauche vertical) */}
+      <line x1={x0-5} y1={cy-dPx/2} x2={x0-5} y2={cy+dPx/2} stroke="#d4780f" strokeWidth="1"/>
+      <line x1={x0-8} y1={cy-dPx/2} x2={x0-2} y2={cy-dPx/2} stroke="#d4780f" strokeWidth="1"/>
+      <line x1={x0-8} y1={cy+dPx/2} x2={x0-2} y2={cy+dPx/2} stroke="#d4780f" strokeWidth="1"/>
+      <text x={x0-16} y={cy+3.5} fontSize="8" fill="#d4780f" textAnchor="middle" fontFamily="monospace" fontWeight="bold">Ø</text>
+
+      {/* Annotation Q (droite vertical) */}
+      <line x1={x2+5} y1={cy-qPx/2} x2={x2+5} y2={cy+qPx/2} stroke="#555" strokeWidth="1"/>
+      <line x1={x2+2} y1={cy-qPx/2} x2={x2+8} y2={cy-qPx/2} stroke="#555" strokeWidth="1"/>
+      <line x1={x2+2} y1={cy+qPx/2} x2={x2+8} y2={cy+qPx/2} stroke="#555" strokeWidth="1"/>
+      <text x={x2+18} y={cy+3.5} fontSize="8" fill="#666" textAnchor="middle" fontFamily="monospace">Q</text>
+
+      {/* Annotation LC (bas, zone coupe) */}
+      <line x1={x0} y1={lcY} x2={x1} y2={lcY} stroke="#d4780f" strokeWidth="0.8"/>
+      <line x1={x0} y1={lcY-3} x2={x0} y2={lcY+3} stroke="#d4780f" strokeWidth="0.8"/>
+      <line x1={x1} y1={lcY-3} x2={x1} y2={lcY+3} stroke="#d4780f" strokeWidth="0.8"/>
+      <text x={(x0+x1)/2} y={lcY+9} fontSize="8" fill="#d4780f" textAnchor="middle" fontFamily="monospace" fontWeight="bold">LC</text>
+
+      {/* Annotation LT (bas, total) */}
+      <line x1={x0} y1={ltY} x2={x2} y2={ltY} stroke="#444" strokeWidth="0.8"/>
+      <line x1={x0} y1={ltY-3} x2={x0} y2={ltY+3} stroke="#444" strokeWidth="0.8"/>
+      <line x1={x2} y1={ltY-3} x2={x2} y2={ltY+3} stroke="#444" strokeWidth="0.8"/>
+      <text x={(x0+x2)/2} y={ltY+9} fontSize="8" fill="#666" textAnchor="middle" fontFamily="monospace">LT</text>
+    </svg>
+  )
+}
+
+// ── Image catégorie avec placeholder ──────────────────────────────────────────
+function CategoryImage({ category, shopTab, className = '', style }: { category: string; shopTab: string; className?: string; style?: React.CSSProperties }) {
+  const [err, setErr] = useState(false)
+  const src = shopTab === 'lames' ? CATEGORY_IMAGES['lame'] : (CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES['classique'])
+  return (
+    <div className={`relative overflow-hidden ${className}`} style={{ background: '#0d0d0d', ...style }}>
+      {/* Placeholder visible quand photo manquante */}
+      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
+        <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+      </div>
+      {!err && (
+        <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover"
+          onError={() => setErr(true)}/>
+      )}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)' }}/>
+    </div>
+  )
+}
+
 const SHOP_TABS = [
-  { id: 'cnc', label: 'Fraises CNC' },
-  { id: 'cmt', label: 'Fraises Défonceuse' },
-  { id: 'lames', label: 'Lames Circulaires Carbure' },
+  { id: 'cnc',   label: 'Fraises CNC' },
+  { id: 'cmt',   label: 'Fraises Défonceuse' },
+  { id: 'lames', label: 'Lames Carbure' },
 ]
 
 const HERO_PHOTOS = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
@@ -65,6 +184,7 @@ export default function BoutiquePage() {
   const [filterDiam, setFilterDiam] = useState<string | null>(null)
   const [filterLC, setFilterLC] = useState<string | null>(null)
   const [filterDents, setFilterDents] = useState<string | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
 
   const favKey = `spincut_favs_${clientCode ?? 'guest'}`
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -84,27 +204,22 @@ export default function BoutiquePage() {
   const cartCount = useMemo(() => Object.values(quantities).reduce((s, v) => s + v, 0), [quantities])
   const cartTotal = useMemo(() => catalog.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0), [catalog, quantities])
 
-  useEffect(() => {
-    localStorage.setItem('spincut_last_section', '/boutique')
-  }, [])
-
+  useEffect(() => { localStorage.setItem('spincut_last_section', '/boutique') }, [])
   useEffect(() => {
     if (!homeView) return
     const t = setInterval(() => setHeroBg(i => (i + 1) % HERO_PHOTOS.length), 2500)
     return () => clearInterval(t)
   }, [homeView])
-
   useEffect(() => {
-    try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
+    try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch {}
   }, [quantities, cartKey])
-
   useEffect(() => {
     fetch('/api/catalog')
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
           setCatalog(data)
-          try { localStorage.setItem('spincut_catalog_cache', JSON.stringify(data)) } catch { /* ignore */ }
+          try { localStorage.setItem('spincut_catalog_cache', JSON.stringify(data)) } catch {}
         } else setCatalogError(data?.error ?? 'Erreur catalogue')
         setCatalogLoading(false)
       })
@@ -112,9 +227,9 @@ export default function BoutiquePage() {
   }, [])
 
   const activeTabCatalog = useMemo(() => {
-    if (shopTab === 'cnc') return catalog.filter(p => ['STOCK A0', 'STOCK B0', 'STOCK A2', 'STOCK B2'].includes(p.sheet))
-    if (shopTab === 'cmt') return catalog.filter(p => ['STOCK A1', 'STOCK B1'].includes(p.sheet))
-    return catalog.filter(p => ['STOCK A3', 'STOCK B3'].includes(p.sheet))
+    if (shopTab === 'cnc')   return catalog.filter(p => ['STOCK A0','STOCK A2'].includes(p.sheet))
+    if (shopTab === 'cmt')   return catalog.filter(p => p.sheet === 'STOCK A1')
+    return catalog.filter(p => p.sheet === 'STOCK A3')
   }, [shopTab, catalog])
 
   const tabs = useMemo(() => {
@@ -130,13 +245,13 @@ export default function BoutiquePage() {
       : activeTabCatalog,
   [activeTabCatalog, activeCategory, usesCategories])
 
-  const diameters = useMemo(() => [...new Set(categoryProducts.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
-  const lcValues  = useMemo(() => [...new Set(categoryProducts.map(p => p.lc).filter(l => l && l !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
+  const diameters   = useMemo(() => [...new Set(categoryProducts.map(p => p.diametre).filter(d => d && d !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
+  const lcValues    = useMemo(() => [...new Set(categoryProducts.map(p => p.lc).filter(l => l && l !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [categoryProducts])
   const dentsValues = useMemo(() => [...new Set(categoryProducts.map(p => p.dents).filter(d => d && d !== '/'))].sort(), [categoryProducts])
-  const filtered = useMemo(() => categoryProducts.filter(p =>
-    (filterDiam === null || p.diametre === filterDiam) &&
-    (filterLC === null || p.lc === filterLC) &&
-    (filterDents === null || p.dents === filterDents)
+  const filtered    = useMemo(() => categoryProducts.filter(p =>
+    (filterDiam  === null || p.diametre === filterDiam) &&
+    (filterLC    === null || p.lc      === filterLC)    &&
+    (filterDents === null || p.dents   === filterDents)
   ), [categoryProducts, filterDiam, filterLC, filterDents])
 
   const activeFilterCount = [filterDiam, filterLC, filterDents].filter(Boolean).length
@@ -150,20 +265,83 @@ export default function BoutiquePage() {
   const favoriteItems = useMemo(() => catalog.filter(p => favorites.has(uid(p))), [catalog, favorites])
 
   const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
-  const goHome = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
+  const goHome  = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
   const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
   const enterFavs = () => { setHomeView(false); setFavsView(true); setActiveCategory(null); resetFilters() }
 
-
   if (!isAuthenticated) { navigate('/'); return null }
+
+  // ── Product row (shared between product list + favs) ──────────────────────
+  const renderProductRow = (item: CatalogProduct) => {
+    const key = uid(item)
+    const qty = quantities[key] || 0
+    const selected = qty > 0
+    const outOfStock = item.stock === 0
+    return (
+      <div key={key}
+        className={`px-4 py-3.5 flex items-center gap-3 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-black'} ${outOfStock ? 'opacity-40' : ''}`}
+      >
+        {/* Gauche — tapper pour ouvrir la fiche */}
+        <button
+          className="flex-1 min-w-0 text-left"
+          onClick={() => setSelectedProduct(item)}
+        >
+          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+            <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
+            <StockBadge stock={item.stock}/>
+            {item.pm && <span className="text-[9px] font-bold bg-[#0d2a0d] text-green-400 px-1 py-0.5 rounded border border-green-800/40">PM</span>}
+            <button
+              onClick={e => { e.stopPropagation(); toggleFav(key) }}
+              className="ml-0.5"
+              style={{ color: favorites.has(key) ? '#e03c3c' : '#333' }}
+            >
+              <svg width="12" height="12" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+              </svg>
+            </button>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="#333" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+          {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
+        </button>
+
+        {/* Droite — prix + quantité */}
+        <div className="flex-shrink-0 flex flex-col items-end gap-2">
+          {item.prix > 0
+            ? <span className={`font-bold text-base ${selected ? 'text-[#d4780f]' : 'text-[#d4780f]/70'}`}>{fmt(item.prix)}€</span>
+            : <span className="text-[#444] text-xs">Sur devis</span>
+          }
+          {!outOfStock && item.prix > 0 && (
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => setQty(key, -1, item.stock)}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
+              >−</button>
+              {qty > 0 && (
+                <input type="number" min={0} max={item.stock} value={qty}
+                  onChange={e => setQtyDirect(key, e.target.value, item.stock)}
+                  className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
+                />
+              )}
+              <button onClick={() => setQty(key, +1, item.stock)}
+                className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
+              >+</button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
 
-      {/* Header */}
+      {/* ── Header ── */}
       <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          {/* Back to home button — visible in shop view */}
           {!homeView && (
             <button onClick={goHome} className="absolute left-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,18 +361,16 @@ export default function BoutiquePage() {
             Déconnexion
           </button>
         </div>
-
-        {/* Shop tabs — only in shop view, not in favs view */}
         {!homeView && !favsView && (
           <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
             {SHOP_TABS.map(t => (
-              <button
-                key={t.id}
+              <button key={t.id}
                 onClick={() => { setShopTab(t.id as typeof shopTab); setActiveCategory(null); resetFilters() }}
-                className="flex-1 py-3 flex flex-col items-center gap-0.5 transition-colors"
+                className="flex-1 py-3 flex items-center justify-center transition-colors"
                 style={{ borderBottom: shopTab === t.id ? '2px solid #d4780f' : '2px solid transparent' }}
               >
-                <span className="text-[11px] font-bold leading-tight text-center" style={{ color: shopTab === t.id ? '#d4780f' : '#888' }}>{t.label}</span>
+                <span className="text-[11px] font-bold leading-tight text-center"
+                  style={{ color: shopTab === t.id ? '#d4780f' : '#888' }}>{t.label}</span>
               </button>
             ))}
           </div>
@@ -206,40 +382,23 @@ export default function BoutiquePage() {
         {/* ── HOME VIEW ── */}
         {homeView && (
           <>
-            {/* Hero with rotating photos */}
             <div className="relative overflow-hidden" style={{ height: '210px' }}>
               {HERO_PHOTOS.map((src, i) => (
-                <div
-                  key={i}
-                  className="absolute inset-0 transition-opacity duration-1000"
-                  style={{
-                    opacity: i === heroBg ? 1 : 0,
-                    backgroundImage: `url(${src})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                />
+                <div key={i} className="absolute inset-0 transition-opacity duration-1000"
+                  style={{ opacity: i === heroBg ? 1 : 0, backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }}/>
               ))}
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 78%, #000 100%)' }} />
-              {/* Photo dots */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 78%, #000 100%)' }}/>
               <div className="absolute bottom-3 right-4 flex gap-1">
                 {HERO_PHOTOS.map((_, i) => (
                   <button key={i} onClick={() => setHeroBg(i)}
-                    style={{ width: i === heroBg ? '14px' : '5px', height: '5px', borderRadius: '3px', background: i === heroBg ? '#d4780f' : 'rgba(255,255,255,0.3)', border: 'none', padding: 0, transition: 'all 0.2s', cursor: 'pointer' }}
-                  />
+                    style={{ width: i === heroBg ? '14px' : '5px', height: '5px', borderRadius: '3px', background: i === heroBg ? '#d4780f' : 'rgba(255,255,255,0.3)', border: 'none', padding: 0, transition: 'all 0.2s', cursor: 'pointer' }}/>
                 ))}
               </div>
             </div>
 
             <div className="px-4 space-y-3 pt-5 pb-6">
-
-                {/* Trust badges */}
               <div className="flex gap-2 pt-1">
-                {[
-                  { icon: '⚡', label: 'Expédié sous 24h' },
-                  { icon: '✓', label: 'Qualité garantie' },
-                  { icon: '⏱', label: 'Réponse < 1h' },
-                ].map(b => (
+                {[{ icon: '⚡', label: 'Expédié sous 24h' }, { icon: '✓', label: 'Qualité garantie' }, { icon: '⏱', label: 'Réponse < 1h' }].map(b => (
                   <div key={b.label} className="flex-1 rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 text-center" style={{ background: '#0d0d0d', border: '1px solid #1e1e1e' }}>
                     <span className="text-base leading-none">{b.icon}</span>
                     <span className="text-[9px] font-semibold leading-tight" style={{ color: '#555' }}>{b.label}</span>
@@ -249,57 +408,37 @@ export default function BoutiquePage() {
 
               <p className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: '#444' }}>Boutique</p>
 
-              {/* Fraises CNC — noir/orange pur */}
-              <button
-                onClick={() => enterTab('cnc')}
-                className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #1a0800 0%, #030100 100%)', border: '1px solid #d4780f44' }}
-              >
+              <button onClick={() => enterTab('cnc')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1a0800 0%, #030100 100%)', border: '1px solid #d4780f44' }}>
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises CNC</p>
                     <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#d4780f' }}>SPINCUT</p>
                   </div>
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e0044)', borderRadius: '2px', flexShrink: 0 }} />
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e0044)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
               </button>
 
-              {/* Fraises Défonceuse — blanc/orange CMT */}
-              <button
-                onClick={() => enterTab('cmt')}
-                className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #1e1c14 0%, #0c0b08 100%)', border: '1px solid #f0dbb044' }}
-              >
+              <button onClick={() => enterTab('cmt')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1e1c14 0%, #0c0b08 100%)', border: '1px solid #f0dbb044' }}>
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises Défonceuse</p>
                     <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#f0dbb0' }}>CMT</p>
                   </div>
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #f0dbb0, #3a3420)', borderRadius: '2px', flexShrink: 0 }} />
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #f0dbb0, #3a3420)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
               </button>
 
-              {/* Lames Carbure — gris carbure métallique */}
-              <button
-                onClick={() => enterTab('lames')}
-                className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                style={{ height: '130px', background: 'linear-gradient(135deg, #1a1a1a 0%, #080808 100%)', border: '1px solid #3a3a3a' }}
-              >
+              <button onClick={() => enterTab('lames')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1a1a1a 0%, #080808 100%)', border: '1px solid #3a3a3a' }}>
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="font-black text-xl leading-tight" style={{ color: '#d0d0d0' }}>Lames Circulaires Carbure</p>
                   </div>
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #aaaaaa, #3a3a3a)', borderRadius: '2px', flexShrink: 0 }} />
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #aaaaaa, #3a3a3a)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
               </button>
 
-              {/* Mes outils favoris — uniquement si favoris */}
               {favorites.size > 0 && (
-                <button
-                  onClick={enterFavs}
-                  className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left"
-                  style={{ height: '90px', background: 'linear-gradient(135deg, #1a0507 0%, #080002 100%)', border: '1px solid #5a1a20' }}
-                >
+                <button onClick={enterFavs} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '90px', background: 'linear-gradient(135deg, #1a0507 0%, #080002 100%)', border: '1px solid #5a1a20' }}>
                   <div className="absolute inset-0 flex items-center px-5">
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-black text-lg leading-tight">Mes outils favoris</p>
@@ -311,7 +450,6 @@ export default function BoutiquePage() {
                   </div>
                 </button>
               )}
-
             </div>
           </>
         )}
@@ -330,7 +468,6 @@ export default function BoutiquePage() {
                 Mes outils favoris
               </span>
             </div>
-
             {favoriteItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
                 <svg className="w-12 h-12 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -341,49 +478,7 @@ export default function BoutiquePage() {
               </div>
             ) : (
               <div className="divide-y divide-[#161616]">
-                {favoriteItems.map(item => {
-                  const key = uid(item)
-                  const qty = quantities[key] || 0
-                  const selected = qty > 0
-                  const outOfStock = item.stock === 0
-                  return (
-                    <div key={key} className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-black'} ${outOfStock ? 'opacity-40' : ''}`}>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                          <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
-                          <StockBadge stock={item.stock} />
-                          <button onClick={() => toggleFav(key)} style={{ color: '#e03c3c', marginLeft: '2px' }}>
-                            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                          </button>
-                        </div>
-                        <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
-                        {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
-                      </div>
-                      <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                        {item.prix > 0
-                          ? <span className={`font-bold text-base ${selected ? 'text-[#d4780f]' : 'text-[#d4780f]/70'}`}>{fmt(item.prix)}€</span>
-                          : <span className="text-[#444] text-xs">Sur devis</span>
-                        }
-                        {!outOfStock && item.prix > 0 && (
-                          <div className="flex items-center gap-1.5">
-                            <button onClick={() => setQty(key, -1, item.stock)}
-                              className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
-                            >−</button>
-                            {qty > 0 && (
-                              <input type="number" min={0} max={item.stock} value={qty}
-                                onChange={e => setQtyDirect(key, e.target.value, item.stock)}
-                                className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
-                              />
-                            )}
-                            <button onClick={() => setQty(key, +1, item.stock)}
-                              className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
-                            >+</button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                {favoriteItems.map(item => renderProductRow(item))}
               </div>
             )}
           </>
@@ -392,177 +487,265 @@ export default function BoutiquePage() {
         {/* ── SHOP VIEW ── */}
         {!homeView && !favsView && (
           <>
-            {(true) && (
-              <>
-                {/* Filter bar */}
-                {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
-                  <div className="px-4 pt-4 pb-1 flex items-center gap-2">
-                    {usesCategories ? (
-                      <button
-                        onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
-                        className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        {activeCategory ? CATEGORY_META[activeCategory]?.label : ''}
-                      </button>
-                    ) : (
-                      <span className="flex-1 text-xs text-[#555]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
-                    )}
-                    {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
-                    {usesCategories && <span className="text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>}
-                    <button
-                      onClick={() => setFiltersOpen(o => !o)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
-                      Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-                    </button>
-                  </div>
+            {/* Barre retour / filtres */}
+            {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
+              <div className="px-4 pt-4 pb-1 flex items-center gap-2">
+                {usesCategories ? (
+                  <button onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
+                    className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    {activeCategory ? CATEGORY_META[activeCategory]?.label : ''}
+                  </button>
+                ) : (
+                  <span className="flex-1 text-xs text-[#555]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
                 )}
-
-                {/* Filters panel */}
-                {(activeCategory || !usesCategories) && filtersOpen && (
-                  <div className="border-t border-[#1a1a1a] bg-[#111]">
-                    <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
-                      {diameters.length > 1 && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
-                          {diameters.map(d => (
-                            <button key={d} onClick={() => setFilterDiam(p => p === d ? null : d)}
-                              className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                            >Ø{d}</button>
-                          ))}
-                        </div>
-                      )}
-                      {dentsValues.length > 1 && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
-                          {dentsValues.map(d => (
-                            <button key={d} onClick={() => setFilterDents(p => p === d ? null : d)}
-                              className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                            >Z{d}</button>
-                          ))}
-                        </div>
-                      )}
-                      {lcValues.length > 1 && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
-                          {lcValues.map(lc => (
-                            <button key={lc} onClick={() => setFilterLC(p => p === lc ? null : lc)}
-                              className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
-                            >LC{lc}</button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {catalogLoading && (
-                  <div className="flex items-center justify-center py-20 gap-3 text-[#444]">
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                    Chargement…
-                  </div>
-                )}
-
-                {catalogError && <div className="m-4 rounded-xl bg-[#2a0000] border border-red-800 px-4 py-3"><p className="text-red-400 text-sm">{catalogError}</p></div>}
-
-                {/* Category picker — CNC uniquement */}
-                {!catalogLoading && !catalogError && !activeCategory && usesCategories && (
-                  <div className="px-4 pt-5 space-y-2">
-                    {activeTabCatalog.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                        <p className="text-white font-bold text-lg">Catalogue en cours de construction</p>
-                        <p className="text-[#555] text-sm max-w-xs">Les produits seront disponibles très prochainement.</p>
-                        <a
-                          href="https://wa.me/33767739561"
-                          target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white mt-2"
-                          style={{ background: '#1a5e1a' }}
-                        >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                          Me prévenir à l'ouverture
-                        </a>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-[#555] text-xs uppercase tracking-widest font-bold mb-4">Catégories</p>
-                        {tabs.map(([id, meta]) => (
-                          <button key={id} onClick={() => selectCategory(id)}
-                            className="w-full px-4 py-3.5 rounded-xl bg-[#161616] border border-[#2a2a2a] text-left text-sm font-medium text-white hover:border-[#d4780f] hover:bg-[#1a1200] transition-colors flex items-center justify-between active:scale-[0.99]"
-                          >
-                            {meta.label}
-                            <svg className="w-4 h-4 text-[#444]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Product list */}
-                {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
-                  <div className="divide-y divide-[#161616]">
-                    {filtered.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 gap-2">
-                        <p className="text-[#444] text-sm">Aucun produit pour ces filtres</p>
-                        {activeFilterCount > 0 && <button onClick={resetFilters} className="text-[#d4780f] text-xs underline">Effacer les filtres</button>}
-                      </div>
-                    ) : filtered.map(item => {
-                      const key = uid(item)
-                      const qty = quantities[key] || 0
-                      const selected = qty > 0
-                      const outOfStock = item.stock === 0
-                      return (
-                        <div key={key}
-                          className={`px-4 py-4 flex items-center gap-4 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-black'} ${outOfStock ? 'opacity-40' : ''}`}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                              <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
-                              <StockBadge stock={item.stock} />
-                              <button onClick={() => toggleFav(key)} className="ml-0.5" style={{ color: favorites.has(key) ? '#e03c3c' : '#333' }}>
-                                <svg width="13" height="13" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-                              </button>
-                            </div>
-                            <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
-                            {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
-                          </div>
-                          <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                            {item.prix > 0
-                              ? <span className={`font-bold text-base ${selected ? 'text-[#d4780f]' : 'text-[#d4780f]/70'}`}>{fmt(item.prix)}€</span>
-                              : <span className="text-[#444] text-xs">Sur devis</span>
-                            }
-                            {!outOfStock && item.prix > 0 && (
-                              <div className="flex items-center gap-1.5">
-                                <button onClick={() => setQty(key, -1, item.stock)}
-                                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
-                                >−</button>
-                                {qty > 0 && (
-                                  <input type="number" min={0} max={item.stock} value={qty}
-                                    onChange={e => setQtyDirect(key, e.target.value, item.stock)}
-                                    className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
-                                  />
-                                )}
-                                <button onClick={() => setQty(key, +1, item.stock)}
-                                  className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
-                                >+</button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </>
+                {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
+                {usesCategories && <span className="text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>}
+                <button onClick={() => setFiltersOpen(o => !o)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
+                  Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                </button>
+              </div>
             )}
 
+            {/* Panneau filtres */}
+            {(activeCategory || !usesCategories) && filtersOpen && (
+              <div className="border-t border-[#1a1a1a] bg-[#111]">
+                <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
+                  {diameters.length > 1 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
+                      {diameters.map(d => (
+                        <button key={d} onClick={() => setFilterDiam(p => p === d ? null : d)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                        >Ø{d}</button>
+                      ))}
+                    </div>
+                  )}
+                  {dentsValues.length > 1 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
+                      {dentsValues.map(d => (
+                        <button key={d} onClick={() => setFilterDents(p => p === d ? null : d)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                        >Z{d}</button>
+                      ))}
+                    </div>
+                  )}
+                  {lcValues.length > 1 && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
+                      {lcValues.map(lc => (
+                        <button key={lc} onClick={() => setFilterLC(p => p === lc ? null : lc)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                        >LC{lc}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {catalogLoading && (
+              <div className="flex items-center justify-center py-20 gap-3 text-[#444]">
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                Chargement…
+              </div>
+            )}
+
+            {catalogError && (
+              <div className="m-4 rounded-xl bg-[#2a0000] border border-red-800 px-4 py-3">
+                <p className="text-red-400 text-sm">{catalogError}</p>
+              </div>
+            )}
+
+            {/* ── Grille catégories avec photos ── */}
+            {!catalogLoading && !catalogError && !activeCategory && usesCategories && (
+              <div className="px-4 pt-5 pb-4">
+                {activeTabCatalog.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                    <p className="text-white font-bold text-lg">Catalogue en cours de construction</p>
+                    <p className="text-[#555] text-sm max-w-xs">Les produits seront disponibles très prochainement.</p>
+                    <a href="https://wa.me/33767739561" target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white mt-2"
+                      style={{ background: '#1a5e1a' }}>
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      Me prévenir à l'ouverture
+                    </a>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">Catégories</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {tabs.map(([id, meta]) => {
+                        const count = activeTabCatalog.filter(p => p.category === id).length
+                        return (
+                          <button key={id} onClick={() => selectCategory(id)}
+                            className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
+                            style={{ background: '#111', border: '1px solid #1e1e1e' }}
+                          >
+                            {/* Zone photo */}
+                            <CategoryImage category={id} shopTab={shopTab} className="rounded-t-2xl" style={{ height: '120px' }}/>
+                            {/* Zone texte */}
+                            <div className="px-3 py-2.5">
+                              <div className="flex items-start justify-between gap-1">
+                                <p className="text-white font-semibold text-sm leading-tight">{meta.label}</p>
+                                <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 mt-0.5">{count}</span>
+                              </div>
+                              {CATEGORY_DESC[id] && (
+                                <p className="text-[#555] text-[11px] mt-0.5 leading-tight">{CATEGORY_DESC[id]}</p>
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Liste produits ── */}
+            {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
+              <div className="divide-y divide-[#161616]">
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-2">
+                    <p className="text-[#444] text-sm">Aucun produit pour ces filtres</p>
+                    {activeFilterCount > 0 && <button onClick={resetFilters} className="text-[#d4780f] text-xs underline">Effacer les filtres</button>}
+                  </div>
+                ) : filtered.map(item => renderProductRow(item))}
+              </div>
+            )}
           </>
         )}
       </main>
 
-      <BottomNav cartCount={cartCount} cartTotal={cartTotal} />
+      <BottomNav cartCount={cartCount} cartTotal={cartTotal}/>
+
+      {/* ── Fiche produit — bottom sheet ── */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 z-50 flex items-end"
+          style={{ background: 'rgba(0,0,0,0.75)' }}
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="w-full max-w-2xl mx-auto rounded-t-2xl overflow-y-auto"
+            style={{ background: '#111', maxHeight: '88vh', border: '1px solid #2a2a2a', borderBottom: 'none' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-[#333]"/>
+            </div>
+
+            {/* Photo catégorie */}
+            <div className="mx-4 mt-2 rounded-xl overflow-hidden relative" style={{ height: '170px' }}>
+              <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full rounded-xl"/>
+              {selectedProduct.pm && (
+                <span className="absolute top-2.5 right-2.5 bg-[#0d2a0d]/90 text-green-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-700/50">Polimiroir</span>
+              )}
+              <div className="absolute bottom-2.5 left-3">
+                <span className="bg-black/60 text-[#d4780f] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {CATEGORY_META[selectedProduct.category]?.label ?? selectedProduct.category}
+                </span>
+              </div>
+            </div>
+
+            <div className="px-4 pt-4 pb-6 space-y-4">
+
+              {/* Référence + désignation */}
+              <div>
+                <span className="font-mono text-[10px] text-[#555] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{selectedProduct.ref}</span>
+                <p className="text-white font-semibold text-base mt-1.5 leading-snug">{selectedProduct.designation}</p>
+              </div>
+
+              {/* Specs (Ø · LC · LT · Q · Z) */}
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { l: 'Ø',  v: selectedProduct.diametre, u: 'mm' },
+                  { l: 'LC', v: selectedProduct.lc,       u: 'mm' },
+                  { l: 'LT', v: selectedProduct.lt,       u: 'mm' },
+                  { l: 'Q',  v: selectedProduct.queue,    u: 'mm' },
+                  { l: 'Z',  v: selectedProduct.dents,    u: 'dents' },
+                ].filter(s => s.v && s.v !== '/').map(s => (
+                  <div key={s.l} className="flex-1 min-w-[48px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
+                    <p className="text-[#d4780f] text-[10px] font-bold">{s.l}</p>
+                    <p className="text-white font-mono font-bold text-sm mt-0.5">{s.v}</p>
+                    <p className="text-[#444] text-[9px]">{s.u}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Schéma technique auto-généré */}
+              {selectedProduct.diametre && selectedProduct.diametre !== '/' && (
+                <div className="rounded-xl p-3 border border-[#1e1e1e]" style={{ background: '#0d0d0d' }}>
+                  <p className="text-[#444] text-[10px] font-bold uppercase tracking-wider mb-3">Schéma technique</p>
+                  <ToolDiagramSVG
+                    d={selectedProduct.diametre}
+                    lc={selectedProduct.lc}
+                    lt={selectedProduct.lt}
+                    q={selectedProduct.queue}
+                  />
+                  <div className="flex gap-3 mt-2 justify-center flex-wrap">
+                    {[
+                      { label: 'Ø Coupe', color: '#d4780f' },
+                      { label: 'LC Longueur de coupe', color: '#d4780f' },
+                      { label: 'LT Longueur totale', color: '#555' },
+                      { label: 'Q Queue', color: '#555' },
+                    ].map(l => (
+                      <span key={l.label} className="flex items-center gap-1 text-[9px]" style={{ color: l.color }}>
+                        <span className="inline-block w-2 h-0.5 rounded" style={{ background: l.color }}/>
+                        {l.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stock + prix + panier */}
+              <div className="flex items-center justify-between pt-2 border-t border-[#1e1e1e]">
+                <div>
+                  <StockBadge stock={selectedProduct.stock}/>
+                  {selectedProduct.prix > 0 && (
+                    <p className="text-[#d4780f] font-black text-2xl mt-1.5">
+                      {fmt(selectedProduct.prix)} €
+                      <span className="text-[#555] text-xs font-normal ml-1">HT</span>
+                    </p>
+                  )}
+                </div>
+                {selectedProduct.stock > 0 && selectedProduct.prix > 0 && (() => {
+                  const key = uid(selectedProduct)
+                  const qty = quantities[key] || 0
+                  return qty === 0 ? (
+                    <button
+                      onClick={() => setQty(key, 1, selectedProduct.stock)}
+                      className="px-6 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+                      style={{ background: '#d4780f' }}
+                    >
+                      + Ajouter
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setQty(key, -1, selectedProduct.stock)}
+                        className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">−</button>
+                      <span className="w-8 text-center text-[#d4780f] font-bold text-lg">{qty}</span>
+                      <button onClick={() => setQty(key, +1, selectedProduct.stock)}
+                        className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">+</button>
+                    </div>
+                  )
+                })()}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
