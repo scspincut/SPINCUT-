@@ -247,13 +247,17 @@ export default function BoutiquePage() {
     return cmtGroups.find(g => g.key === key) ?? null
   }, [selectedProduct, shopTab, cmtGroups])
 
-  // Cascading filters inside the bottom sheet
+  // Cascading filters inside the modal
   const bsProds = currentCMTGroup?.products ?? []
-  const bsAvailØ = useMemo(() => [...new Set(bsProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
+  // All values (for display — never hidden)
+  const bsAllØ = useMemo(() => [...new Set(bsProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
+  const bsAllI = useMemo(() => [...new Set(bsProds.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
+  const bsAllS = useMemo(() => [...new Set(bsProds.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
+  // Compatible values given current selections (for graying)
   const bsByØ    = useMemo(() => bsFilterØ ? bsProds.filter(p => p.diametre === bsFilterØ) : bsProds, [bsProds, bsFilterØ])
-  const bsAvailI = useMemo(() => [...new Set(bsByØ.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsByØ])
+  const bsAvailI = useMemo(() => new Set(bsByØ.map(p => p.lc).filter(v => v && v !== '/')), [bsByØ])
   const bsByØI   = useMemo(() => bsFilterI ? bsByØ.filter(p => p.lc === bsFilterI) : bsByØ, [bsByØ, bsFilterI])
-  const bsAvailS = useMemo(() => [...new Set(bsByØI.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsByØI])
+  const bsAvailS = useMemo(() => new Set(bsByØI.map(p => p.queue).filter(v => v && v !== '/')), [bsByØI])
 
   const cmtVariant = useMemo(() => {
     if (!currentCMTGroup) return selectedProduct
@@ -717,11 +721,11 @@ export default function BoutiquePage() {
         >
           <div
             className="w-full rounded-2xl overflow-hidden overflow-y-auto"
-            style={{ background: '#111', maxHeight: '88vh', maxWidth: '420px', border: '1px solid #2a2a2a' }}
+            style={{ background: '#111', maxHeight: '92vh', maxWidth: '500px', border: '1px solid #2a2a2a' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Photo */}
-            <div className="relative w-full" style={{ background: '#f4f4f4', height: '240px' }}>
+            <div className="relative w-full" style={{ background: '#f4f4f4', height: '280px' }}>
               {shopTab === 'cmt' && currentCMTGroup?.photoUrl
                 ? <img src={currentCMTGroup.photoUrl} alt="" className="w-full h-full object-contain" />
                 : <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full"/>
@@ -750,23 +754,33 @@ export default function BoutiquePage() {
               </p>
 
               {/* Filtres cascadants (CMT) */}
-              {shopTab === 'cmt' && currentCMTGroup && (
+              {shopTab === 'cmt' && currentCMTGroup && currentCMTGroup.products.length > 1 && (
                 <div className="space-y-2">
-                  {[
-                    { label: 'Ø', avail: bsAvailØ, active: bsFilterØ, set: (v: string | null) => { setBsFilterØ(v); setBsFilterI(null); setBsFilterS(null) } },
-                    { label: 'I',  avail: bsAvailI, active: bsFilterI, set: (v: string | null) => { setBsFilterI(v); setBsFilterS(null) } },
-                    { label: 'S',  avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
-                  ].filter(row => row.avail.length > 1).map(row => (
+                  {([
+                    { label: 'Ø', all: bsAllØ, avail: null,     active: bsFilterØ, set: (v: string | null) => { setBsFilterØ(v); setBsFilterI(null); setBsFilterS(null) } },
+                    { label: 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: (v: string | null) => { setBsFilterI(v); setBsFilterS(null) } },
+                    { label: 'S', all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
+                  ] as const).filter(row => row.all.length > 0).map(row => (
                     <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
                       <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
-                      {row.avail.map(v => (
-                        <button key={v}
-                          onClick={() => row.set(row.active === v ? null : v)}
-                          className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all"
-                          style={{ background: row.active === v ? '#d4780f' : '#1a1a1a', color: row.active === v ? 'white' : '#777', border: `1px solid ${row.active === v ? '#d4780f' : '#2a2a2a'}` }}>
-                          {v}
-                        </button>
-                      ))}
+                      {row.all.map(v => {
+                        const isSelected = row.active === v
+                        const isAvail = row.avail === null || row.avail.has(v)
+                        return (
+                          <button key={v}
+                            onClick={() => isAvail ? row.set(isSelected ? null : v) : undefined}
+                            className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all"
+                            style={{
+                              background: isSelected ? '#d4780f' : '#1a1a1a',
+                              color: isSelected ? 'white' : isAvail ? '#bbb' : '#333',
+                              border: `1px solid ${isSelected ? '#d4780f' : isAvail ? '#333' : '#1e1e1e'}`,
+                              opacity: isAvail ? 1 : 0.4,
+                              cursor: isAvail ? 'pointer' : 'default',
+                            }}>
+                            {v}
+                          </button>
+                        )
+                      })}
                     </div>
                   ))}
                 </div>
