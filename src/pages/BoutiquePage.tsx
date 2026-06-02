@@ -151,6 +151,10 @@ export default function BoutiquePage() {
   const [filterLC, setFilterLC] = useState<string | null>(null)
   const [filterDents, setFilterDents] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
+  const [selectedCMTVariantRef, setSelectedCMTVariantRef] = useState<string>('')
+  const [cmtFilterDiam, setCmtFilterDiam] = useState<string | null>(null)
+  const [cmtFilterLC, setCmtFilterLC] = useState<string | null>(null)
+  const [cmtFilterQueue, setCmtFilterQueue] = useState<string | null>(null)
 
   const favKey = `spincut_favs_${clientCode ?? 'guest'}`
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -223,6 +227,52 @@ export default function BoutiquePage() {
   const activeFilterCount = [filterDiam, filterLC, filterDents].filter(Boolean).length
   const resetFilters = () => { setFilterDiam(null); setFilterLC(null); setFilterDents(null) }
 
+  // CMT groups — one entry per shared photo
+  const cmtGroups = useMemo(() => {
+    if (shopTab !== 'cmt') return []
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of activeTabCatalog) {
+      const key = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(p)
+    }
+    return [...map.entries()].map(([key, products]) => ({
+      key, photoUrl: CMT_PHOTO_MAP[products[0].ref] ?? null, products,
+    }))
+  }, [activeTabCatalog, shopTab])
+
+  const cmtAllProds = useMemo(() => shopTab === 'cmt' ? activeTabCatalog : [], [activeTabCatalog, shopTab])
+  const cmtDiamValues  = useMemo(() => [...new Set(cmtAllProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [cmtAllProds])
+  const cmtLCValues    = useMemo(() => [...new Set(cmtAllProds.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [cmtAllProds])
+  const cmtQueueValues = useMemo(() => [...new Set(cmtAllProds.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [cmtAllProds])
+
+  const cmtFilteredGroups = useMemo(() => {
+    if (!cmtFilterDiam && !cmtFilterLC && !cmtFilterQueue) return cmtGroups
+    return cmtGroups.filter(g => g.products.some(p =>
+      (!cmtFilterDiam  || p.diametre === cmtFilterDiam) &&
+      (!cmtFilterLC    || p.lc       === cmtFilterLC) &&
+      (!cmtFilterQueue || p.queue    === cmtFilterQueue)
+    ))
+  }, [cmtGroups, cmtFilterDiam, cmtFilterLC, cmtFilterQueue])
+
+  const currentCMTGroup = useMemo(() => {
+    if (!selectedProduct || shopTab !== 'cmt') return null
+    const key = CMT_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
+    return cmtGroups.find(g => g.key === key) ?? null
+  }, [selectedProduct, shopTab, cmtGroups])
+
+  const cmtVariant = useMemo(() =>
+    currentCMTGroup?.products.find(p => p.ref === selectedCMTVariantRef) ?? selectedProduct,
+  [currentCMTGroup, selectedCMTVariantRef, selectedProduct])
+
+  const fmtVariant = (p: CatalogProduct) => {
+    const parts: string[] = []
+    if (p.diametre && p.diametre !== '/') parts.push(`Ø${p.diametre}`)
+    if (p.lc      && p.lc      !== '/') parts.push(`I${p.lc}`)
+    if (p.queue   && p.queue   !== '/') parts.push(`S${p.queue}`)
+    return parts.length ? parts.join(' · ') : p.ref
+  }
+
   const setQty = (key: string, delta: number, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
   const setQtyDirect = (key: string, val: string, max: number) =>
@@ -232,7 +282,7 @@ export default function BoutiquePage() {
 
   const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
   const goHome  = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
-  const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
+  const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters(); setCmtFilterDiam(null); setCmtFilterLC(null); setCmtFilterQueue(null) }
   const enterFavs = () => { setHomeView(false); setFavsView(true); setActiveCategory(null); resetFilters() }
 
   if (!isAuthenticated) { navigate('/'); return null }
@@ -587,49 +637,80 @@ export default function BoutiquePage() {
 
             {/* ── Grille photos CMT ── */}
             {!catalogLoading && !catalogError && shopTab === 'cmt' && (
-              <div className="px-4 pt-4 pb-4">
-                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">
-                  {activeTabCatalog.length} produits
+              <div className="px-4 pt-3 pb-4">
+
+                {/* Filtres CMT */}
+                {[
+                  { label: 'Ø', values: cmtDiamValues,  active: cmtFilterDiam,  set: setCmtFilterDiam },
+                  { label: 'I', values: cmtLCValues,     active: cmtFilterLC,    set: setCmtFilterLC },
+                  { label: 'S', values: cmtQueueValues,  active: cmtFilterQueue, set: setCmtFilterQueue },
+                ].map(row => row.values.length > 0 && (
+                  <div key={row.label} className="flex items-center gap-2 mb-2 overflow-x-auto no-scrollbar pb-0.5">
+                    <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
+                    {row.values.map(v => (
+                      <button key={v} onClick={() => row.set(row.active === v ? null : v)}
+                        className="flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all"
+                        style={{ background: row.active === v ? '#d4780f' : '#1a1a1a', color: row.active === v ? 'white' : '#666', border: `1px solid ${row.active === v ? '#d4780f' : '#2a2a2a'}` }}>
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+
+                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mt-2 mb-3">
+                  {cmtFilteredGroups.length} produit{cmtFilteredGroups.length > 1 ? 's' : ''}
                 </p>
+
                 <div className="grid grid-cols-2 gap-3">
-                  {activeTabCatalog.map(product => {
-                    const key = uid(product)
-                    const photoUrl = CMT_PHOTO_MAP[product.ref] ?? null
-                    const qty = quantities[key] || 0
+                  {cmtFilteredGroups.map(group => {
+                    const anyInStock = group.products.some(p => p.stock > 0)
+                    const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
+                    const prices     = group.products.map(p => p.prix).filter(x => x > 0)
+                    const minPrice   = prices.length ? Math.min(...prices) : 0
+                    const groupName  = (() => {
+                      if (group.products.length === 1) return group.products[0].designation.replace(/\s+D=.+/i, '').replace(/\s+S=.+/i, '').trim()
+                      let prefix = group.products[0].designation
+                      for (const p of group.products.slice(1)) {
+                        while (prefix.length > 0 && !p.designation.startsWith(prefix)) prefix = prefix.slice(0, -1)
+                      }
+                      return prefix.trim().replace(/[-–\s]+$/, '').trim() || group.products[0].designation.split(' ').slice(0, 4).join(' ')
+                    })()
                     return (
                       <button
-                        key={key}
-                        onClick={() => setSelectedProduct(product)}
+                        key={group.key}
+                        onClick={() => { setSelectedProduct(group.products[0]); setSelectedCMTVariantRef(group.products[0].ref) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
-                        style={{ background: '#111', border: `1px solid ${qty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                        style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
                         {/* Photo */}
                         <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
-                          {photoUrl
-                            ? <img src={photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                          {group.photoUrl
+                            ? <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
                             : <div className="absolute inset-0 flex items-center justify-center"
                                 style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
                                 <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
                               </div>
                           }
                           <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
-                          {qty > 0 && (
-                            <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                              ×{qty}
+                          {totalQty > 0 && (
+                            <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>
+                          )}
+                          {group.products.length > 1 && (
+                            <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                              {group.products.length} dim.
                             </span>
                           )}
                           <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
-                            style={{ background: product.stock > 0 ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: product.stock > 0 ? '#4ade80' : '#ef4444' }}>
-                            {product.stock > 0 ? '● Stock' : '● Rupture'}
+                            style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
+                            {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
                         </div>
                         {/* Infos */}
                         <div className="px-2.5 py-2.5">
-                          <p className="text-[#d4780f] font-mono text-[9px] mb-0.5">{product.ref}</p>
-                          <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{product.designation}</p>
+                          <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
                           <div className="mt-1.5">
-                            {product.prix > 0
-                              ? <span className="text-[#d4780f] font-bold text-sm">{fmt(product.prix)} €</span>
+                            {minPrice > 0
+                              ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span>
                               : <span className="text-[#444] text-[10px]">Sur devis</span>
                             }
                           </div>
@@ -661,12 +742,12 @@ export default function BoutiquePage() {
       {/* ── Fiche produit — bottom sheet ── */}
       {selectedProduct && (
         <div
-          className="fixed inset-0 z-50 flex items-end"
+          className="fixed inset-0 z-50"
           style={{ background: 'rgba(0,0,0,0.75)' }}
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="w-full max-w-2xl mx-auto rounded-t-2xl overflow-y-auto"
+            className="absolute bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto"
             style={{ background: '#111', maxHeight: '88vh', border: '1px solid #2a2a2a', borderBottom: 'none' }}
             onClick={e => e.stopPropagation()}
           >
@@ -677,81 +758,116 @@ export default function BoutiquePage() {
 
             {/* Photo produit */}
             <div className="mx-4 mt-2 rounded-xl overflow-hidden relative" style={{ height: '200px', background: '#f5f5f5' }}>
-              {shopTab === 'cmt' && CMT_PHOTO_MAP[selectedProduct.ref] ? (
-                <>
-                  <img src={CMT_PHOTO_MAP[selectedProduct.ref]} alt="" className="w-full h-full object-contain rounded-xl" style={{ padding: '12px' }} />
-                  <div className="absolute inset-x-0 bottom-0 h-10 rounded-b-xl" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.3))' }}/>
-                </>
+              {shopTab === 'cmt' && currentCMTGroup?.photoUrl ? (
+                <img src={currentCMTGroup.photoUrl} alt="" className="w-full h-full object-contain rounded-xl" style={{ padding: '12px' }} />
               ) : (
                 <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full rounded-xl"/>
               )}
               {selectedProduct.pm && (
                 <span className="absolute top-2.5 right-2.5 bg-[#0d2a0d]/90 text-green-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-700/50">Polimiroir</span>
               )}
-              <div className="absolute bottom-2.5 left-3">
-                <span className="bg-black/60 text-[#d4780f] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {CATEGORY_META[selectedProduct.category]?.label ?? selectedProduct.category}
-                </span>
-              </div>
+              {shopTab !== 'cmt' && (
+                <div className="absolute bottom-2.5 left-3">
+                  <span className="bg-black/60 text-[#d4780f] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {CATEGORY_META[selectedProduct.category]?.label ?? selectedProduct.category}
+                  </span>
+                </div>
+              )}
             </div>
 
-            <div className="px-4 pt-4 pb-6 space-y-4">
+            <div className="px-4 pt-4 pb-8 space-y-4">
 
-              {/* Référence + désignation */}
-              <div>
-                <span className="font-mono text-[10px] text-[#555] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{selectedProduct.ref}</span>
-                <p className="text-white font-semibold text-base mt-1.5 leading-snug">{selectedProduct.designation}</p>
-              </div>
+              {/* Titre groupe */}
+              <p className="text-white font-semibold text-base leading-snug">
+                {shopTab === 'cmt' && currentCMTGroup
+                  ? (() => {
+                      const names = currentCMTGroup.products.map(p => p.designation)
+                      if (names.length === 1) return names[0].replace(/\s+D=.+/i, '').replace(/\s+S=.+/i, '').trim()
+                      let prefix = names[0]
+                      for (const n of names.slice(1)) { while (prefix.length > 0 && !n.startsWith(prefix)) prefix = prefix.slice(0, -1) }
+                      return prefix.trim().replace(/[-–\s]+$/, '').trim() || names[0].split(' ').slice(0, 4).join(' ')
+                    })()
+                  : selectedProduct.designation
+                }
+              </p>
 
-              {/* Specs (Ø · I · L · S) */}
-              <div className="flex gap-2 flex-wrap">
-                {[
-                  { l: 'Ø', v: selectedProduct.diametre, u: 'mm' },
-                  { l: 'I', v: selectedProduct.lc,       u: 'mm' },
-                  { l: 'L', v: selectedProduct.lt,       u: 'mm' },
-                  { l: 'S', v: selectedProduct.queue,    u: 'mm' },
-                ].filter(s => s.v && s.v !== '/').map(s => (
-                  <div key={s.l} className="flex-1 min-w-[48px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
-                    <p className="text-[#d4780f] text-[10px] font-bold">{s.l}</p>
-                    <p className="text-white font-mono font-bold text-sm mt-0.5">{s.v}</p>
-                    <p className="text-[#444] text-[9px]">{s.u}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Stock + prix + panier */}
-              <div className="flex items-center justify-between pt-2 border-t border-[#1e1e1e]">
+              {/* Sélecteur de dimensions (CMT groupes multi-variantes) */}
+              {shopTab === 'cmt' && currentCMTGroup && currentCMTGroup.products.length > 1 && (
                 <div>
-                  <StockBadge stock={selectedProduct.stock}/>
-                  {selectedProduct.prix > 0 && (
-                    <p className="text-[#d4780f] font-black text-2xl mt-1.5">
-                      {fmt(selectedProduct.prix)} €
-                      <span className="text-[#555] text-xs font-normal ml-1">HT</span>
-                    </p>
-                  )}
+                  <p className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-2">Choisir les dimensions</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {currentCMTGroup.products.map(p => {
+                      const isSel = p.ref === selectedCMTVariantRef
+                      return (
+                        <button key={p.ref}
+                          onClick={() => setSelectedCMTVariantRef(p.ref)}
+                          className="flex-shrink-0 px-3 py-2 rounded-xl text-[11px] font-medium transition-all"
+                          style={{ background: isSel ? '#d4780f' : '#1a1a1a', color: isSel ? 'white' : '#888', border: `1px solid ${isSel ? '#d4780f' : '#2a2a2a'}` }}>
+                          {fmtVariant(p)}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-                {selectedProduct.stock > 0 && selectedProduct.prix > 0 && (() => {
-                  const key = uid(selectedProduct)
-                  const qty = quantities[key] || 0
-                  return qty === 0 ? (
-                    <button
-                      onClick={() => setQty(key, 1, selectedProduct.stock)}
-                      className="px-6 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
-                      style={{ background: '#d4780f' }}
-                    >
-                      + Ajouter
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setQty(key, -1, selectedProduct.stock)}
-                        className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">−</button>
-                      <span className="w-8 text-center text-[#d4780f] font-bold text-lg">{qty}</span>
-                      <button onClick={() => setQty(key, +1, selectedProduct.stock)}
-                        className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">+</button>
+              )}
+
+              {/* Specs de la variante sélectionnée */}
+              {(() => {
+                const v = shopTab === 'cmt' ? (cmtVariant ?? selectedProduct) : selectedProduct
+                return (
+                  <>
+                    {shopTab === 'cmt' && (
+                      <span className="font-mono text-[10px] text-[#555] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{v.ref}</span>
+                    )}
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { l: 'Ø', val: v.diametre },
+                        { l: 'I', val: v.lc },
+                        { l: 'L', val: v.lt },
+                        { l: 'S', val: v.queue },
+                      ].filter(s => s.val && s.val !== '/').map(s => (
+                        <div key={s.l} className="flex-1 min-w-[48px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
+                          <p className="text-[#d4780f] text-[10px] font-bold">{s.l}</p>
+                          <p className="text-white font-mono font-bold text-sm mt-0.5">{s.val}</p>
+                          <p className="text-[#444] text-[9px]">mm</p>
+                        </div>
+                      ))}
                     </div>
-                  )
-                })()}
-              </div>
+
+                    {/* Stock + prix + panier */}
+                    <div className="flex items-center justify-between pt-2 border-t border-[#1e1e1e]">
+                      <div>
+                        <StockBadge stock={v.stock}/>
+                        {v.prix > 0 && (
+                          <p className="text-[#d4780f] font-black text-2xl mt-1.5">
+                            {fmt(v.prix)} €
+                            <span className="text-[#555] text-xs font-normal ml-1">HT</span>
+                          </p>
+                        )}
+                      </div>
+                      {v.stock > 0 && v.prix > 0 && (() => {
+                        const key = uid(v)
+                        const qty = quantities[key] || 0
+                        return qty === 0 ? (
+                          <button onClick={() => setQty(key, 1, v.stock)}
+                            className="px-6 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+                            style={{ background: '#d4780f' }}>
+                            + Ajouter
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setQty(key, -1, v.stock)}
+                              className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">−</button>
+                            <span className="w-8 text-center text-[#d4780f] font-bold text-lg">{qty}</span>
+                            <button onClick={() => setQty(key, +1, v.stock)}
+                              className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">+</button>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </>
+                )
+              })()}
 
             </div>
           </div>
