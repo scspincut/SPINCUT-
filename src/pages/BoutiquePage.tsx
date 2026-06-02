@@ -252,11 +252,19 @@ export default function BoutiquePage() {
   const bsAllØ = useMemo(() => [...new Set(bsProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
   const bsAllI = useMemo(() => [...new Set(bsProds.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
   const bsAllS = useMemo(() => [...new Set(bsProds.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
-  // Compatible values given current selections (for graying)
-  const bsByØ    = useMemo(() => bsFilterØ ? bsProds.filter(p => p.diametre === bsFilterØ) : bsProds, [bsProds, bsFilterØ])
-  const bsAvailI = useMemo(() => new Set(bsByØ.map(p => p.lc).filter(v => v && v !== '/')), [bsByØ])
-  const bsByØI   = useMemo(() => bsFilterI ? bsByØ.filter(p => p.lc === bsFilterI) : bsByØ, [bsByØ, bsFilterI])
-  const bsAvailS = useMemo(() => new Set(bsByØI.map(p => p.queue).filter(v => v && v !== '/')), [bsByØI])
+  // Compatible values — bidirectional: each dimension grays based on the other two
+  const bsAvailØ = useMemo(() => new Set(
+    bsProds.filter(p => (!bsFilterI || p.lc === bsFilterI) && (!bsFilterS || p.queue === bsFilterS))
+      .map(p => p.diametre).filter(v => v && v !== '/')
+  ), [bsProds, bsFilterI, bsFilterS])
+  const bsAvailI = useMemo(() => new Set(
+    bsProds.filter(p => (!bsFilterØ || p.diametre === bsFilterØ) && (!bsFilterS || p.queue === bsFilterS))
+      .map(p => p.lc).filter(v => v && v !== '/')
+  ), [bsProds, bsFilterØ, bsFilterS])
+  const bsAvailS = useMemo(() => new Set(
+    bsProds.filter(p => (!bsFilterØ || p.diametre === bsFilterØ) && (!bsFilterI || p.lc === bsFilterI))
+      .map(p => p.queue).filter(v => v && v !== '/')
+  ), [bsProds, bsFilterØ, bsFilterI])
 
   const cmtMatchingVariants = useMemo(() => {
     if (!currentCMTGroup) return selectedProduct ? [selectedProduct] : []
@@ -718,12 +726,12 @@ export default function BoutiquePage() {
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="w-full rounded-2xl overflow-hidden overflow-y-auto"
+            className="w-full rounded-2xl overflow-hidden flex flex-col"
             style={{ background: '#111', maxHeight: '92vh', maxWidth: '500px', border: '1px solid #2a2a2a' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Photo */}
-            <div className="relative w-full" style={{ background: '#f4f4f4', height: '280px' }}>
+            {/* Photo — sticky, does not scroll */}
+            <div className="relative w-full flex-shrink-0" style={{ background: '#f4f4f4', height: '240px' }}>
               {shopTab === 'cmt' && currentCMTGroup?.photoUrl
                 ? <img src={currentCMTGroup.photoUrl} alt="" className="w-full h-full object-contain" />
                 : <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full"/>
@@ -738,7 +746,7 @@ export default function BoutiquePage() {
               </button>
             </div>
 
-            <div className="px-4 pt-4 pb-6 space-y-4">
+            <div className="overflow-y-auto flex-1 px-4 pt-4 pb-6 space-y-4">
 
               {/* Titre */}
               <p className="text-white font-semibold text-base leading-snug">
@@ -755,8 +763,8 @@ export default function BoutiquePage() {
               {shopTab === 'cmt' && currentCMTGroup && currentCMTGroup.products.length > 1 && (
                 <div className="space-y-2">
                   {([
-                    { label: 'Ø', all: bsAllØ, avail: null,     active: bsFilterØ, set: (v: string | null) => { setBsFilterØ(v); setBsFilterI(null); setBsFilterS(null) } },
-                    { label: 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: (v: string | null) => { setBsFilterI(v); setBsFilterS(null) } },
+                    { label: 'Ø', all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
+                    { label: 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
                     { label: 'S', all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
                   ] as const).filter(row => row.all.length > 0).map(row => (
                     <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
