@@ -74,68 +74,6 @@ function StockBadge({ stock }: { stock: number }) {
 }
 
 // ── Schéma technique automatique ──────────────────────────────────────────────
-function ToolDiagramSVG({ d, lc, lt, q }: { d: string; lc: string; lt: string; q: string }) {
-  const D  = Math.max(parseFloat(d)  || 8,  1)
-  const LC = Math.max(parseFloat(lc) || 32, 1)
-  const LT = Math.max(parseFloat(lt) || 65, LC)
-  const Q  = Math.max(parseFloat(q)  || D,  1)
-
-  const W = 260, H = 96
-  const ml = 26, mr = 26, mt = 10, mb = 36
-  const drawW = W - ml - mr
-  const drawH = H - mt - mb
-  const scale = Math.min(drawW / LT, drawH / Math.max(D, Q))
-
-  const ltPx = LT * scale
-  const lcPx = LC * scale
-  const shPx = (LT - LC) * scale
-  const dPx  = D * scale
-  const qPx  = Q * scale
-
-  const x0 = ml
-  const x1 = x0 + lcPx
-  const x2 = x0 + ltPx
-  const cy = mt + drawH / 2
-
-  const lcY = cy + Math.max(dPx, qPx) / 2 + 7
-  const ltY = lcY + 14
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {/* Zone de coupe — orange */}
-      <rect x={x0} y={cy - dPx/2} width={lcPx} height={dPx}
-        fill="#d4780f1a" stroke="#d4780f" strokeWidth="1.5" rx="2"/>
-      {/* Queue — gris */}
-      <rect x={x1} y={cy - qPx/2} width={shPx} height={qPx}
-        fill="#1e1e1e" stroke="#3a3a3a" strokeWidth="1" rx="2"/>
-
-      {/* Annotation Ø (gauche vertical) */}
-      <line x1={x0-5} y1={cy-dPx/2} x2={x0-5} y2={cy+dPx/2} stroke="#d4780f" strokeWidth="1"/>
-      <line x1={x0-8} y1={cy-dPx/2} x2={x0-2} y2={cy-dPx/2} stroke="#d4780f" strokeWidth="1"/>
-      <line x1={x0-8} y1={cy+dPx/2} x2={x0-2} y2={cy+dPx/2} stroke="#d4780f" strokeWidth="1"/>
-      <text x={x0-16} y={cy+3.5} fontSize="8" fill="#d4780f" textAnchor="middle" fontFamily="monospace" fontWeight="bold">Ø</text>
-
-      {/* Annotation Q (droite vertical) */}
-      <line x1={x2+5} y1={cy-qPx/2} x2={x2+5} y2={cy+qPx/2} stroke="#555" strokeWidth="1"/>
-      <line x1={x2+2} y1={cy-qPx/2} x2={x2+8} y2={cy-qPx/2} stroke="#555" strokeWidth="1"/>
-      <line x1={x2+2} y1={cy+qPx/2} x2={x2+8} y2={cy+qPx/2} stroke="#555" strokeWidth="1"/>
-      <text x={x2+18} y={cy+3.5} fontSize="8" fill="#666" textAnchor="middle" fontFamily="monospace">Q</text>
-
-      {/* Annotation LC (bas, zone coupe) */}
-      <line x1={x0} y1={lcY} x2={x1} y2={lcY} stroke="#d4780f" strokeWidth="0.8"/>
-      <line x1={x0} y1={lcY-3} x2={x0} y2={lcY+3} stroke="#d4780f" strokeWidth="0.8"/>
-      <line x1={x1} y1={lcY-3} x2={x1} y2={lcY+3} stroke="#d4780f" strokeWidth="0.8"/>
-      <text x={(x0+x1)/2} y={lcY+9} fontSize="8" fill="#d4780f" textAnchor="middle" fontFamily="monospace" fontWeight="bold">LC</text>
-
-      {/* Annotation LT (bas, total) */}
-      <line x1={x0} y1={ltY} x2={x2} y2={ltY} stroke="#444" strokeWidth="0.8"/>
-      <line x1={x0} y1={ltY-3} x2={x0} y2={ltY+3} stroke="#444" strokeWidth="0.8"/>
-      <line x1={x2} y1={ltY-3} x2={x2} y2={ltY+3} stroke="#444" strokeWidth="0.8"/>
-      <text x={(x0+x2)/2} y={ltY+9} fontSize="8" fill="#666" textAnchor="middle" fontFamily="monospace">LT</text>
-    </svg>
-  )
-}
-
 // ── Image catégorie avec placeholder ──────────────────────────────────────────
 function CategoryImage({ category, shopTab, className = '', style }: { category: string; shopTab: string; className?: string; style?: React.CSSProperties }) {
   const [err, setErr] = useState(false)
@@ -765,14 +703,13 @@ export default function BoutiquePage() {
                 <p className="text-white font-semibold text-base mt-1.5 leading-snug">{selectedProduct.designation}</p>
               </div>
 
-              {/* Specs (Ø · LC · LT · Q · Z) */}
+              {/* Specs (Ø · I · L · S) */}
               <div className="flex gap-2 flex-wrap">
                 {[
-                  { l: 'Ø',  v: selectedProduct.diametre, u: 'mm' },
-                  { l: 'LC', v: selectedProduct.lc,       u: 'mm' },
-                  { l: 'LT', v: selectedProduct.lt,       u: 'mm' },
-                  { l: 'Q',  v: selectedProduct.queue,    u: 'mm' },
-                  { l: 'Z',  v: selectedProduct.dents,    u: 'dents' },
+                  { l: 'Ø', v: selectedProduct.diametre, u: 'mm' },
+                  { l: 'I', v: selectedProduct.lc,       u: 'mm' },
+                  { l: 'L', v: selectedProduct.lt,       u: 'mm' },
+                  { l: 'S', v: selectedProduct.queue,    u: 'mm' },
                 ].filter(s => s.v && s.v !== '/').map(s => (
                   <div key={s.l} className="flex-1 min-w-[48px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
                     <p className="text-[#d4780f] text-[10px] font-bold">{s.l}</p>
@@ -781,32 +718,6 @@ export default function BoutiquePage() {
                   </div>
                 ))}
               </div>
-
-              {/* Schéma technique auto-généré */}
-              {selectedProduct.diametre && selectedProduct.diametre !== '/' && (
-                <div className="rounded-xl p-3 border border-[#1e1e1e]" style={{ background: '#0d0d0d' }}>
-                  <p className="text-[#444] text-[10px] font-bold uppercase tracking-wider mb-3">Schéma technique</p>
-                  <ToolDiagramSVG
-                    d={selectedProduct.diametre}
-                    lc={selectedProduct.lc}
-                    lt={selectedProduct.lt}
-                    q={selectedProduct.queue}
-                  />
-                  <div className="flex gap-3 mt-2 justify-center flex-wrap">
-                    {[
-                      { label: 'Ø Coupe', color: '#d4780f' },
-                      { label: 'LC Longueur de coupe', color: '#d4780f' },
-                      { label: 'LT Longueur totale', color: '#555' },
-                      { label: 'Q Queue', color: '#555' },
-                    ].map(l => (
-                      <span key={l.label} className="flex items-center gap-1 text-[9px]" style={{ color: l.color }}>
-                        <span className="inline-block w-2 h-0.5 rounded" style={{ background: l.color }}/>
-                        {l.label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Stock + prix + panier */}
               <div className="flex items-center justify-between pt-2 border-t border-[#1e1e1e]">
