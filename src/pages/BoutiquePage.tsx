@@ -152,9 +152,9 @@ export default function BoutiquePage() {
   const [filterDents, setFilterDents] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
   const [selectedCMTVariantRef, setSelectedCMTVariantRef] = useState<string>('')
-  const [cmtFilterDiam, setCmtFilterDiam] = useState<string | null>(null)
-  const [cmtFilterLC, setCmtFilterLC] = useState<string | null>(null)
-  const [cmtFilterQueue, setCmtFilterQueue] = useState<string | null>(null)
+  const [bsFilterØ, setBsFilterØ] = useState<string | null>(null)
+  const [bsFilterI, setBsFilterI] = useState<string | null>(null)
+  const [bsFilterS, setBsFilterS] = useState<string | null>(null)
 
   const favKey = `spincut_favs_${clientCode ?? 'guest'}`
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -241,37 +241,31 @@ export default function BoutiquePage() {
     }))
   }, [activeTabCatalog, shopTab])
 
-  const cmtAllProds = useMemo(() => shopTab === 'cmt' ? activeTabCatalog : [], [activeTabCatalog, shopTab])
-  const cmtDiamValues  = useMemo(() => [...new Set(cmtAllProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [cmtAllProds])
-  const cmtLCValues    = useMemo(() => [...new Set(cmtAllProds.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [cmtAllProds])
-  const cmtQueueValues = useMemo(() => [...new Set(cmtAllProds.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [cmtAllProds])
-
-  const cmtFilteredGroups = useMemo(() => {
-    if (!cmtFilterDiam && !cmtFilterLC && !cmtFilterQueue) return cmtGroups
-    return cmtGroups.filter(g => g.products.some(p =>
-      (!cmtFilterDiam  || p.diametre === cmtFilterDiam) &&
-      (!cmtFilterLC    || p.lc       === cmtFilterLC) &&
-      (!cmtFilterQueue || p.queue    === cmtFilterQueue)
-    ))
-  }, [cmtGroups, cmtFilterDiam, cmtFilterLC, cmtFilterQueue])
-
   const currentCMTGroup = useMemo(() => {
     if (!selectedProduct || shopTab !== 'cmt') return null
     const key = CMT_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
     return cmtGroups.find(g => g.key === key) ?? null
   }, [selectedProduct, shopTab, cmtGroups])
 
-  const cmtVariant = useMemo(() =>
-    currentCMTGroup?.products.find(p => p.ref === selectedCMTVariantRef) ?? selectedProduct,
-  [currentCMTGroup, selectedCMTVariantRef, selectedProduct])
+  // Cascading filters inside the bottom sheet
+  const bsProds = currentCMTGroup?.products ?? []
+  const bsAvailØ = useMemo(() => [...new Set(bsProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
+  const bsByØ    = useMemo(() => bsFilterØ ? bsProds.filter(p => p.diametre === bsFilterØ) : bsProds, [bsProds, bsFilterØ])
+  const bsAvailI = useMemo(() => [...new Set(bsByØ.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsByØ])
+  const bsByØI   = useMemo(() => bsFilterI ? bsByØ.filter(p => p.lc === bsFilterI) : bsByØ, [bsByØ, bsFilterI])
+  const bsAvailS = useMemo(() => [...new Set(bsByØI.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsByØI])
 
-  const fmtVariant = (p: CatalogProduct) => {
-    const parts: string[] = []
-    if (p.diametre && p.diametre !== '/') parts.push(`Ø${p.diametre}`)
-    if (p.lc      && p.lc      !== '/') parts.push(`I${p.lc}`)
-    if (p.queue   && p.queue   !== '/') parts.push(`S${p.queue}`)
-    return parts.length ? parts.join(' · ') : p.ref
-  }
+  const cmtVariant = useMemo(() => {
+    if (!currentCMTGroup) return selectedProduct
+    const matching = bsProds.filter(p =>
+      (!bsFilterØ || p.diametre === bsFilterØ) &&
+      (!bsFilterI || p.lc       === bsFilterI) &&
+      (!bsFilterS || p.queue    === bsFilterS)
+    )
+    if (matching.length === 1) return matching[0]
+    return currentCMTGroup.products.find(p => p.ref === selectedCMTVariantRef) ?? currentCMTGroup.products[0]
+  }, [currentCMTGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedCMTVariantRef, selectedProduct])
+
 
   const setQty = (key: string, delta: number, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
@@ -282,7 +276,7 @@ export default function BoutiquePage() {
 
   const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
   const goHome  = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
-  const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters(); setCmtFilterDiam(null); setCmtFilterLC(null); setCmtFilterQueue(null) }
+  const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
   const enterFavs = () => { setHomeView(false); setFavsView(true); setActiveCategory(null); resetFilters() }
 
   if (!isAuthenticated) { navigate('/'); return null }
@@ -637,48 +631,23 @@ export default function BoutiquePage() {
 
             {/* ── Grille photos CMT ── */}
             {!catalogLoading && !catalogError && shopTab === 'cmt' && (
-              <div className="px-4 pt-3 pb-4">
-
-                {/* Filtres CMT */}
-                {[
-                  { label: 'Ø', values: cmtDiamValues,  active: cmtFilterDiam,  set: setCmtFilterDiam },
-                  { label: 'I', values: cmtLCValues,     active: cmtFilterLC,    set: setCmtFilterLC },
-                  { label: 'S', values: cmtQueueValues,  active: cmtFilterQueue, set: setCmtFilterQueue },
-                ].map(row => row.values.length > 0 && (
-                  <div key={row.label} className="flex items-center gap-2 mb-2 overflow-x-auto no-scrollbar pb-0.5">
-                    <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
-                    {row.values.map(v => (
-                      <button key={v} onClick={() => row.set(row.active === v ? null : v)}
-                        className="flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all"
-                        style={{ background: row.active === v ? '#d4780f' : '#1a1a1a', color: row.active === v ? 'white' : '#666', border: `1px solid ${row.active === v ? '#d4780f' : '#2a2a2a'}` }}>
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-
-                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mt-2 mb-3">
-                  {cmtFilteredGroups.length} produit{cmtFilteredGroups.length > 1 ? 's' : ''}
+              <div className="px-4 pt-4 pb-4">
+                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">
+                  {cmtGroups.length} produit{cmtGroups.length > 1 ? 's' : ''}
                 </p>
-
                 <div className="grid grid-cols-2 gap-3">
-                  {cmtFilteredGroups.map(group => {
+                  {cmtGroups.map(group => {
                     const anyInStock = group.products.some(p => p.stock > 0)
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
                     const minPrice   = prices.length ? Math.min(...prices) : 0
-                    const groupName  = (() => {
-                      if (group.products.length === 1) return group.products[0].designation.replace(/\s+D=.+/i, '').replace(/\s+S=.+/i, '').trim()
-                      let prefix = group.products[0].designation
-                      for (const p of group.products.slice(1)) {
-                        while (prefix.length > 0 && !p.designation.startsWith(prefix)) prefix = prefix.slice(0, -1)
-                      }
-                      return prefix.trim().replace(/[-–\s]+$/, '').trim() || group.products[0].designation.split(' ').slice(0, 4).join(' ')
-                    })()
+                    const groupName  = group.products.length === 1
+                      ? group.products[0].designation
+                      : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
                     return (
                       <button
                         key={group.key}
-                        onClick={() => { setSelectedProduct(group.products[0]); setSelectedCMTVariantRef(group.products[0].ref) }}
+                        onClick={() => { setSelectedProduct(group.products[0]); setSelectedCMTVariantRef(''); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
                         style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
@@ -739,116 +708,105 @@ export default function BoutiquePage() {
 
       <BottomNav cartCount={cartCount} cartTotal={cartTotal}/>
 
-      {/* ── Fiche produit — bottom sheet ── */}
+      {/* ── Fiche produit — modal centré ── */}
       {selectedProduct && (
         <div
-          className="fixed inset-0 z-50"
-          style={{ background: 'rgba(0,0,0,0.75)' }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.82)' }}
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="absolute bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto"
-            style={{ background: '#111', maxHeight: '88vh', border: '1px solid #2a2a2a', borderBottom: 'none' }}
+            className="w-full rounded-2xl overflow-hidden overflow-y-auto"
+            style={{ background: '#111', maxHeight: '88vh', maxWidth: '420px', border: '1px solid #2a2a2a' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-[#333]"/>
+            {/* Photo */}
+            <div className="relative w-full" style={{ background: '#f4f4f4', height: '240px' }}>
+              {shopTab === 'cmt' && currentCMTGroup?.photoUrl
+                ? <img src={currentCMTGroup.photoUrl} alt="" className="w-full h-full object-contain" />
+                : <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full"/>
+              }
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(0,0,0,0.45)' }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="white">
+                  <path d="M1 1l10 10M11 1L1 11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
 
-            {/* Photo produit */}
-            <div className="mx-4 mt-2 rounded-xl overflow-hidden relative" style={{ height: '200px', background: '#f5f5f5' }}>
-              {shopTab === 'cmt' && currentCMTGroup?.photoUrl ? (
-                <img src={currentCMTGroup.photoUrl} alt="" className="w-full h-full object-contain rounded-xl" style={{ padding: '12px' }} />
-              ) : (
-                <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full rounded-xl"/>
-              )}
-              {selectedProduct.pm && (
-                <span className="absolute top-2.5 right-2.5 bg-[#0d2a0d]/90 text-green-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-700/50">Polimiroir</span>
-              )}
-              {shopTab !== 'cmt' && (
-                <div className="absolute bottom-2.5 left-3">
-                  <span className="bg-black/60 text-[#d4780f] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    {CATEGORY_META[selectedProduct.category]?.label ?? selectedProduct.category}
-                  </span>
-                </div>
-              )}
-            </div>
+            <div className="px-4 pt-4 pb-6 space-y-4">
 
-            <div className="px-4 pt-4 pb-8 space-y-4">
-
-              {/* Titre groupe */}
+              {/* Titre */}
               <p className="text-white font-semibold text-base leading-snug">
                 {shopTab === 'cmt' && currentCMTGroup
-                  ? (() => {
-                      const names = currentCMTGroup.products.map(p => p.designation)
-                      if (names.length === 1) return names[0].replace(/\s+D=.+/i, '').replace(/\s+S=.+/i, '').trim()
-                      let prefix = names[0]
-                      for (const n of names.slice(1)) { while (prefix.length > 0 && !n.startsWith(prefix)) prefix = prefix.slice(0, -1) }
-                      return prefix.trim().replace(/[-–\s]+$/, '').trim() || names[0].split(' ').slice(0, 4).join(' ')
-                    })()
+                  ? (currentCMTGroup.products.length === 1
+                      ? currentCMTGroup.products[0].designation
+                      : currentCMTGroup.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
+                    )
                   : selectedProduct.designation
                 }
               </p>
 
-              {/* Sélecteur de dimensions (CMT groupes multi-variantes) */}
-              {shopTab === 'cmt' && currentCMTGroup && currentCMTGroup.products.length > 1 && (
-                <div>
-                  <p className="text-[#555] text-[10px] font-bold uppercase tracking-wider mb-2">Choisir les dimensions</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                    {currentCMTGroup.products.map(p => {
-                      const isSel = p.ref === selectedCMTVariantRef
-                      return (
-                        <button key={p.ref}
-                          onClick={() => setSelectedCMTVariantRef(p.ref)}
-                          className="flex-shrink-0 px-3 py-2 rounded-xl text-[11px] font-medium transition-all"
-                          style={{ background: isSel ? '#d4780f' : '#1a1a1a', color: isSel ? 'white' : '#888', border: `1px solid ${isSel ? '#d4780f' : '#2a2a2a'}` }}>
-                          {fmtVariant(p)}
+              {/* Filtres cascadants (CMT) */}
+              {shopTab === 'cmt' && currentCMTGroup && (
+                <div className="space-y-2">
+                  {[
+                    { label: 'Ø', avail: bsAvailØ, active: bsFilterØ, set: (v: string | null) => { setBsFilterØ(v); setBsFilterI(null); setBsFilterS(null) } },
+                    { label: 'I',  avail: bsAvailI, active: bsFilterI, set: (v: string | null) => { setBsFilterI(v); setBsFilterS(null) } },
+                    { label: 'S',  avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
+                  ].filter(row => row.avail.length > 1).map(row => (
+                    <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                      <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
+                      {row.avail.map(v => (
+                        <button key={v}
+                          onClick={() => row.set(row.active === v ? null : v)}
+                          className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all"
+                          style={{ background: row.active === v ? '#d4780f' : '#1a1a1a', color: row.active === v ? 'white' : '#777', border: `1px solid ${row.active === v ? '#d4780f' : '#2a2a2a'}` }}>
+                          {v}
                         </button>
-                      )
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {/* Specs de la variante sélectionnée */}
+              {/* Specs + stock + panier pour la variante sélectionnée */}
               {(() => {
                 const v = shopTab === 'cmt' ? (cmtVariant ?? selectedProduct) : selectedProduct
+                const key = uid(v)
+                const qty = quantities[key] || 0
                 return (
                   <>
-                    {shopTab === 'cmt' && (
+                    {shopTab === 'cmt' && v && (
                       <span className="font-mono text-[10px] text-[#555] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{v.ref}</span>
                     )}
                     <div className="flex gap-2 flex-wrap">
                       {[
-                        { l: 'Ø', val: v.diametre },
-                        { l: 'I', val: v.lc },
-                        { l: 'L', val: v.lt },
-                        { l: 'S', val: v.queue },
+                        { l: 'Ø', val: v?.diametre },
+                        { l: 'I', val: v?.lc },
+                        { l: 'L', val: v?.lt },
+                        { l: 'S', val: v?.queue },
                       ].filter(s => s.val && s.val !== '/').map(s => (
-                        <div key={s.l} className="flex-1 min-w-[48px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
+                        <div key={s.l} className="flex-1 min-w-[44px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
                           <p className="text-[#d4780f] text-[10px] font-bold">{s.l}</p>
                           <p className="text-white font-mono font-bold text-sm mt-0.5">{s.val}</p>
                           <p className="text-[#444] text-[9px]">mm</p>
                         </div>
                       ))}
                     </div>
-
-                    {/* Stock + prix + panier */}
                     <div className="flex items-center justify-between pt-2 border-t border-[#1e1e1e]">
                       <div>
-                        <StockBadge stock={v.stock}/>
-                        {v.prix > 0 && (
+                        {v && <StockBadge stock={v.stock}/>}
+                        {v && v.prix > 0 && (
                           <p className="text-[#d4780f] font-black text-2xl mt-1.5">
-                            {fmt(v.prix)} €
-                            <span className="text-[#555] text-xs font-normal ml-1">HT</span>
+                            {fmt(v.prix)} €<span className="text-[#555] text-xs font-normal ml-1">HT</span>
                           </p>
                         )}
                       </div>
-                      {v.stock > 0 && v.prix > 0 && (() => {
-                        const key = uid(v)
-                        const qty = quantities[key] || 0
-                        return qty === 0 ? (
+                      {v && v.stock > 0 && v.prix > 0 && (
+                        qty === 0 ? (
                           <button onClick={() => setQty(key, 1, v.stock)}
                             className="px-6 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
                             style={{ background: '#d4780f' }}>
@@ -863,7 +821,7 @@ export default function BoutiquePage() {
                               className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">+</button>
                           </div>
                         )
-                      })()}
+                      )}
                     </div>
                   </>
                 )
