@@ -412,7 +412,6 @@ export default function BoutiquePage() {
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises CNC</p>
-                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#d4780f' }}>SPINCUT</p>
                   </div>
                   <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e0044)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
@@ -422,7 +421,6 @@ export default function BoutiquePage() {
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises Défonceuse</p>
-                    <p className="text-xs mt-2 font-black tracking-widest" style={{ color: '#f0dbb0' }}>CMT</p>
                   </div>
                   <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #f0dbb0, #3a3420)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
