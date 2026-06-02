@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
         <img
           src="/logo-banniere.png"
           alt="SPINCUT"
-          style={{ width: '100%', maxWidth: '320px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }}
+          style={{ width: '100%', maxWidth: '420px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }}
         />
 
         {/* Auth card */}

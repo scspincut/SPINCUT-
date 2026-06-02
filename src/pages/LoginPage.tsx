@@ -109,7 +109,7 @@ export default function LoginPage() {
         <img
           src="/logo-banniere.png"
           alt="SPINCUT Outils CNC"
-          style={{ width: '100%', maxWidth: '360px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }}
+          style={{ width: '100%', maxWidth: '480px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }}
         />
 
         {/* Accroche */}
