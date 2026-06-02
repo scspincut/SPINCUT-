@@ -151,7 +151,6 @@ export default function BoutiquePage() {
   const [filterLC, setFilterLC] = useState<string | null>(null)
   const [filterDents, setFilterDents] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
-  const [selectedCMTVariantRef, setSelectedCMTVariantRef] = useState<string>('')
   const [bsFilterØ, setBsFilterØ] = useState<string | null>(null)
   const [bsFilterI, setBsFilterI] = useState<string | null>(null)
   const [bsFilterS, setBsFilterS] = useState<string | null>(null)
@@ -259,16 +258,15 @@ export default function BoutiquePage() {
   const bsByØI   = useMemo(() => bsFilterI ? bsByØ.filter(p => p.lc === bsFilterI) : bsByØ, [bsByØ, bsFilterI])
   const bsAvailS = useMemo(() => new Set(bsByØI.map(p => p.queue).filter(v => v && v !== '/')), [bsByØI])
 
-  const cmtVariant = useMemo(() => {
-    if (!currentCMTGroup) return selectedProduct
-    const matching = bsProds.filter(p =>
+  const cmtMatchingVariants = useMemo(() => {
+    if (!currentCMTGroup) return selectedProduct ? [selectedProduct] : []
+    const prods = currentCMTGroup.products.filter(p =>
       (!bsFilterØ || p.diametre === bsFilterØ) &&
       (!bsFilterI || p.lc       === bsFilterI) &&
       (!bsFilterS || p.queue    === bsFilterS)
     )
-    if (matching.length === 1) return matching[0]
-    return currentCMTGroup.products.find(p => p.ref === selectedCMTVariantRef) ?? currentCMTGroup.products[0]
-  }, [currentCMTGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedCMTVariantRef, selectedProduct])
+    return prods.length > 0 ? prods : currentCMTGroup.products
+  }, [currentCMTGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedProduct])
 
 
   const setQty = (key: string, delta: number, max: number) =>
@@ -651,7 +649,7 @@ export default function BoutiquePage() {
                     return (
                       <button
                         key={group.key}
-                        onClick={() => { setSelectedProduct(group.products[0]); setSelectedCMTVariantRef(''); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}
+                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
                         style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
@@ -786,58 +784,62 @@ export default function BoutiquePage() {
                 </div>
               )}
 
-              {/* Specs + stock + panier pour la variante sélectionnée */}
+              {/* Liste de toutes les variantes correspondantes */}
               {(() => {
-                const v = shopTab === 'cmt' ? (cmtVariant ?? selectedProduct) : selectedProduct
-                const key = uid(v)
-                const qty = quantities[key] || 0
+                const variants = shopTab === 'cmt' ? cmtMatchingVariants : [selectedProduct!]
                 return (
-                  <>
-                    {shopTab === 'cmt' && v && (
-                      <span className="font-mono text-[10px] text-[#555] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{v.ref}</span>
-                    )}
-                    <div className="flex gap-2 flex-wrap">
-                      {[
-                        { l: 'Ø', val: v?.diametre },
-                        { l: 'I', val: v?.lc },
-                        { l: 'L', val: v?.lt },
-                        { l: 'S', val: v?.queue },
-                      ].filter(s => s.val && s.val !== '/').map(s => (
-                        <div key={s.l} className="flex-1 min-w-[44px] bg-[#1a1a1a] rounded-xl p-2.5 text-center border border-[#252525]">
-                          <p className="text-[#d4780f] text-[10px] font-bold">{s.l}</p>
-                          <p className="text-white font-mono font-bold text-sm mt-0.5">{s.val}</p>
-                          <p className="text-[#444] text-[9px]">mm</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-[#1e1e1e]">
-                      <div>
-                        {v && <StockBadge stock={v.stock}/>}
-                        {v && v.prix > 0 && (
-                          <p className="text-[#d4780f] font-black text-2xl mt-1.5">
-                            {fmt(v.prix)} €<span className="text-[#555] text-xs font-normal ml-1">HT</span>
-                          </p>
-                        )}
-                      </div>
-                      {v && v.stock > 0 && v.prix > 0 && (
-                        qty === 0 ? (
-                          <button onClick={() => setQty(key, 1, v.stock)}
-                            className="px-6 py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
-                            style={{ background: '#d4780f' }}>
-                            + Ajouter
-                          </button>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => setQty(key, -1, v.stock)}
-                              className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">−</button>
-                            <span className="w-8 text-center text-[#d4780f] font-bold text-lg">{qty}</span>
-                            <button onClick={() => setQty(key, +1, v.stock)}
-                              className="w-10 h-10 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-xl text-white">+</button>
+                  <div className="space-y-2">
+                    {variants.map(v => {
+                      const key = uid(v)
+                      const qty = quantities[key] || 0
+                      return (
+                        <div key={key} className="rounded-xl border border-[#252525] p-3 space-y-2"
+                          style={{ background: qty > 0 ? '#130e00' : '#1a1a1a' }}>
+                          {/* Ref + specs */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-[10px] text-[#555] bg-black/40 px-1.5 py-0.5 rounded">{v.ref}</span>
+                            <StockBadge stock={v.stock}/>
                           </div>
-                        )
-                      )}
-                    </div>
-                  </>
+                          <div className="flex gap-1.5">
+                            {[
+                              { l: 'Ø', val: v.diametre },
+                              { l: 'I', val: v.lc },
+                              { l: 'L', val: v.lt },
+                              { l: 'S', val: v.queue },
+                            ].filter(s => s.val && s.val !== '/').map(s => (
+                              <div key={s.l} className="flex-1 bg-[#111] rounded-lg py-1.5 text-center border border-[#2a2a2a]">
+                                <p className="text-[#d4780f] text-[9px] font-bold">{s.l}</p>
+                                <p className="text-white font-mono font-semibold text-xs mt-0.5">{s.val}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            {v.prix > 0
+                              ? <span className="text-[#d4780f] font-black text-lg">{fmt(v.prix)} €<span className="text-[#555] text-xs font-normal ml-1">HT</span></span>
+                              : <span className="text-[#444] text-xs">Sur devis</span>
+                            }
+                            {v.stock > 0 && v.prix > 0 && (
+                              qty === 0 ? (
+                                <button onClick={() => setQty(key, 1, v.stock)}
+                                  className="px-4 py-2 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+                                  style={{ background: '#d4780f' }}>
+                                  + Ajouter
+                                </button>
+                              ) : (
+                                <div className="flex items-center gap-1.5">
+                                  <button onClick={() => setQty(key, -1, v.stock)}
+                                    className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">−</button>
+                                  <span className="w-7 text-center text-[#d4780f] font-bold text-base">{qty}</span>
+                                  <button onClick={() => setQty(key, +1, v.stock)}
+                                    className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">+</button>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 )
               })()}
 
