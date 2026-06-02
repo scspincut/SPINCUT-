@@ -51,7 +51,7 @@ const CATEGORY_DESC: Record<string, string> = {
   classique:   'Bois massif, panneaux, MDF',
   polimiroir:  'PVC, acrylique, plastiques',
   compression: 'Mélaminé, CTP double face',
-  diamant:     'HPL, MDF, panneaux abrasifs',
+  diamant:     'HPL, Mélaminé, MDF, panneaux abrasifs',
   ravageuse:   'Ébauche bois et aluminium',
   alu:         'Aluminium toutes nuances',
   gravure:     'Gravure V-carve, marquage',
