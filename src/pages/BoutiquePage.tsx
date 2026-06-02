@@ -163,22 +163,31 @@ const SHOP_TABS = [
 
 const HERO_PHOTOS = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
 
-// Mapping provisoire photos CMT — à corriger si l'ordre ne correspond pas
 const CMT_PHOTO_MAP: Record<string, string> = {
-  '19812011':  '/images/cmt/cmt-01.png',
-  '91206011':  '/images/cmt/cmt-02.png',
-  '91210011':  '/images/cmt/cmt-03.png',
-  '91106011':  '/images/cmt/cmt-04.png',
-  '91107011':  '/images/cmt/cmt-05.png',
-  '91108011':  '/images/cmt/cmt-06.png',
-  '91110011':  '/images/cmt/cmt-07.png',
-  '91119011':  '/images/cmt/cmt-08.png',
-  '91120011':  '/images/cmt/cmt-09.png',
-  '92216011B': '/images/cmt/cmt-10.png',
-  '70612711':  '/images/cmt/cmt-11.png',
-  '90612711':  '/images/cmt/cmt-12.png',
-  '90619111':  '/images/cmt/cmt-13.jpg',
-  '90118011':  '/images/cmt/cmt-14.png',
+  '19812011':   '/images/cmt/cmt-02.png',
+  '91106011':   '/images/cmt/cmt-03.png',
+  '91107011':   '/images/cmt/cmt-03.png',
+  '91108011':   '/images/cmt/cmt-03.png',
+  '91110011':   '/images/cmt/cmt-03.png',
+  '91119011':   '/images/cmt/cmt-03.png',
+  '91120011':   '/images/cmt/cmt-03.png',
+  '91206011':   '/images/cmt/cmt-04.png',
+  '91210011':   '/images/cmt/cmt-04.png',
+  '91216011B':  '/images/cmt/cmt-01.png',
+  '70612711':   '/images/cmt/cmt-14.png',
+  '90612711':   '/images/cmt/cmt-14.png',
+  '90619111':   '/images/cmt/cmt-14.png',
+  '90118011':   '/images/cmt/cmt-07.png',
+  '90212011':   '/images/cmt/cmt-06.png',
+  '90225011':   '/images/cmt/cmt-06.png',
+  '93535011':   '/images/cmt/cmt-05.png',
+  '51218011':   '/images/cmt/cmt-13.jpg',
+  '51219011':   '/images/cmt/cmt-13.jpg',
+  '92705011':   '/images/cmt/cmt-08.png',
+  '93922211':   '/images/cmt/cmt-10.png',
+  '91506011':   '/images/cmt/cmt-11.png',
+  '65804511':   '/images/cmt/cmt-09.png',
+  'W170.210.R': '/images/cmt/cmt-12.png',
 }
 
 export default function BoutiquePage() {
