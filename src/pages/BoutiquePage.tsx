@@ -666,15 +666,15 @@ export default function BoutiquePage() {
                         style={{ background: '#111', border: `1px solid ${qty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
                         {/* Photo */}
-                        <div className="relative overflow-hidden" style={{ height: '120px', background: '#0d0d0d' }}>
-                          <div className="absolute inset-0 flex items-center justify-center"
-                            style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
-                            <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
-                          </div>
-                          {photoUrl && (
-                            <img src={photoUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                          )}
-                          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }}/>
+                        <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
+                          {photoUrl
+                            ? <img src={photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                            : <div className="absolute inset-0 flex items-center justify-center"
+                                style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
+                                <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+                              </div>
+                          }
+                          <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
                           {qty > 0 && (
                             <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                               ×{qty}
@@ -738,11 +738,11 @@ export default function BoutiquePage() {
             </div>
 
             {/* Photo produit */}
-            <div className="mx-4 mt-2 rounded-xl overflow-hidden relative" style={{ height: '170px' }}>
+            <div className="mx-4 mt-2 rounded-xl overflow-hidden relative" style={{ height: '200px', background: '#f5f5f5' }}>
               {shopTab === 'cmt' && CMT_PHOTO_MAP[selectedProduct.ref] ? (
                 <>
-                  <img src={CMT_PHOTO_MAP[selectedProduct.ref]} alt="" className="w-full h-full object-cover rounded-xl" />
-                  <div className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.4) 100%)' }}/>
+                  <img src={CMT_PHOTO_MAP[selectedProduct.ref]} alt="" className="w-full h-full object-contain rounded-xl" style={{ padding: '12px' }} />
+                  <div className="absolute inset-x-0 bottom-0 h-10 rounded-b-xl" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.3))' }}/>
                 </>
               ) : (
                 <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full rounded-xl"/>
