@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
+
 interface CatalogProduct {
   sheet: string; row: number; famille: string; ref: string
   diametre: string; lc: string; lt: string; dents: string
@@ -17,6 +18,21 @@ interface OrderHistoryEntry {
   total: number
 }
 
+interface AbbyProfile {
+  id: string
+  firstname: string
+  lastname: string
+  emails: string[]
+  phone: string
+  billingAddress: {
+    address: string | null
+    complement?: string | null
+    city: string | null
+    zipCode: string | null
+    country: string
+  } | null
+}
+
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
 function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 
@@ -24,21 +40,21 @@ export default function OrderPage() {
   const navigate = useNavigate()
   const { isAuthenticated, logout } = useClientAuth()
 
-  const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
-    try { return JSON.parse(localStorage.getItem('spincut_catalog_cache') ?? '[]') } catch { return [] }
-  })
-  const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [orderError, setOrderError] = useState('')
-  const [showHistory, setShowHistory] = useState(true)
-  const [lastOrder, setLastOrder] = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(null)
-
   const clientCode = getClientCode()
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
   const clientName = clientInfo?.clientName ?? null
 
-  const cartKey = `spincut_cart_${clientCode ?? 'guest'}`
-  const bdcKey = `spincut_bdc_${clientCode ?? 'guest'}`
+  const cartKey    = `spincut_cart_${clientCode ?? 'guest'}`
+  const bdcKey     = `spincut_bdc_${clientCode ?? 'guest'}`
   const historyKey = `spincut_orders_${clientCode ?? 'guest'}`
+
+  const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
+    try { return JSON.parse(localStorage.getItem('spincut_catalog_cache') ?? '[]') } catch { return [] }
+  })
+  const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [orderError, setOrderError]   = useState('')
+  const [showHistory, setShowHistory] = useState(true)
+  const [lastOrder, setLastOrder]     = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(null)
 
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
@@ -47,6 +63,21 @@ export default function OrderPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
 
+  // ── Abby profile ──────────────────────────────────────────────────────────
+  const [profile, setProfile]             = useState<AbbyProfile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(false)
+
+  useEffect(() => {
+    if (!clientName) return
+    setProfileLoading(true)
+    fetch(`/api/client-profile?clientName=${encodeURIComponent(clientName)}`)
+      .then(r => r.json())
+      .then(data => { if (!data.error) setProfile(data) })
+      .catch(() => {})
+      .finally(() => setProfileLoading(false))
+  }, [clientName])
+
+  // ── Catalog ───────────────────────────────────────────────────────────────
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
   }, [quantities, cartKey])
@@ -77,9 +108,7 @@ export default function OrderPage() {
       .filter((p): p is CatalogProduct => !!p && p.stock > 0)
   }, [orderHistory, catalog])
 
-
   if (!isAuthenticated) { navigate('/'); return null }
-
   localStorage.setItem('spincut_last_section', '/commande')
 
   const setQty = (key: string, delta: number, max: number) =>
@@ -88,9 +117,13 @@ export default function OrderPage() {
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
   const cartItems = catalog.filter(p => (quantities[uid(p)] || 0) > 0)
-  const total = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0)
+  const total     = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0)
   const itemCount = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
-  const hasItems = itemCount > 0
+  const hasItems  = itemCount > 0
+
+  const currentBdcId: string | null = (() => {
+    try { return JSON.parse(localStorage.getItem(bdcKey) ?? 'null') } catch { return null }
+  })()
 
   const sendOrder = async () => {
     if (orderStatus === 'loading') return
@@ -103,16 +136,13 @@ export default function OrderPage() {
     try {
       let existingBdcId: string | undefined
       try { existingBdcId = JSON.parse(localStorage.getItem(bdcKey) ?? 'null') ?? undefined } catch { /* ignore */ }
-
       const res = await fetch('/api/create-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', items, existingBdcId }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
       const { orderId, isNewBdc } = await res.json()
-
       try { localStorage.setItem(bdcKey, JSON.stringify(orderId)) } catch { /* ignore */ }
-
       const entry: OrderHistoryEntry = {
         date: Date.now(), orderId, isNewBdc,
         items: items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price })),
@@ -121,7 +151,6 @@ export default function OrderPage() {
       const newHistory = [entry, ...orderHistory].slice(0, 20)
       setOrderHistory(newHistory)
       try { localStorage.setItem(historyKey, JSON.stringify(newHistory)) } catch { /* ignore */ }
-
       const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
       setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId, isNewBdc })
       setOrderStatus('success')
@@ -139,8 +168,7 @@ export default function OrderPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          <button
-            onClick={() => navigate('/profil')}
+          <button onClick={() => navigate('/profil')}
             className="absolute left-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,8 +177,7 @@ export default function OrderPage() {
             Profil
           </button>
           <img src="/logo-banniere.png" alt="SPINCUT Outils CNC" style={{ height: '54px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
-          <button
-            onClick={() => { logout(); navigate('/') }}
+          <button onClick={() => { logout(); navigate('/') }}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,43 +188,110 @@ export default function OrderPage() {
         </div>
       </header>
 
-      {/* Main */}
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
 
-        {/* Dashboard résumé */}
-        {orderHistory.length > 0 && (
-          <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-            <p className="text-[10px] uppercase tracking-wider px-4 pt-4 pb-3" style={{ color: '#555' }}>Tableau de bord</p>
-            <div className="grid grid-cols-3 divide-x divide-[#2a2a2a] border-t border-[#2a2a2a]">
-              <div className="px-3 py-4 text-center">
-                <p className="text-[#d4780f] font-black text-2xl">{orderHistory.length}</p>
-                <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Commandes</p>
-              </div>
-              <div className="px-3 py-4 text-center">
-                <p className="text-[#d4780f] font-black text-2xl">{orderHistory.reduce((s, e) => s + e.total, 0).toFixed(0).replace('.', ',')}€</p>
-                <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Total HT</p>
-              </div>
-              <div className="px-3 py-4 text-center">
-                <p className="text-white font-black text-2xl">{orderHistory.reduce((s, e) => s + e.items.reduce((ss, i) => ss + i.quantity, 0), 0)}</p>
-                <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Articles</p>
-              </div>
-            </div>
-            {(() => {
-              const currentBdcId: string | null = (() => { try { return JSON.parse(localStorage.getItem(`spincut_bdc_${clientCode ?? 'guest'}`) ?? 'null') } catch { return null } })()
-              return currentBdcId ? (
-                <div className="px-4 py-3 border-t border-[#2a2a2a] flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>Bon de commande actif</p>
-                    <p className="text-white font-mono text-sm mt-0.5">{currentBdcId}</p>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#d4780f]/20 text-[#d4780f]">En cours</span>
-                </div>
-              ) : null
-            })()}
-          </div>
-        )}
+        {/* ── TABLEAU DE BORD ────────────────────────────────────────────── */}
+        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+          <p className="text-[10px] uppercase tracking-wider px-4 pt-4 pb-3" style={{ color: '#555' }}>Tableau de bord</p>
 
-        {/* Status messages */}
+          {/* Coordonnées client (Abby) */}
+          <div className="px-4 pb-4">
+            {profileLoading ? (
+              <div className="flex items-center gap-2 text-[#444] text-sm">
+                <svg className="animate-spin w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                Chargement du profil…
+              </div>
+            ) : profile ? (
+              <div className="flex items-start gap-3">
+                {/* Avatar */}
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#2a1400', border: '1.5px solid rgba(212,120,15,0.25)' }}>
+                  <svg className="w-5 h-5 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </div>
+                {/* Infos */}
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  <p className="text-white font-bold text-sm leading-tight">
+                    {[profile.firstname, profile.lastname].filter(Boolean).join(' ') || clientName || '—'}
+                  </p>
+                  {profile.emails?.[0] && (
+                    <p className="text-[#888] text-xs truncate">{profile.emails[0]}</p>
+                  )}
+                  {profile.phone && (
+                    <p className="text-[#888] text-xs">{profile.phone}</p>
+                  )}
+                  {profile.billingAddress?.address && (
+                    <p className="text-[#555] text-[11px] leading-tight">
+                      {profile.billingAddress.address}
+                      {profile.billingAddress.complement ? `, ${profile.billingAddress.complement}` : ''}
+                      {' — '}{[profile.billingAddress.zipCode, profile.billingAddress.city].filter(Boolean).join(' ')}
+                    </p>
+                  )}
+                </div>
+                {/* Lien profil */}
+                <button onClick={() => navigate('/profil')}
+                  className="text-[10px] text-[#d4780f] border border-[#d4780f]/30 px-2 py-1 rounded-lg hover:bg-[#d4780f]/10 transition-colors flex-shrink-0"
+                >
+                  Modifier
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm font-bold">{clientName ?? 'Client SPINCUT'}</p>
+                  <p className="text-[#444] text-xs mt-0.5">Profil Abby non trouvé</p>
+                </div>
+                <button onClick={() => navigate('/profil')}
+                  className="text-[10px] text-[#555] border border-[#2a2a2a] px-2 py-1 rounded-lg hover:text-white transition-colors"
+                >
+                  Profil
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Statistiques */}
+          <div className="grid grid-cols-3 divide-x divide-[#2a2a2a] border-t border-[#2a2a2a]">
+            <div className="px-3 py-4 text-center">
+              <p className="text-[#d4780f] font-black text-2xl">{orderHistory.length}</p>
+              <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Commandes</p>
+            </div>
+            <div className="px-3 py-4 text-center">
+              <p className="text-[#d4780f] font-black text-2xl">
+                {orderHistory.reduce((s, e) => s + e.total, 0).toFixed(0)}€
+              </p>
+              <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Total HT</p>
+            </div>
+            <div className="px-3 py-4 text-center">
+              <p className="text-white font-black text-2xl">
+                {orderHistory.reduce((s, e) => s + e.items.reduce((ss, i) => ss + i.quantity, 0), 0)}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Articles</p>
+            </div>
+          </div>
+
+          {/* BDC actif */}
+          {currentBdcId && (
+            <div className="px-4 py-3 border-t border-[#2a2a2a] flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>Bon de commande actif</p>
+                <p className="text-white font-mono text-sm mt-0.5">{currentBdcId}</p>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#d4780f]/20 text-[#d4780f]">En cours</span>
+            </div>
+          )}
+
+          {/* Code client */}
+          <div className="px-4 py-2.5 border-t border-[#1a1a1a] flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-wider" style={{ color: '#444' }}>Code client</p>
+            <p className="text-[#555] font-mono text-xs">{clientCode ?? '—'}</p>
+          </div>
+        </div>
+
+        {/* ── STATUS ────────────────────────────────────────────────────── */}
         {orderStatus === 'success' && lastOrder && (
           <div className="rounded-2xl overflow-hidden" style={{ background: '#061510', border: '1px solid #1a4a2a' }}>
             <div className="px-4 py-3 flex items-start gap-3">
@@ -236,7 +330,7 @@ export default function OrderPage() {
           </div>
         )}
 
-        {/* Commande en cours */}
+        {/* ── PANIER EN COURS ───────────────────────────────────────────── */}
         {hasItems ? (
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3">Commande en cours</p>
@@ -266,8 +360,6 @@ export default function OrderPage() {
                 )
               })}
             </div>
-
-            {/* Total + send */}
             <div className="mt-3 flex items-center justify-between px-1">
               <div>
                 <p className="text-[#555] text-xs">{itemCount} article{itemCount > 1 ? 's' : ''}</p>
@@ -285,8 +377,7 @@ export default function OrderPage() {
             </div>
           </div>
         ) : orderStatus !== 'success' && orderHistory.length === 0 ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-20 gap-5 text-center">
+          <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
               <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -304,7 +395,7 @@ export default function OrderPage() {
           </div>
         ) : null}
 
-        {/* Commandes habituelles */}
+        {/* ── DERNIERS ACHATS ───────────────────────────────────────────── */}
         {habitualItems.length > 0 && (
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-[#555] mb-3">Mes derniers achats</p>
@@ -336,7 +427,7 @@ export default function OrderPage() {
           </div>
         )}
 
-        {/* Historique commandes */}
+        {/* ── HISTORIQUE ────────────────────────────────────────────────── */}
         {orderHistory.length > 0 && (
           <div>
             <button
@@ -344,18 +435,24 @@ export default function OrderPage() {
               className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#161616] border border-[#2a2a2a] text-sm font-semibold text-[#888] hover:text-white transition-colors"
             >
               <span className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <svg className="w-4 h-4 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
                 Mes commandes
                 <span className="text-[10px] bg-[#d4780f]/20 text-[#d4780f] px-1.5 py-0.5 rounded-full font-bold">{orderHistory.length}</span>
               </span>
-              <svg className={`w-4 h-4 transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+              <svg className={`w-4 h-4 transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+              </svg>
             </button>
             {showHistory && (
               <div className="mt-2 space-y-2">
                 {orderHistory.map((entry, i) => (
                   <div key={i} className="rounded-xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
                     <div className="px-4 py-2.5 flex items-center justify-between border-b border-[#1e1e1e]">
-                      <span className="text-[#888] text-xs">{new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-[#888] text-xs">
+                        {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${entry.isNewBdc ? 'bg-blue-900/30 text-blue-400' : 'bg-[#3a1e00] text-[#d4780f]'}`}>
                           {entry.isNewBdc ? 'Nouveau BDC' : 'Ajout BDC'}
@@ -387,6 +484,7 @@ export default function OrderPage() {
             )}
           </div>
         )}
+
       </main>
 
       <BottomNav cartCount={itemCount} cartTotal={total} />
