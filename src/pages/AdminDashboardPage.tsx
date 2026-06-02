@@ -223,7 +223,7 @@ export default function AdminDashboardPage() {
         className="sticky top-0 z-10 bg-black border-b border-[#1a1a1a]"
       >
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-          <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '130px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
+          <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
           <button
             onClick={handleLogout}
             className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
