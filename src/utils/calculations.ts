@@ -97,7 +97,10 @@ export function calculate(params: CalculatorParams): CalcResult {
   const fzReel = vfUsed / (nUsed * zCalc);
 
   // Step 15 — ap
-  const apRecommended = opParams.apFactor * diameter;
+  // Règle pro : découpe Ø ≤ 10mm → ap = D/2 (outil fragile), Ø ≥ 12mm → ap = D
+  let baseApFactor = opParams.apFactor;
+  if (operation === 'decoupe' && diameter <= 10) baseApFactor = Math.min(baseApFactor, 0.5);
+  const apRecommended = baseApFactor * diameter;
   const apUsed = (apOverride !== null && apOverride > 0) ? apOverride : apRecommended;
 
   // Step 16 — Vf_Z
@@ -139,6 +142,14 @@ export function calculate(params: CalculatorParams): CalcResult {
     alerts.push({
       type: 'warning',
       message: `Avance à la limite de ta machine — résultats calculés à ${vfMax!.toLocaleString('fr-FR')} mm/min.`,
+    });
+  }
+
+  // Alerte ap réduit sur petits outils
+  if (operation === 'decoupe' && diameter <= 10 && apOverride === null) {
+    alerts.push({
+      type: 'info',
+      message: `Ø ${diameter}mm ≤ 10mm : ap limité à D/2 (${apUsed.toFixed(1)} mm) — règle sécurité petits outils.`,
     });
   }
 
