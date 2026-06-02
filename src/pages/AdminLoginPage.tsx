@@ -32,9 +32,9 @@ export default function AdminLoginPage() {
 
         {/* Logo */}
         <img
-          src="/logo.png"
+          src="/logo-banniere.png"
           alt="SPINCUT"
-          style={{ width: '100%', maxWidth: '340px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 88% 80% at 50% 50%, black 35%, transparent 100%)' }}
+          style={{ width: '100%', maxWidth: '320px', objectFit: 'contain', mixBlendMode: 'screen', display: 'block', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }}
         />
 
         {/* Auth card */}
