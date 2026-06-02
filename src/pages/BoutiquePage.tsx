@@ -188,6 +188,7 @@ const CMT_PHOTO_MAP: Record<string, string> = {
   '91506011':   '/images/cmt/cmt-11.png',
   '65804511':   '/images/cmt/cmt-09.png',
   'W170.210.R': '/images/cmt/cmt-12.png',
+  '82233511':   '/images/cmt/cmt-15.png',
 }
 
 export default function BoutiquePage() {
