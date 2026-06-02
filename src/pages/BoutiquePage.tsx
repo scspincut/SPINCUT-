@@ -163,6 +163,24 @@ const SHOP_TABS = [
 
 const HERO_PHOTOS = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
 
+// Mapping provisoire photos CMT — à corriger si l'ordre ne correspond pas
+const CMT_PHOTO_MAP: Record<string, string> = {
+  '19812011':  '/images/cmt/cmt-01.png',
+  '91206011':  '/images/cmt/cmt-02.png',
+  '91210011':  '/images/cmt/cmt-03.png',
+  '91106011':  '/images/cmt/cmt-04.png',
+  '91107011':  '/images/cmt/cmt-05.png',
+  '91108011':  '/images/cmt/cmt-06.png',
+  '91110011':  '/images/cmt/cmt-07.png',
+  '91119011':  '/images/cmt/cmt-08.png',
+  '91120011':  '/images/cmt/cmt-09.png',
+  '92216011B': '/images/cmt/cmt-10.png',
+  '70612711':  '/images/cmt/cmt-11.png',
+  '90612711':  '/images/cmt/cmt-12.png',
+  '90619111':  '/images/cmt/cmt-13.jpg',
+  '90118011':  '/images/cmt/cmt-14.png',
+}
+
 export default function BoutiquePage() {
   const navigate = useNavigate()
   const { isAuthenticated, logout } = useClientAuth()
@@ -237,7 +255,7 @@ export default function BoutiquePage() {
     return Object.entries(CATEGORY_META).filter(([id]) => cats.has(id)).sort((a, b) => a[1].order - b[1].order)
   }, [activeTabCatalog])
 
-  const usesCategories = shopTab === 'cnc' || shopTab === 'cmt'
+  const usesCategories = shopTab === 'cnc'
 
   const categoryProducts = useMemo(() =>
     usesCategories
@@ -619,8 +637,64 @@ export default function BoutiquePage() {
               </div>
             )}
 
-            {/* ── Liste produits ── */}
-            {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
+            {/* ── Grille photos CMT ── */}
+            {!catalogLoading && !catalogError && shopTab === 'cmt' && (
+              <div className="px-4 pt-4 pb-4">
+                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">
+                  {activeTabCatalog.length} produits
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {activeTabCatalog.map(product => {
+                    const key = uid(product)
+                    const photoUrl = CMT_PHOTO_MAP[product.ref] ?? null
+                    const qty = quantities[key] || 0
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedProduct(product)}
+                        className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
+                        style={{ background: '#111', border: `1px solid ${qty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                      >
+                        {/* Photo */}
+                        <div className="relative overflow-hidden" style={{ height: '120px', background: '#0d0d0d' }}>
+                          <div className="absolute inset-0 flex items-center justify-center"
+                            style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
+                            <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+                          </div>
+                          {photoUrl && (
+                            <img src={photoUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          )}
+                          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5) 100%)' }}/>
+                          {qty > 0 && (
+                            <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                              ×{qty}
+                            </span>
+                          )}
+                          <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
+                            style={{ background: product.stock > 0 ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: product.stock > 0 ? '#4ade80' : '#ef4444' }}>
+                            {product.stock > 0 ? '● Stock' : '● Rupture'}
+                          </span>
+                        </div>
+                        {/* Infos */}
+                        <div className="px-2.5 py-2.5">
+                          <p className="text-[#d4780f] font-mono text-[9px] mb-0.5">{product.ref}</p>
+                          <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{product.designation}</p>
+                          <div className="mt-1.5">
+                            {product.prix > 0
+                              ? <span className="text-[#d4780f] font-bold text-sm">{fmt(product.prix)} €</span>
+                              : <span className="text-[#444] text-[10px]">Sur devis</span>
+                            }
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Liste produits (CNC + Lames) ── */}
+            {!catalogLoading && !catalogError && shopTab !== 'cmt' && (activeCategory || !usesCategories) && (
               <div className="divide-y divide-[#161616]">
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -653,9 +727,16 @@ export default function BoutiquePage() {
               <div className="w-10 h-1 rounded-full bg-[#333]"/>
             </div>
 
-            {/* Photo catégorie */}
+            {/* Photo produit */}
             <div className="mx-4 mt-2 rounded-xl overflow-hidden relative" style={{ height: '170px' }}>
-              <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full rounded-xl"/>
+              {shopTab === 'cmt' && CMT_PHOTO_MAP[selectedProduct.ref] ? (
+                <>
+                  <img src={CMT_PHOTO_MAP[selectedProduct.ref]} alt="" className="w-full h-full object-cover rounded-xl" />
+                  <div className="absolute inset-0 rounded-xl" style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.4) 100%)' }}/>
+                </>
+              ) : (
+                <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full rounded-xl"/>
+              )}
               {selectedProduct.pm && (
                 <span className="absolute top-2.5 right-2.5 bg-[#0d2a0d]/90 text-green-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-700/50">Polimiroir</span>
               )}
