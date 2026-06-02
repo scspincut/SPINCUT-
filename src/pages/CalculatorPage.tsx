@@ -355,7 +355,7 @@ export default function CalculatorPage() {
       <header className="border-b border-[#1e1e1e] px-4 py-3 sticky top-0 bg-black z-10">
         <div className="max-w-4xl mx-auto relative flex items-center justify-center">
           <div className="flex items-center gap-2">
-            <img src="/logo-banniere.png" alt="SPINCUT Outils CNC" style={{ height: '54px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
+            <img src="/logo-banniere.png" alt="SPINCUT Outils CNC" style={{ height: '80px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
             {isAdmin && (
               <span className="bg-[#3a1e00] text-[#d4780f] text-xs font-bold px-2 py-0.5 rounded-full border border-[#d4780f]/30">
                 Admin
