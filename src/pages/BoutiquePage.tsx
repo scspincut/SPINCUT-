@@ -144,7 +144,6 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
 
 // Second photo for products that have two images
 const LAMES_PHOTO2_MAP: Record<string, string> = {
-  'F03FS09678': '/images/cmt/cmt-23.png',
   'F03FS09748': '/images/cmt/cmt-24.png',
 }
 
