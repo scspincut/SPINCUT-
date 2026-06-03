@@ -852,7 +852,7 @@ export default function BoutiquePage() {
                 <div className="space-y-2">
                   {([
                     { label: 'Ø',                               all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
-                    { label: currentLamesGroup ? 'Ép.D' : 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
+                    { label: currentLamesGroup ? 'Ép. Dent' : 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
                     { label: currentLamesGroup ? 'Al'   : 'S', all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
                   ] as const).filter(row => row.all.length > 0).map(row => (
                     <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
@@ -899,8 +899,8 @@ export default function BoutiquePage() {
                           <div className="flex gap-1.5">
                             {(currentLamesGroup ? [
                               { l: 'Ø',    val: v.diametre },
-                              { l: 'Ép.D', val: v.lc },
-                              { l: 'Ép.C', val: v.lt },
+                              { l: 'Ép. Dent', val: v.lc },
+                              { l: 'Ép. Corps', val: v.lt },
                               { l: 'Al',   val: v.queue },
                               { l: 'Z',    val: v.dents },
                             ] : [
