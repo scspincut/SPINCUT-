@@ -13,6 +13,7 @@ interface AbbyAddress {
 
 interface AbbyProfile {
   id: string
+  orgId?: string | null
   firstname: string
   lastname: string
   emails: string[]
@@ -102,6 +103,7 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: profile.id,
+          orgId: profile.orgId ?? undefined,
           firstname: editFirstname || undefined,
           lastname: editLastname || undefined,
           emails: editEmail ? [editEmail] : profile.emails,
