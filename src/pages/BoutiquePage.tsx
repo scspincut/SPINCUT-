@@ -138,8 +138,14 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'LC2104804M':      '/images/cmt/cmt-20.png',  // Forézienne ATB bois (shared)
   'LC2166004M':      '/images/cmt/cmt-21.png',  // Forézienne TF NEG alu
   'LC3006007M':      '/images/cmt/cmt-22.png',  // Forézienne HFP mélamine
-  'F03FS09678':      '/images/cmt/cmt-24.png',  // Freud — lames scies circulaires bois
-  'F03FS09748':      '/images/cmt/cmt-23.png',  // Freud rouge bois portative
+  'F03FS09678':      '/images/cmt/cmt-24.png',
+  'F03FS09748':      '/images/cmt/cmt-23.png',
+}
+
+// Second photo for products that have two images
+const LAMES_PHOTO2_MAP: Record<string, string> = {
+  'F03FS09678': '/images/cmt/cmt-23.png',
+  'F03FS09748': '/images/cmt/cmt-24.png',
 }
 
 export default function BoutiquePage() {
@@ -279,6 +285,7 @@ export default function BoutiquePage() {
   }, [selectedProduct, shopTab, lamesGroups])
 
   const currentPhotoGroup = currentCMTGroup ?? currentLamesGroup
+  const currentPhoto2 = selectedProduct ? (LAMES_PHOTO2_MAP[selectedProduct.ref] ?? null) : null
 
   // Cascading filters inside the modal
   const bsProds = currentPhotoGroup?.products ?? []
@@ -828,11 +835,22 @@ export default function BoutiquePage() {
             onClick={e => e.stopPropagation()}
           >
             {/* Photo — sticky, does not scroll */}
-            <div className="relative w-full flex-shrink-0" style={{ background: '#f4f4f4', height: '240px' }}>
-              {currentPhotoGroup?.photoUrl
-                ? <img src={currentPhotoGroup.photoUrl} alt="" className="w-full h-full object-contain" />
-                : <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full"/>
-              }
+            <div className="relative w-full flex-shrink-0 overflow-hidden" style={{ background: '#f4f4f4', height: '240px' }}>
+              {currentPhoto2 ? (
+                /* Galerie 2 photos — scroll horizontal avec snap */
+                <div className="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar">
+                  <div className="flex-shrink-0 w-full h-full snap-center">
+                    <img src={currentPhotoGroup?.photoUrl ?? ''} alt="" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex-shrink-0 w-full h-full snap-center">
+                    <img src={currentPhoto2} alt="" className="w-full h-full object-contain" />
+                  </div>
+                </div>
+              ) : currentPhotoGroup?.photoUrl ? (
+                <img src={currentPhotoGroup.photoUrl} alt="" className="w-full h-full object-contain" />
+              ) : (
+                <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full"/>
+              )}
               <button
                 onClick={() => setSelectedProduct(null)}
                 className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center"
@@ -841,6 +859,12 @@ export default function BoutiquePage() {
                   <path d="M1 1l10 10M11 1L1 11" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
               </button>
+              {currentPhoto2 && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white opacity-90"/>
+                  <div className="w-1.5 h-1.5 rounded-full bg-white opacity-40"/>
+                </div>
+              )}
             </div>
 
             <div className="overflow-y-auto flex-1 px-4 pt-4 pb-6 space-y-4">
