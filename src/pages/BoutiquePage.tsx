@@ -139,12 +139,12 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'LC2166004M':      '/images/cmt/cmt-21.png',  // Forézienne TF NEG alu
   'LC3006007M':      '/images/cmt/cmt-22.png',  // Forézienne HFP mélamine
   'F03FS09678':      '/images/cmt/cmt-24.png',
-  'F03FS09748':      '/images/cmt/cmt-23.png',
+  'F03FS09748':      '/images/cmt/cmt-24.png',
 }
 
-// Second photo for products that have two images
+// Second photo keyed by primary photo URL (shared by the whole group)
 const LAMES_PHOTO2_MAP: Record<string, string> = {
-  'F03FS09748': '/images/cmt/cmt-24.png',
+  '/images/cmt/cmt-24.png': '/images/cmt/cmt-23.png',
 }
 
 export default function BoutiquePage() {
@@ -286,7 +286,7 @@ export default function BoutiquePage() {
   }, [selectedProduct, shopTab, lamesGroups])
 
   const currentPhotoGroup = currentCMTGroup ?? currentLamesGroup
-  const currentPhoto2 = selectedProduct ? (LAMES_PHOTO2_MAP[selectedProduct.ref] ?? null) : null
+  const currentPhoto2 = currentPhotoGroup?.photoUrl ? (LAMES_PHOTO2_MAP[currentPhotoGroup.photoUrl] ?? null) : null
 
   // Cascading filters inside the modal
   const bsProds = currentPhotoGroup?.products ?? []
