@@ -138,6 +138,8 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'LC2104804M':      '/images/cmt/cmt-20.png',  // Forézienne ATB bois (shared)
   'LC2166004M':      '/images/cmt/cmt-21.png',  // Forézienne TF NEG alu
   'LC3006007M':      '/images/cmt/cmt-22.png',  // Forézienne HFP mélamine
+  'F03FS09678':      '/images/cmt/cmt-23.png',  // Freud rouge bois portative
+  'F03FS09748':      '/images/cmt/cmt-23.png',
 }
 
 export default function BoutiquePage() {
