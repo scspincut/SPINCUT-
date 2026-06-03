@@ -898,12 +898,11 @@ export default function BoutiquePage() {
                           </div>
                           <div className="flex gap-1.5">
                             {(currentLamesGroup ? [
-                              { l: 'Ø',    val: v.diametre },
-                              { l: 'Ép. Dent', val: v.lc },
+                              { l: 'Ø',         val: v.diametre },
+                              { l: 'Ép. Dent',  val: v.lc },
                               { l: 'Ép. Corps', val: v.lt },
-                              { l: 'Al',    val: v.queue },
-                              { l: 'Z',     val: v.dents },
-                              { l: 'Alésage', val: v.angle },
+                              { l: 'Z',         val: v.dents },
+                              { l: 'Alésage',   val: v.angle },
                             ] : [
                               { l: 'Ø', val: v.diametre },
                               { l: 'I', val: v.lc },
