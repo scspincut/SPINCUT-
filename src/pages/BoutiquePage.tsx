@@ -127,6 +127,10 @@ const CMT_PHOTO_MAP: Record<string, string> = {
   '65804511':   '/images/cmt/cmt-09.png',
   'W170.210.R': '/images/cmt/cmt-12.png',
   '82233511':   '/images/cmt/cmt-15.png',
+  'FL08.01020':      '/images/cmt/cmt-16.png',  // Klein scoring blade Ø120 Z=12+12
+  '938.7.100.22.12': '/images/cmt/cmt-17.png',  // Leman lamello blade Ø100
+  'DC300.02830':     '/images/cmt/cmt-18.png',  // Klein main blade Ø300 NO-NOISE
+  '122.255.2532':    '/images/cmt/cmt-19.png',  // Leman HSS metal blade
 }
 
 export default function BoutiquePage() {
