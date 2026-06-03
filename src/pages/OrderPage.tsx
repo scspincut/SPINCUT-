@@ -63,6 +63,11 @@ export default function OrderPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
 
+  type AbbyOrder = { id: string; number: string; state: string; label: string; total: number; date: number; items: { ref: string; designation: string; qty: number }[] }
+  type AbbyInvoice = { id: string; number: string; state: string; label: string; amount: number; dueAt?: number }
+  const [abbyOrders, setAbbyOrders] = useState<AbbyOrder[]>([])
+  const [abbyInvoices, setAbbyInvoices] = useState<AbbyInvoice[]>([])
+
   // ── Abby profile ──────────────────────────────────────────────────────────
   const [profile, setProfile]             = useState<AbbyProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
@@ -75,6 +80,27 @@ export default function OrderPage() {
       .then(data => { if (!data.error) setProfile(data) })
       .catch(() => {})
       .finally(() => setProfileLoading(false))
+  }, [clientName])
+
+  // ── Abby dashboard (commandes en cours + factures) ───────────────────────
+  useEffect(() => {
+    if (!clientName) return
+    const orderIds = [...new Set(
+      (() => { try { return (JSON.parse(localStorage.getItem(historyKey) ?? '[]') as OrderHistoryEntry[]).map(h => h.orderId).filter(Boolean) } catch { return [] } })()
+    )]
+    fetch('/api/client-dashboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientName, orderIds }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.error) {
+          setAbbyOrders(data.orders ?? [])
+          setAbbyInvoices(data.invoices ?? [])
+        }
+      })
+      .catch(() => {})
   }, [clientName])
 
   // ── Catalog ───────────────────────────────────────────────────────────────
@@ -290,6 +316,67 @@ export default function OrderPage() {
             <p className="text-[#555] font-mono text-xs">{clientCode ?? '—'}</p>
           </div>
         </div>
+
+        {/* ── COMMANDES EN COURS (Abby) ──────────────────────────────────── */}
+        {abbyOrders.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #2a1a00', background: '#0a0600' }}>
+            <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid #1a1000' }}>
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="#d4780f" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#d4780f' }}>Commandes en cours</p>
+            </div>
+            {abbyOrders.map((order, i) => (
+              <div key={order.id} className="px-4 py-3" style={{ borderBottom: i < abbyOrders.length - 1 ? '1px solid #111' : 'none' }}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono" style={{ color: '#555' }}>{order.number || `#${order.id.slice(-6)}`}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{
+                      background: order.state === 'signed' ? '#0d1a0d' : '#1a1000',
+                      color: order.state === 'signed' ? '#4ade80' : '#d4780f',
+                    }}>{order.label}</span>
+                  </div>
+                  <span className="text-sm font-bold text-white">{fmt(order.total)} <span className="text-[10px] font-normal" style={{ color: '#555' }}>€ HT</span></span>
+                </div>
+                {order.items.length > 0 && (
+                  <p className="text-[11px]" style={{ color: '#555' }}>
+                    {order.items.slice(0, 2).map(it => it.designation || it.ref).join(' · ')}{order.items.length > 2 ? ' …' : ''}
+                  </p>
+                )}
+                {order.date > 0 && (
+                  <p className="text-[10px] mt-0.5" style={{ color: '#333' }}>{new Date(order.date).toLocaleDateString('fr-FR')}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── FACTURES À RÉGLER (Abby) ────────────────────────────────────── */}
+        {abbyInvoices.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #3a1010', background: '#080303' }}>
+            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #1a0808' }}>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" />
+                <p className="text-[11px] font-bold uppercase tracking-wider text-red-400">Factures à régler</p>
+              </div>
+              <span className="text-[10px] font-bold text-red-400">{abbyInvoices.length} facture{abbyInvoices.length > 1 ? 's' : ''}</span>
+            </div>
+            {abbyInvoices.map((inv, i) => (
+              <div key={inv.id} className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: i < abbyInvoices.length - 1 ? '1px solid #110505' : 'none' }}>
+                <div>
+                  <span className="text-[11px] font-mono" style={{ color: '#888' }}>{inv.number || `#${inv.id.slice(-6)}`}</span>
+                  {inv.dueAt && inv.dueAt > 0 && (
+                    <p className="text-[10px] text-red-400 mt-0.5">Échéance : {new Date(inv.dueAt).toLocaleDateString('fr-FR')}</p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-white">{fmt(inv.amount)}</span>
+                  <span className="text-[10px] font-normal" style={{ color: '#555' }}> € TTC</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ── STATUS ────────────────────────────────────────────────────── */}
         {orderStatus === 'success' && lastOrder && (

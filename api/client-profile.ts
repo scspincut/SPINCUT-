@@ -14,30 +14,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'clientName requis' })
     }
     try {
-      // Search contacts and organizations in parallel
-      const [contactsRes, orgsRes] = await Promise.allSettled([
-        abby.contact.retrieveContacts({ query: { search: clientName, limit: 5, page: 1 } }),
-        abby.organization.retrieveOrganizations({ query: { search: clientName, limit: 5, page: 1 } as any }),
-      ])
+      // 1. Find contact by name
+      const { data: contacts } = await abby.contact.retrieveContacts({
+        query: { search: clientName, limit: 5, page: 1 },
+      })
+      const contact = contacts?.docs?.[0]
 
-      const contact = contactsRes.status === 'fulfilled' ? contactsRes.value.data?.docs?.[0] : undefined
-      const org = orgsRes.status === 'fulfilled' ? (orgsRes.value.data as any)?.docs?.[0] : undefined
+      // 2. Get linked organization: prefer the embedded org ID on the contact,
+      //    fall back to a name search
+      let org: any = null
+      const embeddedOrgId = (contact as any)?.organization?.id
+      if (embeddedOrgId) {
+        try {
+          const { data: fetchedOrg } = await abby.organization.retrieveOrganization({
+            path: { id: embeddedOrgId },
+          })
+          org = fetchedOrg
+        } catch {}
+      }
+      if (!org) {
+        try {
+          const { data: orgs } = await abby.organization.retrieveOrganizations({
+            query: { search: clientName, limit: 5, page: 1 },
+          })
+          org = orgs?.docs?.[0] ?? null
+        } catch {}
+      }
 
       if (!contact && !org) {
         return res.status(404).json({ error: 'Contact introuvable dans Abby' })
       }
 
       res.setHeader('Cache-Control', 'no-store')
-
-      // Merge: contact fields + org supplements for missing phone/address
       return res.status(200).json({
         id: contact?.id ?? org?.id,
         orgId: org?.id ?? null,
+        // For company clients, lastname falls back to org commercial/name
         firstname: contact?.firstname ?? '',
-        lastname: contact?.lastname ?? '',
-        emails: contact?.emails ?? [],
-        phone: contact?.phone || org?.phone || '',
-        billingAddress: (contact as any)?.billingAddress ?? org?.billingAddress ?? null,
+        lastname: contact?.lastname || org?.commercialName || org?.name || '',
+        emails: contact?.emails ?? org?.emails ?? [],
+        phone: contact?.phone ?? '',
+        billingAddress: contact?.billingAddress ?? org?.billingAddress ?? null,
       })
     } catch (err) {
       return res.status(500).json({ error: err instanceof Error ? err.message : 'Erreur inconnue' })
@@ -57,7 +74,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (!id) return res.status(400).json({ error: 'id requis' })
     try {
-      // Update contact if it's a contact id (org id and contact id may differ)
       const isOrgOnly = id === orgId
       if (!isOrgOnly) {
         const { data: current } = await abby.contact.getContact({ path: { id } })
@@ -75,21 +91,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
       }
 
-      // Also update organization phone/address if orgId provided
-      if (orgId && (phone !== undefined || billingAddress !== undefined)) {
+      // Also update organization address if orgId provided
+      if (orgId && billingAddress !== undefined) {
         try {
-          const { data: currentOrg } = await abby.organization.getOrganization({ path: { id: orgId } })
+          const { data: currentOrg } = await abby.organization.retrieveOrganization({ path: { id: orgId } })
           await abby.organization.updateOrganization({
             path: { id: orgId },
             body: {
               name: (currentOrg as any).name,
-              phone: phone ?? (currentOrg as any).phone,
               billingAddress: billingAddress
                 ? { ...billingAddress, country: billingAddress.country as any }
                 : (currentOrg as any).billingAddress,
             } as any,
           })
-        } catch {} // non-critical — org update is best-effort
+        } catch {}
       }
 
       return res.status(200).json({ ok: true })
