@@ -280,30 +280,33 @@ export default function BoutiquePage() {
 
   // Cascading filters inside the modal
   const bsProds = currentPhotoGroup?.products ?? []
+  // For lames: I=dents(Z), S=angle(alésage) — for CMT: I=lc, S=queue
+  const bsFieldI = (p: CatalogProduct) => currentLamesGroup ? p.dents : p.lc
+  const bsFieldS = (p: CatalogProduct) => currentLamesGroup ? p.angle : p.queue
   // All values (for display — never hidden)
   const bsAllØ = useMemo(() => [...new Set(bsProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
-  const bsAllI = useMemo(() => [...new Set(bsProds.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
-  const bsAllS = useMemo(() => [...new Set(bsProds.map(p => p.queue).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
+  const bsAllI = useMemo(() => [...new Set(bsProds.map(bsFieldI).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds, currentLamesGroup])
+  const bsAllS = useMemo(() => [...new Set(bsProds.map(bsFieldS).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds, currentLamesGroup])
   // Compatible values — bidirectional: each dimension grays based on the other two
   const bsAvailØ = useMemo(() => new Set(
-    bsProds.filter(p => (!bsFilterI || p.lc === bsFilterI) && (!bsFilterS || p.queue === bsFilterS))
+    bsProds.filter(p => (!bsFilterI || bsFieldI(p) === bsFilterI) && (!bsFilterS || bsFieldS(p) === bsFilterS))
       .map(p => p.diametre).filter(v => v && v !== '/')
-  ), [bsProds, bsFilterI, bsFilterS])
+  ), [bsProds, bsFilterI, bsFilterS, currentLamesGroup])
   const bsAvailI = useMemo(() => new Set(
-    bsProds.filter(p => (!bsFilterØ || p.diametre === bsFilterØ) && (!bsFilterS || p.queue === bsFilterS))
-      .map(p => p.lc).filter(v => v && v !== '/')
-  ), [bsProds, bsFilterØ, bsFilterS])
+    bsProds.filter(p => (!bsFilterØ || p.diametre === bsFilterØ) && (!bsFilterS || bsFieldS(p) === bsFilterS))
+      .map(bsFieldI).filter(v => v && v !== '/')
+  ), [bsProds, bsFilterØ, bsFilterS, currentLamesGroup])
   const bsAvailS = useMemo(() => new Set(
-    bsProds.filter(p => (!bsFilterØ || p.diametre === bsFilterØ) && (!bsFilterI || p.lc === bsFilterI))
-      .map(p => p.queue).filter(v => v && v !== '/')
-  ), [bsProds, bsFilterØ, bsFilterI])
+    bsProds.filter(p => (!bsFilterØ || p.diametre === bsFilterØ) && (!bsFilterI || bsFieldI(p) === bsFilterI))
+      .map(bsFieldS).filter(v => v && v !== '/')
+  ), [bsProds, bsFilterØ, bsFilterI, currentLamesGroup])
 
   const cmtMatchingVariants = useMemo(() => {
     if (!currentPhotoGroup) return selectedProduct ? [selectedProduct] : []
     const prods = currentPhotoGroup.products.filter(p =>
       (!bsFilterØ || p.diametre === bsFilterØ) &&
-      (!bsFilterI || p.lc       === bsFilterI) &&
-      (!bsFilterS || p.queue    === bsFilterS)
+      (!bsFilterI || bsFieldI(p) === bsFilterI) &&
+      (!bsFilterS || bsFieldS(p) === bsFilterS)
     )
     return prods.length > 0 ? prods : currentPhotoGroup.products
   }, [currentPhotoGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedProduct])
@@ -855,9 +858,9 @@ export default function BoutiquePage() {
               {currentPhotoGroup && currentPhotoGroup.products.length > 1 && (
                 <div className="space-y-2">
                   {([
-                    { label: 'Ø',                               all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
-                    { label: currentLamesGroup ? 'Ép. Dent' : 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
-                    { label: currentLamesGroup ? 'Al'   : 'S', all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
+                    { label: 'Ø',                                  all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
+                    { label: currentLamesGroup ? 'Z'       : 'I',  all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
+                    { label: currentLamesGroup ? 'Alésage' : 'S',  all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
                   ] as const).filter(row => row.all.length > 0).map(row => (
                     <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
                       <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
