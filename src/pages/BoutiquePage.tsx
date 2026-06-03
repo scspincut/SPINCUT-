@@ -851,9 +851,9 @@ export default function BoutiquePage() {
               {currentPhotoGroup && currentPhotoGroup.products.length > 1 && (
                 <div className="space-y-2">
                   {([
-                    { label: 'Ø', all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
-                    { label: 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
-                    { label: 'S', all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
+                    { label: 'Ø',                               all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
+                    { label: currentLamesGroup ? 'Ép.D' : 'I', all: bsAllI, avail: bsAvailI, active: bsFilterI, set: setBsFilterI },
+                    { label: currentLamesGroup ? 'Al'   : 'S', all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
                   ] as const).filter(row => row.all.length > 0).map(row => (
                     <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
                       <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
@@ -897,12 +897,18 @@ export default function BoutiquePage() {
                             <StockBadge stock={v.stock}/>
                           </div>
                           <div className="flex gap-1.5">
-                            {[
+                            {(currentLamesGroup ? [
+                              { l: 'Ø',    val: v.diametre },
+                              { l: 'Ép.D', val: v.lc },
+                              { l: 'Ép.C', val: v.lt },
+                              { l: 'Al',   val: v.queue },
+                              { l: 'Z',    val: v.dents },
+                            ] : [
                               { l: 'Ø', val: v.diametre },
                               { l: 'I', val: v.lc },
                               { l: 'L', val: v.lt },
                               { l: 'S', val: v.queue },
-                            ].filter(s => s.val && s.val !== '/').map(s => (
+                            ]).filter(s => s.val && s.val !== '/').map(s => (
                               <div key={s.l} className="flex-1 bg-[#111] rounded-lg py-1.5 text-center border border-[#2a2a2a]">
                                 <p className="text-[#d4780f] text-[9px] font-bold">{s.l}</p>
                                 <p className="text-white font-mono font-semibold text-xs mt-0.5">{s.val}</p>
