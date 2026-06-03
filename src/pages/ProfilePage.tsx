@@ -231,10 +231,14 @@ export default function ProfilePage() {
 
           {profile && !editing && (
             <div className="px-4 pb-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <InfoRow label="Prénom" value={profile.firstname || '—'} />
-                <InfoRow label="Nom" value={profile.lastname || '—'} />
-              </div>
+              {profile.orgId ? (
+                <InfoRow label="Raison sociale" value={profile.lastname || '—'} />
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <InfoRow label="Prénom" value={profile.firstname || '—'} />
+                  <InfoRow label="Nom" value={profile.lastname || '—'} />
+                </div>
+              )}
               <InfoRow label="Email" value={profile.emails?.[0] || '—'} />
               <InfoRow label="Téléphone" value={profile.phone || '—'} />
               {profile.billingAddress && (
@@ -251,10 +255,14 @@ export default function ProfilePage() {
 
           {profile && editing && (
             <div className="px-4 pb-4 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <EditField label="Prénom" value={editFirstname} onChange={setEditFirstname} placeholder="Ibrahim" />
-                <EditField label="Nom" value={editLastname} onChange={setEditLastname} placeholder="TAMEGA" />
-              </div>
+              {profile.orgId ? (
+                <EditField label="Raison sociale" value={editLastname} onChange={setEditLastname} placeholder="MENU DU BOIS" />
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <EditField label="Prénom" value={editFirstname} onChange={setEditFirstname} placeholder="Ibrahim" />
+                  <EditField label="Nom" value={editLastname} onChange={setEditLastname} placeholder="TAMEGA" />
+                </div>
+              )}
               <EditField label="Email" value={editEmail} onChange={setEditEmail} type="email" placeholder="exemple@email.com" />
               <EditField label="Téléphone" value={editPhone} onChange={setEditPhone} type="tel" placeholder="06 XX XX XX XX" />
               <div>
