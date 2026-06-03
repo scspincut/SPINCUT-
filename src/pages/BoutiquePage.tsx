@@ -127,10 +127,13 @@ const CMT_PHOTO_MAP: Record<string, string> = {
   '65804511':   '/images/cmt/cmt-09.png',
   'W170.210.R': '/images/cmt/cmt-12.png',
   '82233511':   '/images/cmt/cmt-15.png',
-  'FL08.01020':      '/images/cmt/cmt-16.png',  // Klein scoring blade Ø120 Z=12+12
-  '938.7.100.22.12': '/images/cmt/cmt-17.png',  // Leman lamello blade Ø100
-  'DC300.02830':     '/images/cmt/cmt-18.png',  // Klein main blade Ø300 NO-NOISE
-  '122.255.2532':    '/images/cmt/cmt-19.png',  // Leman HSS metal blade
+}
+
+const LAMES_PHOTO_MAP: Record<string, string> = {
+  'FL08.01020':      '/images/cmt/cmt-16.png',
+  '938.7.100.22.12': '/images/cmt/cmt-17.png',
+  'DC300.02830':     '/images/cmt/cmt-18.png',
+  '122.255.2532':    '/images/cmt/cmt-19.png',
 }
 
 export default function BoutiquePage() {
@@ -250,8 +253,29 @@ export default function BoutiquePage() {
     return cmtGroups.find(g => g.key === key) ?? null
   }, [selectedProduct, shopTab, cmtGroups])
 
+  const lamesGroups = useMemo(() => {
+    if (shopTab !== 'lames') return []
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of activeTabCatalog) {
+      const key = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(p)
+    }
+    return [...map.entries()].map(([key, products]) => ({
+      key, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products,
+    }))
+  }, [activeTabCatalog, shopTab])
+
+  const currentLamesGroup = useMemo(() => {
+    if (!selectedProduct || shopTab !== 'lames') return null
+    const key = LAMES_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
+    return lamesGroups.find(g => g.key === key) ?? null
+  }, [selectedProduct, shopTab, lamesGroups])
+
+  const currentPhotoGroup = currentCMTGroup ?? currentLamesGroup
+
   // Cascading filters inside the modal
-  const bsProds = currentCMTGroup?.products ?? []
+  const bsProds = currentPhotoGroup?.products ?? []
   // All values (for display — never hidden)
   const bsAllØ = useMemo(() => [...new Set(bsProds.map(p => p.diametre).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
   const bsAllI = useMemo(() => [...new Set(bsProds.map(p => p.lc).filter(v => v && v !== '/'))].sort((a, b) => parseFloat(a) - parseFloat(b)), [bsProds])
@@ -271,14 +295,14 @@ export default function BoutiquePage() {
   ), [bsProds, bsFilterØ, bsFilterI])
 
   const cmtMatchingVariants = useMemo(() => {
-    if (!currentCMTGroup) return selectedProduct ? [selectedProduct] : []
-    const prods = currentCMTGroup.products.filter(p =>
+    if (!currentPhotoGroup) return selectedProduct ? [selectedProduct] : []
+    const prods = currentPhotoGroup.products.filter(p =>
       (!bsFilterØ || p.diametre === bsFilterØ) &&
       (!bsFilterI || p.lc       === bsFilterI) &&
       (!bsFilterS || p.queue    === bsFilterS)
     )
-    return prods.length > 0 ? prods : currentCMTGroup.products
-  }, [currentCMTGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedProduct])
+    return prods.length > 0 ? prods : currentPhotoGroup.products
+  }, [currentPhotoGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedProduct])
 
 
   const setQty = (key: string, delta: number, max: number) =>
@@ -705,8 +729,68 @@ export default function BoutiquePage() {
               </div>
             )}
 
-            {/* ── Liste produits (CNC + Lames) ── */}
-            {!catalogLoading && !catalogError && shopTab !== 'cmt' && (activeCategory || !usesCategories) && (
+            {/* ── Grille photos Lames ── */}
+            {!catalogLoading && !catalogError && shopTab === 'lames' && (
+              <div className="px-4 pt-4 pb-4">
+                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">
+                  {lamesGroups.length} produit{lamesGroups.length > 1 ? 's' : ''}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {lamesGroups.map(group => {
+                    const anyInStock = group.products.some(p => p.stock > 0)
+                    const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
+                    const prices     = group.products.map(p => p.prix).filter(x => x > 0)
+                    const minPrice   = prices.length ? Math.min(...prices) : 0
+                    const groupName  = group.products.length === 1
+                      ? group.products[0].designation
+                      : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
+                    return (
+                      <button
+                        key={group.key}
+                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}
+                        className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
+                        style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                      >
+                        <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
+                          {group.photoUrl
+                            ? <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                            : <div className="absolute inset-0 flex items-center justify-center"
+                                style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
+                                <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+                              </div>
+                          }
+                          <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
+                          {totalQty > 0 && (
+                            <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>
+                          )}
+                          {group.products.length > 1 && (
+                            <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                              {group.products.length} dim.
+                            </span>
+                          )}
+                          <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
+                            style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
+                            {anyInStock ? '● Stock' : '● Rupture'}
+                          </span>
+                        </div>
+                        <div className="px-2.5 py-2.5">
+                          <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
+                          <div className="mt-1.5">
+                            {minPrice > 0
+                              ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span>
+                              : <span className="text-[#444] text-[10px]">Sur devis</span>
+                            }
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Liste produits (CNC + Lames sans photo) ── */}
+            {!catalogLoading && !catalogError && shopTab !== 'cmt' && shopTab !== 'lames' && (activeCategory || !usesCategories) && (
               <div className="divide-y divide-[#161616]">
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -736,8 +820,8 @@ export default function BoutiquePage() {
           >
             {/* Photo — sticky, does not scroll */}
             <div className="relative w-full flex-shrink-0" style={{ background: '#f4f4f4', height: '240px' }}>
-              {shopTab === 'cmt' && currentCMTGroup?.photoUrl
-                ? <img src={currentCMTGroup.photoUrl} alt="" className="w-full h-full object-contain" />
+              {currentPhotoGroup?.photoUrl
+                ? <img src={currentPhotoGroup.photoUrl} alt="" className="w-full h-full object-contain" />
                 : <CategoryImage category={selectedProduct.category} shopTab={shopTab} className="w-full h-full"/>
               }
               <button
@@ -754,17 +838,17 @@ export default function BoutiquePage() {
 
               {/* Titre */}
               <p className="text-white font-semibold text-base leading-snug">
-                {shopTab === 'cmt' && currentCMTGroup
-                  ? (currentCMTGroup.products.length === 1
-                      ? currentCMTGroup.products[0].designation
-                      : currentCMTGroup.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
+                {currentPhotoGroup
+                  ? (currentPhotoGroup.products.length === 1
+                      ? currentPhotoGroup.products[0].designation
+                      : currentPhotoGroup.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
                     )
                   : selectedProduct.designation
                 }
               </p>
 
-              {/* Filtres cascadants (CMT) */}
-              {shopTab === 'cmt' && currentCMTGroup && currentCMTGroup.products.length > 1 && (
+              {/* Filtres cascadants */}
+              {currentPhotoGroup && currentPhotoGroup.products.length > 1 && (
                 <div className="space-y-2">
                   {([
                     { label: 'Ø', all: bsAllØ, avail: bsAvailØ, active: bsFilterØ, set: setBsFilterØ },
@@ -798,7 +882,7 @@ export default function BoutiquePage() {
 
               {/* Liste de toutes les variantes correspondantes */}
               {(() => {
-                const variants = shopTab === 'cmt' ? cmtMatchingVariants : [selectedProduct!]
+                const variants = currentPhotoGroup ? cmtMatchingVariants : [selectedProduct!]
                 return (
                   <div className="space-y-2">
                     {variants.map(v => {
