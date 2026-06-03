@@ -134,6 +134,10 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   '938.7.100.22.12': '/images/cmt/cmt-17.png',
   'DC300.02830':     '/images/cmt/cmt-18.png',
   '122.255.2532':    '/images/cmt/cmt-19.png',
+  'LC2102403M':      '/images/cmt/cmt-20.png',  // Forézienne ATB bois
+  'LC2104804M':      '/images/cmt/cmt-20.png',  // Forézienne ATB bois (shared)
+  'LC2166004M':      '/images/cmt/cmt-21.png',  // Forézienne TF NEG alu
+  'LC3006007M':      '/images/cmt/cmt-22.png',  // Forézienne HFP mélamine
 }
 
 export default function BoutiquePage() {
