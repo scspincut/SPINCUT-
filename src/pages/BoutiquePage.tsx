@@ -901,8 +901,9 @@ export default function BoutiquePage() {
                               { l: 'Ø',    val: v.diametre },
                               { l: 'Ép. Dent', val: v.lc },
                               { l: 'Ép. Corps', val: v.lt },
-                              { l: 'Al',   val: v.queue },
-                              { l: 'Z',    val: v.dents },
+                              { l: 'Al',    val: v.queue },
+                              { l: 'Z',     val: v.dents },
+                              { l: 'Angle', val: v.angle },
                             ] : [
                               { l: 'Ø', val: v.diametre },
                               { l: 'I', val: v.lc },
