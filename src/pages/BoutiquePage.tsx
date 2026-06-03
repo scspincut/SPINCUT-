@@ -65,6 +65,24 @@ const CATEGORY_DESC: Record<string, string> = {
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
+
+function AutoPhoto({ urls }: { urls: string[] }) {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    if (urls.length <= 1) return
+    const t = setInterval(() => setIdx(i => (i + 1) % urls.length), 1500)
+    return () => clearInterval(t)
+  }, [urls.length])
+  return (
+    <>
+      {urls.map((src, i) => (
+        <img key={src} src={src} alt=""
+          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
+          style={{ opacity: i === idx ? 1 : 0, padding: '8px' }} />
+      ))}
+    </>
+  )
+}
 function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 
 function StockBadge({ stock }: { stock: number }) {
@@ -770,7 +788,7 @@ export default function BoutiquePage() {
                       >
                         <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
                           {group.photoUrl
-                            ? <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                            ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} />
                             : <div className="absolute inset-0 flex items-center justify-center"
                                 style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
                                 <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
