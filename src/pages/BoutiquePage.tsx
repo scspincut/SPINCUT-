@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getClientCode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
@@ -169,6 +169,8 @@ export default function BoutiquePage() {
   const [filterLC, setFilterLC] = useState<string | null>(null)
   const [filterDents, setFilterDents] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
+  const [photoIndex, setPhotoIndex] = useState(0)
+  const galleryRef = useRef<HTMLDivElement>(null)
   const [bsFilterØ, setBsFilterØ] = useState<string | null>(null)
   const [bsFilterI, setBsFilterI] = useState<string | null>(null)
   const [bsFilterS, setBsFilterS] = useState<string | null>(null)
@@ -700,7 +702,7 @@ export default function BoutiquePage() {
                     return (
                       <button
                         key={group.key}
-                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}
+                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
                         style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
@@ -762,7 +764,7 @@ export default function BoutiquePage() {
                     return (
                       <button
                         key={group.key}
-                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}
+                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
                         style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
@@ -836,15 +838,34 @@ export default function BoutiquePage() {
             {/* Photo — sticky, does not scroll */}
             <div className="relative w-full flex-shrink-0 overflow-hidden" style={{ background: '#f4f4f4', height: '240px' }}>
               {currentPhoto2 ? (
-                /* Galerie 2 photos — scroll horizontal avec snap */
-                <div className="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar">
-                  <div className="flex-shrink-0 w-full h-full snap-center">
-                    <img src={currentPhotoGroup?.photoUrl ?? ''} alt="" className="w-full h-full object-contain" />
+                <>
+                  <div ref={galleryRef}
+                    className="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar"
+                    onScroll={e => setPhotoIndex(Math.round((e.currentTarget.scrollLeft) / e.currentTarget.offsetWidth))}>
+                    <div className="flex-shrink-0 w-full h-full snap-center">
+                      <img src={currentPhotoGroup?.photoUrl ?? ''} alt="" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="flex-shrink-0 w-full h-full snap-center">
+                      <img src={currentPhoto2} alt="" className="w-full h-full object-contain" />
+                    </div>
                   </div>
-                  <div className="flex-shrink-0 w-full h-full snap-center">
-                    <img src={currentPhoto2} alt="" className="w-full h-full object-contain" />
-                  </div>
-                </div>
+                  {/* Flèche gauche */}
+                  {photoIndex > 0 && (
+                    <button className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.45)' }}
+                      onClick={() => { galleryRef.current?.scrollTo({ left: 0, behavior: 'smooth' }) }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M6.5 1.5L3 5l3.5 3.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  )}
+                  {/* Flèche droite */}
+                  {photoIndex < 1 && (
+                    <button className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.45)' }}
+                      onClick={() => { galleryRef.current?.scrollTo({ left: galleryRef.current.offsetWidth, behavior: 'smooth' }) }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3.5 1.5L7 5l-3.5 3.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </button>
+                  )}
+                </>
               ) : currentPhotoGroup?.photoUrl ? (
                 <img src={currentPhotoGroup.photoUrl} alt="" className="w-full h-full object-contain" />
               ) : (
