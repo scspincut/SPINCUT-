@@ -53,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         firstname: contact?.firstname ?? '',
         lastname: contact?.lastname || org?.commercialName || org?.name || '',
         emails: contact?.emails ?? org?.emails ?? [],
-        phone: contact?.phone ?? '',
+        phone: contact?.phone || (org as any)?.phone || (org as any)?.phoneNumber || (org as any)?.mobilePhone || '',
         billingAddress: contact?.billingAddress ?? org?.billingAddress ?? null,
       })
     } catch (err) {
