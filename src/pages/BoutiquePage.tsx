@@ -66,13 +66,15 @@ const CATEGORY_DESC: Record<string, string> = {
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
 
-function AutoPhoto({ urls }: { urls: string[] }) {
-  const [idx, setIdx] = useState(0)
+function AutoPhoto({ urls, externalIdx }: { urls: string[]; externalIdx?: number }) {
+  const [localIdx, setLocalIdx] = useState(0)
   useEffect(() => {
+    if (externalIdx !== undefined) return
     if (urls.length <= 1) return
-    const t = setInterval(() => setIdx(i => (i + 1) % urls.length), 1500)
+    const t = setInterval(() => setLocalIdx(i => (i + 1) % urls.length), 1500)
     return () => clearInterval(t)
-  }, [urls.length])
+  }, [urls.length, externalIdx])
+  const idx = externalIdx !== undefined ? externalIdx % Math.max(urls.length, 1) : localIdx
   return (
     <>
       {urls.map((src, i) => (
@@ -159,24 +161,24 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'LC3006007M':      '/images/cmt/cmt-22.png',  // Forézienne HFP mélamine
   'F03FS09678':      '/images/cmt/cmt-24.png',
   'F03FS09748':      '/images/cmt/cmt-24.png',
-  // Freud — scies portatives / plongeantes
-  'F03FS09798':      '/images/cmt/cmt-25.png',  // FR06L001H Mélaminé/Agglomérés/MDF
-  'F03FS09865':      '/images/cmt/cmt-27.png',  // FR06L001H HPL/Surfaces dures
-  // Freud — scie à onglets
-  'F03FS05346':      '/images/cmt/cmt-29.png',  // LU6A 1900 Acier/Métaux ferreux
-  // Freud — scies à format / verticales
-  'F03FS09038':      '/images/cmt/cmt-31.png',  // LU3C 0300 Panneaux revêtus 2 faces
-  'F03FS07295':      '/images/cmt/cmt-33.png',  // LU4D 0200 Coupe fine panneaux
+  // Freud — scies portatives / plongeantes (app card en premier)
+  'F03FS09798':      '/images/cmt/cmt-26.png',  // FR06L001H Mélaminé/Agglomérés/MDF
+  'F03FS09865':      '/images/cmt/cmt-28.png',  // FR06L001H HPL/Surfaces dures
+  // Freud — scie à onglets (app card en premier)
+  'F03FS05346':      '/images/cmt/cmt-30.png',  // LU6A 1900 Acier/Métaux ferreux
+  // Freud — scies à format / verticales (app card en premier)
+  'F03FS09038':      '/images/cmt/cmt-32.png',  // LU3C 0300 Panneaux revêtus 2 faces
+  'F03FS07295':      '/images/cmt/cmt-33.png',  // LU4D 0200 Coupe fine panneaux (lame seule)
 }
 
 // Second photo keyed by primary photo URL (shared by the whole group)
 const LAMES_PHOTO2_MAP: Record<string, string> = {
   '/images/cmt/cmt-24.png': '/images/cmt/cmt-23.png',
-  '/images/cmt/cmt-25.png': '/images/cmt/cmt-26.png',  // F03FS09798 app card
-  '/images/cmt/cmt-27.png': '/images/cmt/cmt-28.png',  // F03FS09865 app card
-  '/images/cmt/cmt-29.png': '/images/cmt/cmt-30.png',  // F03FS05346 app card
-  '/images/cmt/cmt-31.png': '/images/cmt/cmt-32.png',  // F03FS09038 app card
-  '/images/cmt/cmt-34.png': '/images/cmt/cmt-35.png',  // CMT 92408110 assembly
+  '/images/cmt/cmt-26.png': '/images/cmt/cmt-25.png',  // F03FS09798 → blade
+  '/images/cmt/cmt-28.png': '/images/cmt/cmt-27.png',  // F03FS09865 → blade
+  '/images/cmt/cmt-30.png': '/images/cmt/cmt-29.png',  // F03FS05346 → blade
+  '/images/cmt/cmt-32.png': '/images/cmt/cmt-31.png',  // F03FS09038 → blade
+  '/images/cmt/cmt-34.png': '/images/cmt/cmt-35.png',  // CMT 92408110 → assembly
 }
 
 export default function BoutiquePage() {
@@ -231,6 +233,13 @@ export default function BoutiquePage() {
 
   const cartCount = useMemo(() => Object.values(quantities).reduce((s, v) => s + v, 0), [quantities])
   const cartTotal = useMemo(() => catalog.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0), [catalog, quantities])
+
+  const [syncPhotoIdx, setSyncPhotoIdx] = useState(0)
+  useEffect(() => {
+    if (shopTab !== 'lames' && shopTab !== 'cmt') return
+    const t = setInterval(() => setSyncPhotoIdx(i => i + 1), 2000)
+    return () => clearInterval(t)
+  }, [shopTab])
 
   useEffect(() => { localStorage.setItem('spincut_last_section', '/boutique') }, [])
   useEffect(() => {
@@ -837,7 +846,12 @@ export default function BoutiquePage() {
                         {/* Photo */}
                         <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
                           {group.photoUrl
-                            ? <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                            ? (() => {
+                                const urls = [group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]
+                                return urls.length > 1
+                                  ? <AutoPhoto urls={urls} externalIdx={syncPhotoIdx} />
+                                  : <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                              })()
                             : <div className="absolute inset-0 flex items-center justify-center"
                                 style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
                                 <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
@@ -898,7 +912,7 @@ export default function BoutiquePage() {
                       >
                         <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
                           {group.photoUrl
-                            ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} />
+                            ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} externalIdx={syncPhotoIdx} />
                             : <div className="absolute inset-0 flex items-center justify-center"
                                 style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
                                 <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
