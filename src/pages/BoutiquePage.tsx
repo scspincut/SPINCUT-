@@ -145,6 +145,7 @@ const CMT_PHOTO_MAP: Record<string, string> = {
   '65804511':   '/images/cmt/cmt-09.png',
   'W170.210.R': '/images/cmt/cmt-12.png',
   '82233511':   '/images/cmt/cmt-15.png',
+  '92408110':   '/images/cmt/cmt-34.png',  // CMT 924.081.10
 }
 
 const LAMES_PHOTO_MAP: Record<string, string> = {
@@ -158,11 +159,24 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'LC3006007M':      '/images/cmt/cmt-22.png',  // Forézienne HFP mélamine
   'F03FS09678':      '/images/cmt/cmt-24.png',
   'F03FS09748':      '/images/cmt/cmt-24.png',
+  // Freud — scies portatives / plongeantes
+  'F03FS09798':      '/images/cmt/cmt-25.png',  // FR06L001H Mélaminé/Agglomérés/MDF
+  'F03FS09865':      '/images/cmt/cmt-27.png',  // FR06L001H HPL/Surfaces dures
+  // Freud — scie à onglets
+  'F03FS05346':      '/images/cmt/cmt-29.png',  // LU6A 1900 Acier/Métaux ferreux
+  // Freud — scies à format / verticales
+  'F03FS09038':      '/images/cmt/cmt-31.png',  // LU3C 0300 Panneaux revêtus 2 faces
+  'F03FS07295':      '/images/cmt/cmt-33.png',  // LU4D 0200 Coupe fine panneaux
 }
 
 // Second photo keyed by primary photo URL (shared by the whole group)
 const LAMES_PHOTO2_MAP: Record<string, string> = {
   '/images/cmt/cmt-24.png': '/images/cmt/cmt-23.png',
+  '/images/cmt/cmt-25.png': '/images/cmt/cmt-26.png',  // F03FS09798 app card
+  '/images/cmt/cmt-27.png': '/images/cmt/cmt-28.png',  // F03FS09865 app card
+  '/images/cmt/cmt-29.png': '/images/cmt/cmt-30.png',  // F03FS05346 app card
+  '/images/cmt/cmt-31.png': '/images/cmt/cmt-32.png',  // F03FS09038 app card
+  '/images/cmt/cmt-34.png': '/images/cmt/cmt-35.png',  // CMT 92408110 assembly
 }
 
 export default function BoutiquePage() {
