@@ -95,14 +95,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Try every plausible Abby endpoint for listing invoices.
-    // Abby doesn't expose this in their SDK so we probe known patterns.
+    // Real SDK paths: /v2/billing/invoice/{id} and /v2/billing/{id}
     const idsToTry = [...new Set([orgId, contactId].filter(Boolean))] as string[]
     const endpoints = idsToTry.flatMap(id => [
-      `${BASE}/v2/billings?type=invoice&contactId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billings?billingType=invoice&contactId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billings?contactId=${id}&page=1&limit=50`,
-      `${BASE}/billings?type=invoice&contactId=${id}&page=1&limit=50`,
+      // Correct SDK base path (singular /v2/billing)
+      `${BASE}/v2/billing/invoice?contactId=${id}&page=1&limit=50`,
+      `${BASE}/v2/billing/invoice?customerId=${id}&page=1&limit=50`,
+      `${BASE}/v2/billing/invoice?organizationId=${id}&page=1&limit=50`,
+      // Listing all billing docs filtered by type
+      `${BASE}/v2/billing?billingType=invoice&contactId=${id}&page=1&limit=50`,
       `${BASE}/v2/billing?type=invoice&contactId=${id}&page=1&limit=50`,
+      `${BASE}/v2/billing?contactId=${id}&page=1&limit=50`,
+      // Legacy/alternate paths
+      `${BASE}/v2/billings?type=invoice&contactId=${id}&page=1&limit=50`,
+      `${BASE}/v2/billings?contactId=${id}&page=1&limit=50`,
     ])
 
     for (const url of endpoints) {
@@ -111,8 +117,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
       if (!docs.length) continue
       for (const inv of docs) {
-        // Only show unpaid invoices
-        if (['paid', 'archived'].includes(inv.state ?? inv.billingState)) continue
+        // Show all unpaid invoices (finalized/sent/overdue = En attente + En retard)
+        const invState = inv.state ?? inv.billingState ?? ''
+        if (['paid', 'archived', 'cancelled', 'draft'].includes(invState)) continue
         const billingType = inv.type ?? inv.billingType ?? ''
         if (billingType && billingType !== 'invoice') continue
         invoices.push({
