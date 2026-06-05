@@ -216,10 +216,10 @@ export interface OpParams {
 
 export const OPERATION_PARAMS: Record<string, OpParams> = {
   decoupe: {
-    apFactor: 1.00, aeFactor: 0.125,
+    apFactor: 1.00, aeFactor: 1.00,
     apLabel: '1×D par passe',
-    aeLabel: '~12% du diamètre',
-    isFinition: true, noRctf: false,
+    aeLabel: '100% (pleine fraise)',
+    isFinition: false, noRctf: true,
   },
   rainure: {
     apFactor: 0.50, aeFactor: 1.00,
