@@ -169,6 +169,8 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   // Freud — scies à format / verticales (app card en premier)
   'F03FS09038':      '/images/cmt/cmt-32.png',  // LU3C 0300 Panneaux revêtus 2 faces
   'F03FS07295':      '/images/cmt/cmt-33.png',  // LU4D 0200 Coupe fine panneaux (lame seule)
+  // Léman — scie à format
+  '964.260.3024':    '/images/cmt/cmt-36.png',  // Ø260 Z24 ALT débit bois
 }
 
 // Second photo keyed by primary photo URL (shared by the whole group)
