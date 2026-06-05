@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import type React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?: number; cartTotal?: number }) {
+export default function BottomNav({ cartCount = 0, cartTotal = 0, invoiceCount = 0 }: { cartCount?: number; cartTotal?: number; invoiceCount?: number }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [contactOpen, setContactOpen] = useState(false)
@@ -12,7 +13,7 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
     navigate(path)
   }
 
-  const tabs = [
+  const tabs: { path: string; label: string; badge?: number; redBadge?: number; icon: (c: string) => React.ReactNode }[] = [
     {
       path: '/calculator',
       label: 'Calculateur',
@@ -36,8 +37,9 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
     },
     {
       path: '/commande',
-      label: 'Commandes',
+      label: 'Suivi',
       badge: cartCount,
+      redBadge: invoiceCount,
       icon: (c: string) => (
         <svg width="22" height="22" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
           <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
@@ -203,7 +205,11 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
               <button key={tab.path} onClick={() => go(tab.path)} className="flex-1 flex flex-col items-center pt-3 pb-4 gap-1">
                 <div className="relative">
                   {tab.icon(color)}
-                  {tab.badge ? (
+                  {(tab.redBadge ?? 0) > 0 ? (
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center px-1">
+                      {tab.redBadge}
+                    </span>
+                  ) : (tab.badge ?? 0) > 0 ? (
                     <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 bg-[#d4780f] rounded-full text-white text-[9px] font-bold flex items-center justify-center px-1">
                       {tab.badge}
                     </span>
