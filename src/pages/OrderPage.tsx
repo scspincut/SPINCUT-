@@ -22,7 +22,6 @@ type AbbyOrder = { id: string; number: string; state: string; label: string; tot
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
 function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
-function toMs(ts: number) { return ts > 9_999_999_999 ? ts : ts * 1000 }
 
 export default function OrderPage() {
   const navigate = useNavigate()
