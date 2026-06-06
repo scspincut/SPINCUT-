@@ -15,9 +15,15 @@ const STATE_LABEL: Record<string, string> = {
 async function fetchAbbyPath(abby: any, path: string) {
   try {
     const result = await abby.getClient().get({ url: path, throwOnError: false })
-    return result?.data ?? {}
+    if (result?.data !== undefined) return result.data
+    // Error case: SDK returns { error, request, response } with no .data
+    const status = result?.response?.status ?? 'no-resp'
+    const errBody = result?.error
+      ? JSON.stringify(result.error).slice(0, 150)
+      : 'no-error-body'
+    return { _status: status, _error: errBody }
   } catch (e: any) {
-    return { _status: e?.status ?? 'thrown', _error: String(e).slice(0, 200) }
+    return { _status: 'thrown', _error: String(e).slice(0, 200) }
   }
 }
 
