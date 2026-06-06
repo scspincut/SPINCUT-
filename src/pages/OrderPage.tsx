@@ -39,10 +39,21 @@ export default function OrderPage() {
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
     try { return JSON.parse(localStorage.getItem('spincut_catalog_cache') ?? '[]') } catch { return [] }
   })
-  const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const TEST_LAST_ORDER_KEY = 'spincut_test_last_order'
+  const [orderStatus, setOrderStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(() => {
+    if (isTestMode()) {
+      try { return sessionStorage.getItem(TEST_LAST_ORDER_KEY) ? 'success' : 'idle' } catch { return 'idle' }
+    }
+    return 'idle'
+  })
   const [orderError, setOrderError]   = useState('')
   const [showHistory, setShowHistory] = useState(true)
-  const [lastOrder, setLastOrder]     = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(null)
+  const [lastOrder, setLastOrder]     = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(() => {
+    if (isTestMode()) {
+      try { const s = sessionStorage.getItem(TEST_LAST_ORDER_KEY); return s ? JSON.parse(s) : null } catch { return null }
+    }
+    return null
+  })
 
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
@@ -130,7 +141,9 @@ export default function OrderPage() {
     if (isTestMode()) {
       await new Promise(r => setTimeout(r, 800))
       const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
-      setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId: 'TEST-0000', isNewBdc: true })
+      const testOrder = { items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId: 'TEST-0000', isNewBdc: true }
+      try { sessionStorage.setItem(TEST_LAST_ORDER_KEY, JSON.stringify(testOrder)) } catch {}
+      setLastOrder(testOrder)
       setOrderStatus('success')
       setQuantities({})
       return
@@ -246,7 +259,7 @@ export default function OrderPage() {
                     </svg>
                   </div>
                   <p className="text-green-400 font-bold text-sm flex-1">Commande envoyée !</p>
-                  <button onClick={() => { setOrderStatus('idle'); setLastOrder(null) }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
+                  <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
                 </div>
                 <div className="px-4 py-3 space-y-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
                   {lastOrder.items.map((item, i) => (
