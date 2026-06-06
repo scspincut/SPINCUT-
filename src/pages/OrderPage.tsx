@@ -18,36 +18,12 @@ interface OrderHistoryEntry {
   total: number
 }
 
-interface AbbyProfile {
-  id: string
-  firstname: string
-  lastname: string
-  emails: string[]
-  phone: string
-  billingAddress: {
-    address: string | null
-    complement?: string | null
-    city: string | null
-    zipCode: string | null
-    country: string
-  } | null
-}
-
-interface StockItem {
-  ref: string
-  designation: string
-  qty: number
-  minQty: number
-  updatedAt: number
-}
-
-type PageTab = 'commandes' | 'factures' | 'stock'
-type AbbyOrder = { id: string; number: string; state: string; label: string; total: number; date: number; items: { ref: string; designation: string; qty: number }[] }
+type PageTab = 'commandes' | 'factures'
+type AbbyOrder   = { id: string; number: string; state: string; label: string; total: number; date: number; items: { ref: string; designation: string; qty: number }[] }
 type AbbyInvoice = { id: string; number: string; state: string; label: string; amount: number; dueAt?: number }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
 function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
-// Abby dueAt may be seconds or ms — normalise to ms
 function toMs(ts: number) { return ts > 9_999_999_999 ? ts : ts * 1000 }
 
 export default function OrderPage() {
@@ -61,7 +37,6 @@ export default function OrderPage() {
   const cartKey    = `spincut_cart_${clientCode ?? 'guest'}`
   const bdcKey     = `spincut_bdc_${clientCode ?? 'guest'}`
   const historyKey = `spincut_orders_${clientCode ?? 'guest'}`
-  const stockKey   = `spincut_stock_${clientCode ?? 'guest'}`
 
   const [pageTab, setPageTab] = useState<PageTab>('commandes')
 
@@ -79,27 +54,9 @@ export default function OrderPage() {
   const [orderHistory, setOrderHistory] = useState<OrderHistoryEntry[]>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
-  const [stock, setStock] = useState<StockItem[]>(() => {
-    try { return JSON.parse(localStorage.getItem(`spincut_stock_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
-  })
-  const [showAddStock, setShowAddStock] = useState(false)
-  const [stockSearch, setStockSearch]   = useState('')
-  const [addedToCart, setAddedToCart]   = useState<string | null>(null)
 
   const [abbyOrders, setAbbyOrders]     = useState<AbbyOrder[]>([])
   const [abbyInvoices, setAbbyInvoices] = useState<AbbyInvoice[]>([])
-  const [profile, setProfile]           = useState<AbbyProfile | null>(null)
-  const [profileLoading, setProfileLoading] = useState(false)
-
-  useEffect(() => {
-    if (!clientName) return
-    setProfileLoading(true)
-    fetch(`/api/client-profile?clientName=${encodeURIComponent(clientName)}`)
-      .then(r => r.json())
-      .then(data => { if (!data.error) setProfile(data) })
-      .catch(() => {})
-      .finally(() => setProfileLoading(false))
-  }, [clientName])
 
   useEffect(() => {
     if (!clientName) return
@@ -126,10 +83,6 @@ export default function OrderPage() {
   }, [quantities, cartKey])
 
   useEffect(() => {
-    try { localStorage.setItem(stockKey, JSON.stringify(stock)) } catch { /* ignore */ }
-  }, [stock, stockKey])
-
-  useEffect(() => {
     fetch('/api/catalog')
       .then(r => r.json())
       .then(data => {
@@ -154,17 +107,6 @@ export default function OrderPage() {
       .map(h => catalog.find(p => p.ref === h.ref))
       .filter((p): p is CatalogProduct => !!p && p.stock > 0)
   }, [orderHistory, catalog])
-
-  const catalogSearchResults = useMemo(() => {
-    if (!stockSearch.trim()) return []
-    const q = stockSearch.toLowerCase()
-    return catalog
-      .filter(p => {
-        if (stock.find(s => s.ref === p.ref)) return false
-        return p.ref.toLowerCase().includes(q) || p.designation.toLowerCase().includes(q)
-      })
-      .slice(0, 10)
-  }, [stockSearch, catalog, stock])
 
   if (!isAuthenticated) { navigate('/'); return null }
   localStorage.setItem('spincut_last_section', '/commande')
@@ -221,37 +163,10 @@ export default function OrderPage() {
     }
   }
 
-  // ── Stock helpers ──────────────────────────────────────────────────────────
-  const addToStock = (ref: string, designation: string) => {
-    if (stock.find(s => s.ref === ref)) return
-    setStock(prev => [...prev, { ref, designation, qty: 0, minQty: 1, updatedAt: Date.now() }])
-    setShowAddStock(false)
-    setStockSearch('')
-  }
-  const updateStockQty = (ref: string, delta: number) =>
-    setStock(prev => prev.map(s => s.ref === ref ? { ...s, qty: Math.max(0, s.qty + delta), updatedAt: Date.now() } : s))
-  const updateStockMin = (ref: string, val: string) =>
-    setStock(prev => prev.map(s => s.ref === ref ? { ...s, minQty: Math.max(1, parseInt(val) || 1) } : s))
-  const removeFromStock = (ref: string) =>
-    setStock(prev => prev.filter(s => s.ref !== ref))
-  const addToCartFromStock = (item: StockItem) => {
-    const catalogItem = catalog.find(p => p.ref === item.ref && p.stock > 0) ?? catalog.find(p => p.ref === item.ref)
-    if (!catalogItem) return
-    const key = uid(catalogItem)
-    setQuantities(prev => ({ ...prev, [key]: (prev[key] || 0) + 1 }))
-    setAddedToCart(item.ref)
-    setTimeout(() => setAddedToCart(null), 2500)
-  }
-  const stockStatus = (item: StockItem): 'ok' | 'low' | 'empty' => {
-    if (item.qty === 0) return 'empty'
-    if (item.qty < item.minQty) return 'low'
-    return 'ok'
-  }
-
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
 
-      {/* Header + tabs — one sticky block */}
+      {/* Header + tabs sticky */}
       <div className="sticky top-0 z-30 bg-black">
         <header className="border-b border-[#1a1a1a]">
           <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
@@ -263,7 +178,7 @@ export default function OrderPage() {
               </svg>
               Profil
             </button>
-            <img src="/logo-banniere.png" alt="SPINCUT Outils CNC" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
+            <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
             <button onClick={() => { logout(); navigate('/') }}
               className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
             >
@@ -275,12 +190,12 @@ export default function OrderPage() {
           </div>
         </header>
 
-        {/* Sub-tabs */}
+        {/* 2 sub-tabs */}
         <div className="border-b border-[#1a1a1a]">
           <div className="flex max-w-2xl mx-auto">
-            {(['commandes', 'factures', 'stock'] as PageTab[]).map(tab => {
-              const labels: Record<PageTab, string> = { commandes: 'Commandes', factures: 'Factures', stock: 'Mon Stock' }
-              const badge = tab === 'factures' ? abbyInvoices.length : tab === 'commandes' ? itemCount : 0
+            {(['commandes', 'factures'] as PageTab[]).map(tab => {
+              const labels: Record<PageTab, string> = { commandes: 'Commandes', factures: 'Factures' }
+              const badge = tab === 'factures' ? abbyInvoices.length : itemCount
               const badgeRed = tab === 'factures'
               return (
                 <button
@@ -314,83 +229,18 @@ export default function OrderPage() {
         {pageTab === 'commandes' && (
           <div className="space-y-4">
 
-            {/* Profile + stats */}
-            <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
-              <p className="text-[10px] uppercase tracking-wider px-4 pt-4 pb-3" style={{ color: '#555' }}>Tableau de bord</p>
-              <div className="px-4 pb-4">
-                {profileLoading ? (
-                  <div className="flex items-center gap-2 text-[#444] text-sm">
-                    <svg className="animate-spin w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                    </svg>
-                    Chargement du profil…
-                  </div>
-                ) : profile ? (
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#2a1400', border: '1.5px solid rgba(212,120,15,0.25)' }}>
-                      <svg className="w-5 h-5 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-0.5">
-                      <p className="text-white font-bold text-sm leading-tight">
-                        {[profile.firstname, profile.lastname].filter(Boolean).join(' ') || clientName || '—'}
-                      </p>
-                      {profile.emails?.[0] && <p className="text-[#888] text-xs truncate">{profile.emails[0]}</p>}
-                      {profile.phone && <p className="text-[#888] text-xs">{profile.phone}</p>}
-                      {profile.billingAddress?.address && (
-                        <p className="text-[#555] text-[11px] leading-tight">
-                          {profile.billingAddress.address}
-                          {profile.billingAddress.complement ? `, ${profile.billingAddress.complement}` : ''}
-                          {' — '}{[profile.billingAddress.zipCode, profile.billingAddress.city].filter(Boolean).join(' ')}
-                        </p>
-                      )}
-                    </div>
-                    <button onClick={() => navigate('/profil')}
-                      className="text-[10px] text-[#d4780f] border border-[#d4780f]/30 px-2 py-1 rounded-lg hover:bg-[#d4780f]/10 transition-colors flex-shrink-0"
-                    >Modifier</button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white text-sm font-bold">{clientName ?? 'Client SPINCUT'}</p>
-                      <p className="text-[#444] text-xs mt-0.5">Profil Abby non trouvé</p>
-                    </div>
-                    <button onClick={() => navigate('/profil')} className="text-[10px] text-[#555] border border-[#2a2a2a] px-2 py-1 rounded-lg hover:text-white transition-colors">Profil</button>
-                  </div>
-                )}
+            {/* BDC actif */}
+            {currentBdcId && (
+              <div className="flex items-center justify-between px-4 py-3 rounded-xl" style={{ background: '#0a0600', border: '1px solid #2a1a00' }}>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>Bon de commande actif</p>
+                  <p className="text-white font-mono text-sm mt-0.5">{currentBdcId}</p>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#d4780f]/20 text-[#d4780f]">En cours</span>
               </div>
-              <div className="grid grid-cols-3 divide-x divide-[#2a2a2a] border-t border-[#2a2a2a]">
-                <div className="px-3 py-4 text-center">
-                  <p className="text-[#d4780f] font-black text-2xl">{orderHistory.length}</p>
-                  <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Commandes</p>
-                </div>
-                <div className="px-3 py-4 text-center">
-                  <p className="text-[#d4780f] font-black text-2xl">{orderHistory.reduce((s, e) => s + e.total, 0).toFixed(0)}€</p>
-                  <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Total HT</p>
-                </div>
-                <div className="px-3 py-4 text-center">
-                  <p className="text-white font-black text-2xl">{orderHistory.reduce((s, e) => s + e.items.reduce((ss, i) => ss + i.quantity, 0), 0)}</p>
-                  <p className="text-[10px] uppercase tracking-wider mt-1" style={{ color: '#555' }}>Articles</p>
-                </div>
-              </div>
-              {currentBdcId && (
-                <div className="px-4 py-3 border-t border-[#2a2a2a] flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>Bon de commande actif</p>
-                    <p className="text-white font-mono text-sm mt-0.5">{currentBdcId}</p>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#d4780f]/20 text-[#d4780f]">En cours</span>
-                </div>
-              )}
-              <div className="px-4 py-2.5 border-t border-[#1a1a1a] flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-wider" style={{ color: '#444' }}>Code client</p>
-                <p className="text-[#555] font-mono text-xs">{clientCode ?? '—'}</p>
-              </div>
-            </div>
+            )}
 
-            {/* Abby active orders */}
+            {/* Commandes en cours (Abby) */}
             {abbyOrders.length > 0 && (
               <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #2a1a00', background: '#0a0600' }}>
                 <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid #1a1000' }}>
@@ -433,16 +283,14 @@ export default function OrderPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
                     </svg>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  </div>
+                  <p className="text-green-400 font-bold text-sm flex-1">Commande envoyée !</p>
                   <button onClick={() => { setOrderStatus('idle'); setLastOrder(null) }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
                 </div>
                 <div className="px-4 py-3 space-y-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
                   {lastOrder.items.map((item, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className="flex-1 mr-2 truncate" style={{ color: '#5a9a5a' }}>{item.quantity}× {item.designation}</span>
-                      <span className="flex-shrink-0" style={{ color: '#3a6a3a' }}>{(item.quantity * item.price).toFixed(2).replace('.', ',')} €</span>
+                      <span style={{ color: '#3a6a3a' }}>{(item.quantity * item.price).toFixed(2).replace('.', ',')} €</span>
                     </div>
                   ))}
                   <div className="flex items-center justify-between text-sm font-bold pt-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
@@ -505,7 +353,7 @@ export default function OrderPage() {
                   </button>
                 </div>
               </div>
-            ) : orderStatus !== 'success' && orderHistory.length === 0 ? (
+            ) : orderStatus !== 'success' && orderHistory.length === 0 && abbyOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
                   <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -616,7 +464,6 @@ export default function OrderPage() {
           <div className="space-y-4">
             {abbyInvoices.length > 0 ? (
               <>
-                {/* Summary banner */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: '#0a0202', border: '1px solid #3a1010' }}>
                   <div className="px-5 py-4 flex items-center justify-between">
                     <div>
@@ -630,7 +477,6 @@ export default function OrderPage() {
                   </div>
                 </div>
 
-                {/* Invoice cards */}
                 {abbyInvoices.map(inv => {
                   const dueMs = inv.dueAt ? toMs(inv.dueAt) : null
                   const isLate = dueMs != null && dueMs < Date.now()
@@ -688,185 +534,7 @@ export default function OrderPage() {
             )}
           </div>
         )}
-
-        {/* ══════════════════════════ MON STOCK ════════════════════════════ */}
-        {pageTab === 'stock' && (
-          <div className="space-y-4">
-
-            {/* Header row */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white font-bold text-sm">Gestion de stock</p>
-                <p className="text-[#555] text-xs mt-0.5">Suivez vos outils et commandez au bon moment</p>
-              </div>
-              <button
-                onClick={() => setShowAddStock(true)}
-                className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white active:scale-95 transition-all"
-                style={{ background: '#d4780f' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/>
-                </svg>
-                Ajouter
-              </button>
-            </div>
-
-            {/* Added-to-cart toast */}
-            {addedToCart && (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium" style={{ background: '#0d1a0d', border: '1px solid #1a4a1a', color: '#4ade80' }}>
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
-                </svg>
-                Ajouté au panier — allez dans l'onglet Commandes
-              </div>
-            )}
-
-            {/* Stock items */}
-            {stock.length > 0 ? (
-              <div className="space-y-3">
-                {stock.map(item => {
-                  const status = stockStatus(item)
-                  const cfg = {
-                    ok:    { color: '#4ade80', bg: '#0d1a0d', label: 'OK',       border: '#1a4a1a' },
-                    low:   { color: '#fbbf24', bg: '#1a1400', label: 'Faible',   border: '#3a2a00' },
-                    empty: { color: '#f87171', bg: '#1a0505', label: 'Rupture',  border: '#4a1010' },
-                  }[status]
-                  const canOrder = catalog.some(p => p.ref === item.ref)
-                  return (
-                    <div key={item.ref} className="rounded-2xl overflow-hidden" style={{ background: '#111', border: `1px solid ${cfg.border}` }}>
-                      {/* Tool info row */}
-                      <div className="px-4 pt-3 pb-2 flex items-start gap-3">
-                        <div className="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: cfg.color }} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold leading-snug">{item.designation}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[#555] font-mono text-[10px]">{item.ref}</span>
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
-                          </div>
-                        </div>
-                        <button onClick={() => removeFromStock(item.ref)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                          </svg>
-                        </button>
-                      </div>
-                      {/* Qty + min row */}
-                      <div className="px-4 pb-3 flex items-center gap-3">
-                        <span className="text-[11px] text-[#555] flex-shrink-0">Stock :</span>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateStockQty(item.ref, -1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>−</button>
-                          <span className="w-10 text-center font-black text-lg" style={{ color: cfg.color }}>{item.qty}</span>
-                          <button onClick={() => updateStockQty(item.ref, +1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>+</button>
-                        </div>
-                        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-                          <span className="text-[10px] text-[#444]">min.</span>
-                          <input
-                            type="number" min={1} value={item.minQty}
-                            onChange={e => updateStockMin(item.ref, e.target.value)}
-                            className="w-10 text-center text-sm font-bold rounded-lg py-1 outline-none"
-                            style={{ background: '#161616', color: '#888', border: '1px solid #2a2a2a' }}
-                          />
-                        </div>
-                      </div>
-                      {/* Reorder button */}
-                      {(status === 'low' || status === 'empty') && canOrder && (
-                        <div className="px-4 pb-4">
-                          <button
-                            onClick={() => addToCartFromStock(item)}
-                            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95"
-                            style={{ background: '#2a1400', color: '#d4780f', border: '1px solid rgba(212,120,15,0.2)' }}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                            Réapprovisionner
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
-                  <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-white font-bold text-lg">Aucun outil suivi</p>
-                  <p className="text-[#555] text-sm mt-1">Ajoutez vos outils pour gérer vos niveaux de stock</p>
-                </div>
-                <button onClick={() => setShowAddStock(true)} className="py-3 px-6 rounded-xl bg-[#d4780f] text-white text-sm font-bold hover:bg-[#b86400] active:scale-95 transition-all">
-                  Ajouter un outil
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </main>
-
-      {/* Add-to-stock modal */}
-      {showAddStock && (
-        <div
-          className="fixed inset-0 z-[60] flex items-end justify-center"
-          style={{ background: 'rgba(0,0,0,0.8)' }}
-          onClick={() => { setShowAddStock(false); setStockSearch('') }}
-        >
-          <div
-            className="w-full max-w-lg rounded-t-2xl flex flex-col"
-            style={{ background: '#161616', border: '1px solid #2a2a2a', maxHeight: '80vh' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="px-4 py-4 flex items-center justify-between border-b border-[#2a2a2a] flex-shrink-0">
-              <p className="font-bold text-white text-sm">Ajouter un outil au stock</p>
-              <button onClick={() => { setShowAddStock(false); setStockSearch('') }} className="text-[#555] hover:text-white text-2xl leading-none">×</button>
-            </div>
-            <div className="px-4 py-3 flex-shrink-0">
-              <input
-                autoFocus
-                type="text"
-                placeholder="Rechercher par réf. ou désignation…"
-                value={stockSearch}
-                onChange={e => setStockSearch(e.target.value)}
-                className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-[#444] outline-none"
-                style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
-              />
-            </div>
-            <div className="overflow-y-auto flex-1 pb-6">
-              {stockSearch.trim() === '' ? (
-                <p className="text-center text-[#444] text-sm py-8">Tapez une référence ou désignation</p>
-              ) : catalogSearchResults.length === 0 ? (
-                <p className="text-center text-[#444] text-sm py-8">Aucun résultat pour « {stockSearch} »</p>
-              ) : (
-                <div className="divide-y divide-[#1a1a1a]">
-                  {catalogSearchResults.map(p => (
-                    <button
-                      key={uid(p)}
-                      onClick={() => addToStock(p.ref, p.designation)}
-                      className="w-full px-4 py-3 text-left hover:bg-[#1e1e1e] transition-colors flex items-center justify-between gap-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{p.designation}</p>
-                        <p className="text-[#555] font-mono text-xs mt-0.5">{p.ref}</p>
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        <p className="text-[#d4780f] font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} €</p>
-                        {p.stock > 0 && <p className="text-[#333] text-[10px]">stock: {p.stock}</p>}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       <BottomNav cartCount={itemCount} cartTotal={total} invoiceCount={abbyInvoices.length} />
     </div>

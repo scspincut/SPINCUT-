@@ -49,6 +49,15 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0, invoiceCount =
         </svg>
       ),
     },
+    {
+      path: '/stock',
+      label: 'Mon Stock',
+      icon: (c: string) => (
+        <svg width="22" height="22" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+      ),
+    },
   ]
 
   return (
