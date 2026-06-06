@@ -9,7 +9,16 @@ const STATE_LABEL: Record<string, string> = {
   refused:   'Refusée',
   invoiced:  'Facturée',
   delivered: 'Livrée',
-  paid:      'Payé',
+  paid:      'Payée',
+}
+
+// BDC converti en facture = livré
+const DELIVERED_STATES = new Set(['invoiced', 'delivered', 'paid'])
+const HIDDEN_STATES    = new Set(['cancelled', 'archived'])
+
+type OrderEntry = {
+  id: string; number: string; state: string; label: string
+  total: number; date: number; items: { ref: string; designation: string; qty: number }[]
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -27,38 +36,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const abby = new Abby(apiKey)
 
-  const orders: {
-    id: string; number: string; state: string; label: string
-    total: number; date: number; items: { ref: string; designation: string; qty: number }[]
-  }[] = []
+  const pending: OrderEntry[]   = []
+  const delivered: OrderEntry[] = []
 
   if (orderIds && orderIds.length > 0) {
-    const uniqueIds = [...new Set(orderIds)].slice(0, 15)
+    const uniqueIds = [...new Set(orderIds)].slice(0, 20)
     await Promise.allSettled(
       uniqueIds.map(async id => {
         try {
           const { data: bdc } = await abby.billing.getBillingById({ path: { billingId: id } })
           const b = bdc as any
           const state: string = b.state ?? 'unknown'
-          if (['paid', 'cancelled', 'archived'].includes(state)) return
-          orders.push({
+          if (HIDDEN_STATES.has(state)) return
+          const entry: OrderEntry = {
             id,
             number: b.number ?? '',
             state,
             label: STATE_LABEL[state] ?? state,
             total: (b.total?.amountWithoutTaxAfterDiscount ?? 0) / 100,
             date: b.emittedAt ?? b.createdAt ?? 0,
-            items: (b.lines ?? []).slice(0, 3).map((l: any) => ({
+            items: (b.lines ?? []).slice(0, 5).map((l: any) => ({
               ref: l.reference ?? '',
               designation: l.designation ?? '',
               qty: l.quantity ?? 1,
             })),
-          })
+          }
+          if (DELIVERED_STATES.has(state)) {
+            delivered.push(entry)
+          } else {
+            pending.push(entry)
+          }
         } catch {}
       })
     )
   }
 
+  // Tri par date décroissante
+  const byDate = (a: OrderEntry, b: OrderEntry) => b.date - a.date
+  pending.sort(byDate)
+  delivered.sort(byDate)
+
   res.setHeader('Cache-Control', 'no-store')
-  return res.status(200).json({ orders })
+  return res.status(200).json({ orders: pending, delivered })
 }
