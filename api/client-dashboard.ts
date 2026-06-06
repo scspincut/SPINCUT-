@@ -137,7 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // ── Strategy C: filter by contact/org ID ──
+    // ── Strategy C: filter by contact/org ID (query param) ──
     if (invoices.length === 0) {
       const ids = [...new Set([orgId, contactId].filter(Boolean))] as string[]
       for (const id of ids) {
@@ -158,6 +158,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
         if (invoices.length > 0) break
+      }
+    }
+
+    // ── Strategy D: ID as PATH segment (mirroring POST /v2/billing/invoice/{customerId}) ──
+    if (invoices.length === 0) {
+      const ids = [...new Set([contactId, orgId].filter(Boolean))] as string[]
+      for (const id of ids) {
+        const urlsToTry = [
+          `${BASE}/v2/billing/invoice/${id}`,
+          `${BASE}/v2/billing/invoice/${id}?page=1&limit=50`,
+          `${BASE}/v2/billing/estimate/${id}`,
+        ]
+        for (const url of urlsToTry) {
+          const data = await fetchAbby(url, apiKey)
+          const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
+          _debug.probes.push({ src: url, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 10) : null })
+          if (docs.length > 0) {
+            processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
+            if (invoices.length > 0) break
+          }
+        }
+        if (invoices.length > 0) break
+      }
+    }
+
+    // ── Strategy E: bare /v2/billing list (all docs, filter client-side) ──
+    if (invoices.length === 0) {
+      const urlsToTry = [
+        `${BASE}/v2/billing?page=1&limit=100`,
+        `${BASE}/v2/billing?page=1&limit=100&state=sent`,
+        `${BASE}/v2/billing?page=1&limit=100&state=finalized`,
+      ]
+      for (const url of urlsToTry) {
+        const data = await fetchAbby(url, apiKey)
+        const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
+        _debug.probes.push({ src: url, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 10) : null })
+        if (docs.length > 0) {
+          processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
+          if (invoices.length > 0) break
+        }
       }
     }
 
