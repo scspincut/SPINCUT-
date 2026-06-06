@@ -73,4 +73,5 @@ export interface AccessCode {
   clientName?: string;
   clientPhone?: string;
   invoiceIds?: string[];
+  isTest?: boolean;
 }

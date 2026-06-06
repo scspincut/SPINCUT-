@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useClientAuth, getAccessCodes, getClientCode } from '../hooks/useAuth'
+import { useClientAuth, getAccessCodes, getClientCode, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
+import TestModeBanner from '../components/TestModeBanner'
 
 interface CatalogProduct {
   sheet: string; row: number; famille: string; ref: string
@@ -68,7 +69,9 @@ export default function OrderPage() {
   }, [clientName])
 
   useEffect(() => {
-    try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
+    if (!isTestMode()) {
+      try { localStorage.setItem(cartKey, JSON.stringify(quantities)) } catch { /* ignore */ }
+    }
   }, [quantities, cartKey])
 
   useEffect(() => {
@@ -122,6 +125,17 @@ export default function OrderPage() {
       queue: p.queue !== '/' ? p.queue : '',
       quantity: quantities[uid(p)], price: p.prix, sheet: p.sheet, row: p.row,
     }))
+
+    // Mode test : simuler une commande sans appel API ni sauvegarde
+    if (isTestMode()) {
+      await new Promise(r => setTimeout(r, 800))
+      const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
+      setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId: 'TEST-0000', isNewBdc: true })
+      setOrderStatus('success')
+      setQuantities({})
+      return
+    }
+
     try {
       let existingBdcId: string | undefined
       try { existingBdcId = JSON.parse(localStorage.getItem(bdcKey) ?? 'null') ?? undefined } catch { /* ignore */ }
@@ -171,6 +185,7 @@ export default function OrderPage() {
         </header>
 
       </div>
+      {isTestMode() && <TestModeBanner />}
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4">
 

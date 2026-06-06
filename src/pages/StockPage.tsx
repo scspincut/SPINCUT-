@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useClientAuth, getClientCode } from '../hooks/useAuth'
+import { useClientAuth, getClientCode, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
+import TestModeBanner from '../components/TestModeBanner'
 
 interface StockTool {
   id: string
@@ -39,7 +40,9 @@ export default function StockPage() {
   const [formError, setFormError] = useState('')
 
   useEffect(() => {
-    try { localStorage.setItem(stockKey, JSON.stringify(tools)) } catch {}
+    if (!isTestMode()) {
+      try { localStorage.setItem(stockKey, JSON.stringify(tools)) } catch {}
+    }
   }, [tools, stockKey])
 
   if (!isAuthenticated) { navigate('/'); return null }
@@ -101,6 +104,7 @@ export default function StockPage() {
           </button>
         </div>
       </header>
+      {isTestMode() && <TestModeBanner />}
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
 

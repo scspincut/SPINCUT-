@@ -33,6 +33,7 @@ export default function AdminDashboardPage() {
   const [newCode, setNewCode] = useState('')
   const [newClientName, setNewClientName] = useState('')
   const [newClientPhone, setNewClientPhone] = useState('')
+  const [newIsTest, setNewIsTest] = useState(false)
   const [createError, setCreateError] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
@@ -150,6 +151,7 @@ export default function AdminDashboardPage() {
       createdAt: `${day}/${month}/${year}`,
       clientName: newClientName.trim() || undefined,
       clientPhone: newClientPhone.trim() || undefined,
+      isTest: newIsTest || undefined,
     }
     const updated = [...existing, newEntry]
     saveAccessCodes(updated)
@@ -157,6 +159,7 @@ export default function AdminDashboardPage() {
     setNewCode('')
     setNewClientName('')
     setNewClientPhone('')
+    setNewIsTest(false)
   }
 
   const toggleActive = (id: string) => {
@@ -299,6 +302,15 @@ export default function AdminDashboardPage() {
                 onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
               />
             </div>
+            <label className="flex items-center gap-2 cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={newIsTest}
+                onChange={e => setNewIsTest(e.target.checked)}
+                className="w-4 h-4 accent-[#d4780f] cursor-pointer"
+              />
+              <span className="text-xs" style={{ color: '#888' }}>Code de test — aucune donnée sauvegardée</span>
+            </label>
           </form>
         </div>
 
@@ -494,7 +506,10 @@ export default function AdminDashboardPage() {
                   {codes.map(c => (
                     <tr key={c.id} style={{ borderBottom: '1px solid #1a1a1a' }}>
                       <td className="py-3 pr-4">
-                        <span className="font-mono font-semibold text-white tracking-wider">{c.code}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold text-white tracking-wider">{c.code}</span>
+                          {c.isTest && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#1a1a00', color: '#fbbf24', border: '1px solid #3a3a00' }}>TEST</span>}
+                        </div>
                       </td>
                       <td className="py-3 pr-4">
                         {c.clientName

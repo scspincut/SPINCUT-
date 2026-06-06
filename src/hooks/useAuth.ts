@@ -17,6 +17,12 @@ export function saveAccessCodes(codes: AccessCode[]): void {
   localStorage.setItem(CODES_KEY, JSON.stringify(codes));
 }
 
+export function isTestMode(): boolean {
+  const code = getClientCode()
+  if (!code) return false
+  return getAccessCodes().find(c => c.code === code)?.isTest === true
+}
+
 export function getClientCode(): string | null {
   const val = localStorage.getItem(CLIENT_SESSION_KEY);
   return val && val !== 'true' ? val : null;
