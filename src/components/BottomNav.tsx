@@ -15,16 +15,6 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
 
   const tabs: { path: string; label: string; badge?: number; icon: (c: string) => React.ReactNode }[] = [
     {
-      path: '/calculator',
-      label: 'Calculateur',
-      icon: (c: string) => (
-        <svg width="22" height="22" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-          <rect x="4" y="2" width="16" height="20" rx="2"/>
-          <path d="M8 7h8M8 11h8M8 15h4"/>
-        </svg>
-      ),
-    },
-    {
       path: '/boutique',
       label: 'Boutique',
       icon: (c: string) => (
@@ -37,7 +27,7 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
     },
     {
       path: '/commande',
-      label: 'Suivi',
+      label: 'Commande',
       badge: cartCount,
       icon: (c: string) => (
         <svg width="22" height="22" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -45,6 +35,16 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
           <rect x="9" y="3" width="6" height="4" rx="1"/>
           <line x1="9" y1="12" x2="15" y2="12"/>
           <line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/calculator',
+      label: 'Calculateur',
+      icon: (c: string) => (
+        <svg width="22" height="22" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <path d="M8 7h8M8 11h8M8 15h4"/>
         </svg>
       ),
     },

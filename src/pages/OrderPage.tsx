@@ -158,14 +158,6 @@ export default function OrderPage() {
       <div className="sticky top-0 z-30 bg-black">
         <header className="border-b border-[#1a1a1a]">
           <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
-            <button onClick={() => navigate('/profil')}
-              className="absolute left-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-              </svg>
-              Profil
-            </button>
             <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
             <button onClick={() => { logout(); navigate('/') }}
               className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
