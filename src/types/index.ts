@@ -72,4 +72,5 @@ export interface AccessCode {
   createdAt: string;
   clientName?: string;
   clientPhone?: string;
+  invoiceIds?: string[];
 }

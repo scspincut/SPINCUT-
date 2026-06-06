@@ -38,6 +38,20 @@ export default function AdminDashboardPage() {
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [importMsg, setImportMsg] = useState('')
 
+  // Factures Abby par client
+  const [invoiceCodeId, setInvoiceCodeId] = useState<string>('')
+  const [invoiceInput, setInvoiceInput] = useState<string>('')
+  const [invoiceSaved, setInvoiceSaved] = useState(false)
+
+  const saveInvoiceIds = () => {
+    const ids = invoiceInput.split(/[\n,\s]+/).map(s => s.trim()).filter(Boolean)
+    const updated = codes.map(c => c.id === invoiceCodeId ? { ...c, invoiceIds: ids } : c)
+    saveAccessCodes(updated)
+    setCodes(updated)
+    setInvoiceSaved(true)
+    setTimeout(() => setInvoiceSaved(false), 2000)
+  }
+
   // Import BDC Abby
   const [bdcId, setBdcId] = useState('')
   const [bdcStatus, setBdcStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -441,6 +455,53 @@ export default function AdminDashboardPage() {
               {importMsg}
             </p>
           )}
+        </div>
+
+        {/* Factures Abby par client */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <h2 className="text-base font-semibold text-white mb-4">Factures Abby par client</h2>
+          <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>
+            Colle les IDs de factures Abby (un par ligne ou séparés par virgule). Le client les verra dans l'onglet Factures.
+          </p>
+          <div className="flex flex-col gap-3">
+            <select
+              value={invoiceCodeId}
+              onChange={e => {
+                setInvoiceCodeId(e.target.value)
+                const c = codes.find(x => x.id === e.target.value)
+                setInvoiceInput((c?.invoiceIds ?? []).join('\n'))
+                setInvoiceSaved(false)
+              }}
+              className="w-full px-3 py-2 rounded-lg text-sm text-white"
+              style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', outline: 'none' }}
+            >
+              <option value="">— Choisir un client —</option>
+              {codes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.clientName ?? c.code} ({c.code})
+                </option>
+              ))}
+            </select>
+            {invoiceCodeId && (
+              <>
+                <textarea
+                  value={invoiceInput}
+                  onChange={e => { setInvoiceInput(e.target.value); setInvoiceSaved(false) }}
+                  placeholder={'ID1\nID2\nID3'}
+                  rows={4}
+                  className="w-full px-3 py-2 rounded-lg text-xs font-mono text-white resize-none"
+                  style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', outline: 'none' }}
+                />
+                <button
+                  onClick={saveInvoiceIds}
+                  className="text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  style={{ background: invoiceSaved ? '#0a1f0a' : '#1a2a0a', color: invoiceSaved ? '#4ade80' : '#a3e635', border: `1px solid ${invoiceSaved ? '#166534' : '#365314'}` }}
+                >
+                  {invoiceSaved ? '✓ Enregistré' : 'Enregistrer les IDs'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Codes list card */}

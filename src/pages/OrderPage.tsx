@@ -57,24 +57,23 @@ export default function OrderPage() {
 
   const [abbyOrders, setAbbyOrders]     = useState<AbbyOrder[]>([])
   const [abbyInvoices, setAbbyInvoices] = useState<AbbyInvoice[]>([])
-  const [abbyDebug, setAbbyDebug]       = useState<string>('')
 
   useEffect(() => {
     if (!clientName) return
     const orderIds = [...new Set(
       (() => { try { return (JSON.parse(localStorage.getItem(historyKey) ?? '[]') as OrderHistoryEntry[]).map(h => h.orderId).filter(Boolean) } catch { return [] } })()
     )]
+    const invoiceIds: string[] = clientInfo?.invoiceIds ?? []
     fetch('/api/client-dashboard', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientName, orderIds }),
+      body: JSON.stringify({ clientName, orderIds, invoiceIds }),
     })
       .then(r => r.json())
       .then(data => {
         if (!data.error) {
           setAbbyOrders(data.orders ?? [])
           setAbbyInvoices(data.invoices ?? [])
-          if (data._debug) setAbbyDebug(JSON.stringify(data._debug, null, 2))
         }
       })
       .catch(() => {})
@@ -532,12 +531,6 @@ export default function OrderPage() {
                   <p className="text-white font-bold text-lg">Aucune facture en attente</p>
                   <p className="text-[#555] text-sm mt-1">Vos factures sont toutes réglées</p>
                 </div>
-              </div>
-            )}
-            {abbyDebug && (
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #2a2a2a' }}>
-                <p className="text-[10px] uppercase tracking-wider px-3 py-2 text-[#555] border-b border-[#1a1a1a]">Debug API</p>
-                <pre className="text-[9px] text-[#666] px-3 py-2 overflow-x-auto whitespace-pre-wrap break-all" style={{ maxHeight: '300px', overflowY: 'auto' }}>{abbyDebug}</pre>
               </div>
             )}
           </div>
