@@ -9,38 +9,20 @@ interface StockTool {
   diametre: number
   lc: number
   lt: number
-  dents: number
-  matiere: string
+  dents: string
   qty: number
   addedAt: number
 }
 
 const TOOL_TYPES = [
   'Carbure monobloc',
-  'Diamant coupé',
+  'Diamant',
   'Compression',
   'Ravageuse',
   'HSS',
 ]
 
-const MATIERES = [
-  'Bois tendre',
-  'Bois dur',
-  'Bois exotique',
-  'MDF',
-  'CTP',
-  'Mélaminé',
-  'Panneau stratifié',
-  'Alu 2017',
-  'Alu 7075',
-  'Alu 6060',
-  'Alu coulé',
-  'PVC',
-  'PMMA',
-  'PC / ABS / POM',
-]
-
-const EMPTY_FORM = { type: '', diametre: '', lc: '', lt: '', dents: '', matiere: '' }
+const EMPTY_FORM = { type: '', diametre: '', lc: '', lt: '', dents: '' }
 
 export default function StockPage() {
   const navigate = useNavigate()
@@ -72,21 +54,18 @@ export default function StockPage() {
     const d = parseFloat(form.diametre)
     const lc = parseFloat(form.lc)
     const lt = parseFloat(form.lt)
-    const dents = parseInt(form.dents)
-    if (!form.type) return setFormError('Sélectionnez un type d\'outil')
-    if (!form.matiere) return setFormError('Sélectionnez une matière')
+    if (!form.type) return setFormError("Sélectionnez un type d'outil")
     if (!form.diametre || isNaN(d) || d <= 0) return setFormError('Diamètre invalide')
     if (!form.lc || isNaN(lc) || lc <= 0) return setFormError('Longueur de coupe invalide')
     if (!form.lt || isNaN(lt) || lt <= 0) return setFormError('Longueur totale invalide')
-    if (!form.dents || isNaN(dents) || dents <= 0) return setFormError('Nombre de dents invalide')
+    if (!form.dents.trim()) return setFormError('Nombre de dents requis')
     const tool: StockTool = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       type: form.type,
       diametre: d,
       lc,
       lt,
-      dents,
-      matiere: form.matiere,
+      dents: form.dents.trim(),
       qty: 0,
       addedAt: Date.now(),
     }
@@ -124,41 +103,27 @@ export default function StockPage() {
         <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-3">
           <p className="text-white font-bold text-sm">Ajouter un outil</p>
 
-          {/* Row 1: Type + Matière */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Type d'outil</p>
-              <select
-                value={form.type}
-                onChange={e => setField('type', e.target.value)}
-                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', color: form.type ? 'white' : '#444' }}
-              >
-                <option value="" disabled>Choisir…</option>
-                {TOOL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Matière</p>
-              <select
-                value={form.matiere}
-                onChange={e => setField('matiere', e.target.value)}
-                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', color: form.matiere ? 'white' : '#444' }}
-              >
-                <option value="" disabled>Choisir…</option>
-                {MATIERES.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
+          {/* Type d'outil — full width */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Type d'outil</p>
+            <select
+              value={form.type}
+              onChange={e => setField('type', e.target.value)}
+              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+              style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', color: form.type ? 'white' : '#444' }}
+            >
+              <option value="" disabled>Choisir…</option>
+              {TOOL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
           </div>
 
-          {/* Row 2: Diamètre + Dents */}
+          {/* Diamètre + Dents */}
           <div className="grid grid-cols-2 gap-2">
             <NumberField label="Diamètre (mm)" value={form.diametre} onChange={v => setField('diametre', v)} placeholder="ex: 6" />
-            <NumberField label="Dents (Z)" value={form.dents} onChange={v => setField('dents', v)} placeholder="ex: 2" />
+            <TextField label="Dents (Z)" value={form.dents} onChange={v => setField('dents', v)} placeholder="ex: 2 ou 2+2" />
           </div>
 
-          {/* Row 3: LC + LT */}
+          {/* LC + LT */}
           <div className="grid grid-cols-2 gap-2">
             <NumberField label="LC — Long. coupe (mm)" value={form.lc} onChange={v => setField('lc', v)} placeholder="ex: 20" />
             <NumberField label="LT — Long. totale (mm)" value={form.lt} onChange={v => setField('lt', v)} placeholder="ex: 60" />
@@ -207,7 +172,6 @@ export default function StockPage() {
                         <span className="text-[11px]" style={{ color: '#666' }}>Z={tool.dents}</span>
                         <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
                         <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
-                        <span className="text-[11px]" style={{ color: '#888' }}>{tool.matiere}</span>
                       </div>
                     </div>
                     <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
@@ -263,6 +227,24 @@ function NumberField({ label, value, onChange, placeholder }: {
       <input
         type="number"
         inputMode="decimal"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
+        style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
+      />
+    </div>
+  )
+}
+
+function TextField({ label, value, onChange, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string
+}) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>{label}</p>
+      <input
+        type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
