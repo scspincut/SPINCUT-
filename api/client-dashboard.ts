@@ -12,11 +12,13 @@ const STATE_LABEL: Record<string, string> = {
   paid:      'Payé',
 }
 
-async function fetchAbby(url: string, apiKey: string) {
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } })
-  const text = await r.text().catch(() => '')
-  if (!r.ok) return { _status: r.status, _error: text.slice(0, 200) }
-  try { return JSON.parse(text) } catch { return { _parseError: text.slice(0, 200) } }
+async function fetchAbbyPath(abby: any, path: string) {
+  try {
+    const result = await abby.getClient().get({ url: path, throwOnError: false })
+    return result?.data ?? {}
+  } catch (e: any) {
+    return { _status: e?.status ?? 'thrown', _error: String(e).slice(0, 200) }
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -33,7 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(500).json({ error: 'ABBY_API_KEY non configurée' })
 
   const abby = new Abby(apiKey)
-  const BASE = 'https://api.app-abby.com'
 
   // Debug collector
   const _debug: any = { clientName, contactId: null, orgId: null, probes: [] }
@@ -119,17 +120,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } catch (e) { _debug.probes.push({ src: 'sdk.invoice.retrieveInvoices', error: String(e) }) }
 
-    // ── Strategy B: raw GET all invoices, filter client-side ──
+    // ── Strategy B: list all invoices via SDK client (proper auth headers) ──
     if (invoices.length === 0) {
-      const urlsToTry = [
-        `${BASE}/v2/billing/invoice?page=1&limit=100`,
-        `${BASE}/v2/billing?type=invoice&page=1&limit=100`,
-        `${BASE}/v2/billing?billingType=invoice&page=1&limit=100`,
+      const pathsToTry = [
+        '/v2/billing/invoice?page=1&limit=100',
+        '/v2/billing?type=invoice&page=1&limit=100',
+        '/v2/billing?billingType=invoice&page=1&limit=100',
       ]
-      for (const url of urlsToTry) {
-        const data = await fetchAbby(url, apiKey)
+      for (const path of pathsToTry) {
+        const data = await fetchAbbyPath(abby, path)
         const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
-        _debug.probes.push({ src: url, status: data?._status, count: docs.length, sample: docs[0] ? JSON.stringify(docs[0]).slice(0, 150) : null })
+        _debug.probes.push({ src: path, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 8) : null })
         if (docs.length > 0) {
           processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
           if (invoices.length > 0) break
@@ -141,17 +142,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (invoices.length === 0) {
       const ids = [...new Set([orgId, contactId].filter(Boolean))] as string[]
       for (const id of ids) {
-        const urlsToTry = [
-          `${BASE}/v2/billing/invoice?contactId=${id}&page=1&limit=50`,
-          `${BASE}/v2/billing/invoice?customerId=${id}&page=1&limit=50`,
-          `${BASE}/v2/billing/invoice?organizationId=${id}&page=1&limit=50`,
-          `${BASE}/v2/billing?type=invoice&contactId=${id}&page=1&limit=50`,
-          `${BASE}/v2/billing?contactId=${id}&page=1&limit=50`,
+        const pathsToTry = [
+          `/v2/billing/invoice?contactId=${id}&page=1&limit=50`,
+          `/v2/billing/invoice?customerId=${id}&page=1&limit=50`,
+          `/v2/billing/invoice?organizationId=${id}&page=1&limit=50`,
+          `/v2/billing?type=invoice&contactId=${id}&page=1&limit=50`,
+          `/v2/billing?contactId=${id}&page=1&limit=50`,
         ]
-        for (const url of urlsToTry) {
-          const data = await fetchAbby(url, apiKey)
+        for (const path of pathsToTry) {
+          const data = await fetchAbbyPath(abby, path)
           const docs: any[] = data?.docs ?? data?.data ?? (Array.isArray(data) ? data : [])
-          _debug.probes.push({ src: url, status: data?._status, count: docs.length })
+          _debug.probes.push({ src: path, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 8) : null })
           if (docs.length > 0) {
             processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
             if (invoices.length > 0) break
@@ -165,15 +166,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (invoices.length === 0) {
       const ids = [...new Set([contactId, orgId].filter(Boolean))] as string[]
       for (const id of ids) {
-        const urlsToTry = [
-          `${BASE}/v2/billing/invoice/${id}`,
-          `${BASE}/v2/billing/invoice/${id}?page=1&limit=50`,
-          `${BASE}/v2/billing/estimate/${id}`,
+        const pathsToTry = [
+          `/v2/billing/invoice/${id}`,
+          `/v2/billing/invoice/${id}?page=1&limit=50`,
+          `/v2/billing/estimate/${id}`,
         ]
-        for (const url of urlsToTry) {
-          const data = await fetchAbby(url, apiKey)
+        for (const path of pathsToTry) {
+          const data = await fetchAbbyPath(abby, path)
           const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
-          _debug.probes.push({ src: url, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 10) : null })
+          _debug.probes.push({ src: path, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 10) : null })
           if (docs.length > 0) {
             processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
             if (invoices.length > 0) break
@@ -185,15 +186,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── Strategy E: bare /v2/billing list (all docs, filter client-side) ──
     if (invoices.length === 0) {
-      const urlsToTry = [
-        `${BASE}/v2/billing?page=1&limit=100`,
-        `${BASE}/v2/billing?page=1&limit=100&state=sent`,
-        `${BASE}/v2/billing?page=1&limit=100&state=finalized`,
+      const pathsToTry = [
+        '/v2/billing?page=1&limit=100',
+        '/v2/billing?page=1&limit=100&state=sent',
+        '/v2/billing?page=1&limit=100&state=finalized',
       ]
-      for (const url of urlsToTry) {
-        const data = await fetchAbby(url, apiKey)
+      for (const path of pathsToTry) {
+        const data = await fetchAbbyPath(abby, path)
         const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
-        _debug.probes.push({ src: url, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 10) : null })
+        _debug.probes.push({ src: path, status: data?._status, count: docs.length, rawKeys: data ? Object.keys(data).slice(0, 10) : null })
         if (docs.length > 0) {
           processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
           if (invoices.length > 0) break
