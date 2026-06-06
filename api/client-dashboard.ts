@@ -14,8 +14,9 @@ const STATE_LABEL: Record<string, string> = {
 
 async function fetchAbby(url: string, apiKey: string) {
   const r = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } })
-  if (!r.ok) return null
-  return r.json().catch(() => null)
+  const text = await r.text().catch(() => '')
+  if (!r.ok) return { _status: r.status, _error: text.slice(0, 200) }
+  try { return JSON.parse(text) } catch { return { _parseError: text.slice(0, 200) } }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -34,6 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const abby = new Abby(apiKey)
   const BASE = 'https://api.app-abby.com'
 
+  // Debug collector
+  const _debug: any = { clientName, contactId: null, orgId: null, probes: [] }
+
   // ── 1. Commandes en cours ─────────────────────────────────────────────────
   const orders: {
     id: string; number: string; state: string; label: string
@@ -48,7 +52,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const { data: bdc } = await abby.billing.getBillingById({ path: { billingId: id } })
           const b = bdc as any
           const state: string = b.state ?? 'unknown'
-          // Include purchase orders not yet fully settled
           if (['paid', 'cancelled', 'archived'].includes(state)) return
           orders.push({
             id,
@@ -75,66 +78,132 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }[] = []
 
   try {
-    // Find contact and its embedded org ID
-    const { data: contacts } = await abby.contact.retrieveContacts({
-      query: { search: clientName, limit: 5, page: 1 },
-    })
-    const contact = contacts?.docs?.[0]
-    const contactId = contact?.id
-    const embeddedOrgId = (contact as any)?.organization?.id
+    // Find contact + org IDs
+    let contactId: string | null = null
+    let orgId: string | null = null
 
-    // Also search orgs by name
-    let orgId = embeddedOrgId
+    try {
+      const { data: contacts } = await abby.contact.retrieveContacts({
+        query: { search: clientName, limit: 5, page: 1 },
+      })
+      const contact = contacts?.docs?.[0]
+      contactId = contact?.id ?? null
+      orgId = (contact as any)?.organization?.id ?? null
+      _debug.contactId = contactId
+      _debug.contactName = contact ? `${contact.firstname} ${contact.lastname}` : null
+      _debug.orgIdFromContact = orgId
+    } catch (e) { _debug.contactError = String(e) }
+
     if (!orgId) {
       try {
         const { data: orgs } = await abby.organization.retrieveOrganizations({
           query: { search: clientName, limit: 5, page: 1 },
         })
         orgId = orgs?.docs?.[0]?.id ?? null
-      } catch {}
+        _debug.orgId = orgId
+        _debug.orgName = (orgs?.docs?.[0] as any)?.name ?? null
+      } catch (e) { _debug.orgError = String(e) }
     }
 
-    // Try every plausible Abby endpoint for listing invoices.
-    // Real SDK paths: /v2/billing/invoice/{id} and /v2/billing/{id}
-    const idsToTry = [...new Set([orgId, contactId].filter(Boolean))] as string[]
-    const endpoints = idsToTry.flatMap(id => [
-      // Correct SDK base path (singular /v2/billing)
-      `${BASE}/v2/billing/invoice?contactId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billing/invoice?customerId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billing/invoice?organizationId=${id}&page=1&limit=50`,
-      // Listing all billing docs filtered by type
-      `${BASE}/v2/billing?billingType=invoice&contactId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billing?type=invoice&contactId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billing?contactId=${id}&page=1&limit=50`,
-      // Legacy/alternate paths
-      `${BASE}/v2/billings?type=invoice&contactId=${id}&page=1&limit=50`,
-      `${BASE}/v2/billings?contactId=${id}&page=1&limit=50`,
-    ])
-
-    for (const url of endpoints) {
-      const data = await fetchAbby(url, apiKey)
-      if (!data) continue
-      const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
-      if (!docs.length) continue
-      for (const inv of docs) {
-        // Show all unpaid invoices (finalized/sent/overdue = En attente + En retard)
-        const invState = inv.state ?? inv.billingState ?? ''
-        if (['paid', 'archived', 'cancelled', 'draft'].includes(invState)) continue
-        const billingType = inv.type ?? inv.billingType ?? ''
-        if (billingType && billingType !== 'invoice') continue
-        invoices.push({
-          id: inv.id,
-          number: inv.number ?? '',
-          state: inv.state ?? inv.billingState ?? 'finalized',
-          label: STATE_LABEL[inv.state ?? inv.billingState] ?? 'À régler',
-          amount: (inv.total?.amountWithTaxAfterDiscount ?? inv.amount ?? 0) / 100,
-          dueAt: inv.dueAt ?? inv.dueDate,
-        })
+    // ── Strategy A: SDK invoice service (if list method exists) ──
+    try {
+      const inv = abby as any
+      if (typeof inv.invoice?.retrieveInvoices === 'function') {
+        const r = await inv.invoice.retrieveInvoices({ query: { limit: 50, page: 1 } })
+        _debug.probes.push({ src: 'sdk.invoice.retrieveInvoices', keys: Object.keys(r?.data ?? {}) })
+        const docs: any[] = r?.data?.docs ?? r?.data?.data ?? (Array.isArray(r?.data) ? r.data : [])
+        _debug.probes[_debug.probes.length - 1].count = docs.length
+        processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
+      } else {
+        _debug.probes.push({ src: 'sdk.invoice.retrieveInvoices', skip: 'method not found' })
       }
-      if (invoices.length > 0) break
+    } catch (e) { _debug.probes.push({ src: 'sdk.invoice.retrieveInvoices', error: String(e) }) }
+
+    // ── Strategy B: raw GET all invoices, filter client-side ──
+    if (invoices.length === 0) {
+      const urlsToTry = [
+        `${BASE}/v2/billing/invoice?page=1&limit=100`,
+        `${BASE}/v2/billing?type=invoice&page=1&limit=100`,
+        `${BASE}/v2/billing?billingType=invoice&page=1&limit=100`,
+      ]
+      for (const url of urlsToTry) {
+        const data = await fetchAbby(url, apiKey)
+        const docs: any[] = data?.docs ?? data?.data ?? data?.billings ?? (Array.isArray(data) ? data : [])
+        _debug.probes.push({ src: url, status: data?._status, count: docs.length, sample: docs[0] ? JSON.stringify(docs[0]).slice(0, 150) : null })
+        if (docs.length > 0) {
+          processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
+          if (invoices.length > 0) break
+        }
+      }
     }
-  } catch {}
+
+    // ── Strategy C: filter by contact/org ID ──
+    if (invoices.length === 0) {
+      const ids = [...new Set([orgId, contactId].filter(Boolean))] as string[]
+      for (const id of ids) {
+        const urlsToTry = [
+          `${BASE}/v2/billing/invoice?contactId=${id}&page=1&limit=50`,
+          `${BASE}/v2/billing/invoice?customerId=${id}&page=1&limit=50`,
+          `${BASE}/v2/billing/invoice?organizationId=${id}&page=1&limit=50`,
+          `${BASE}/v2/billing?type=invoice&contactId=${id}&page=1&limit=50`,
+          `${BASE}/v2/billing?contactId=${id}&page=1&limit=50`,
+        ]
+        for (const url of urlsToTry) {
+          const data = await fetchAbby(url, apiKey)
+          const docs: any[] = data?.docs ?? data?.data ?? (Array.isArray(data) ? data : [])
+          _debug.probes.push({ src: url, status: data?._status, count: docs.length })
+          if (docs.length > 0) {
+            processInvoiceDocs(docs, clientName, contactId, orgId, invoices)
+            if (invoices.length > 0) break
+          }
+        }
+        if (invoices.length > 0) break
+      }
+    }
+
+  } catch (e) { _debug.outerError = String(e) }
 
   res.setHeader('Cache-Control', 'no-store')
-  return res.status(200).json({ orders, invoices })
+  return res.status(200).json({ orders, invoices, _debug })
+}
+
+function processInvoiceDocs(
+  docs: any[],
+  clientName: string,
+  contactId: string | null,
+  orgId: string | null,
+  invoices: { id: string; number: string; state: string; label: string; amount: number; dueAt?: number }[]
+) {
+  const STATE_LABEL: Record<string, string> = {
+    finalized: 'En attente', sent: 'Envoyée', overdue: 'En retard',
+  }
+  const clientUpper = clientName.toUpperCase()
+
+  for (const inv of docs) {
+    const invState: string = inv.state ?? inv.billingState ?? ''
+    if (['paid', 'archived', 'cancelled', 'draft'].includes(invState)) continue
+
+    const billingType: string = inv.type ?? inv.billingType ?? inv.documentType ?? ''
+    if (billingType && !['invoice', 'facture'].includes(billingType.toLowerCase())) continue
+
+    // Match by contact/org ID or by client name in any field
+    const invContactId: string = inv.contactId ?? inv.contact?.id ?? inv.customerId ?? ''
+    const invOrgId: string = inv.organizationId ?? inv.organization?.id ?? ''
+    const invName: string = JSON.stringify(inv).toUpperCase()
+    const matchById = (contactId && invContactId === contactId) || (orgId && (invContactId === orgId || invOrgId === orgId))
+    const matchByName = invName.includes(clientUpper)
+
+    if (!matchById && !matchByName) continue
+
+    if (invoices.find(i => i.id === inv.id)) continue
+
+    invoices.push({
+      id: inv.id,
+      number: inv.number ?? '',
+      state: invState,
+      label: STATE_LABEL[invState] ?? 'À régler',
+      amount: (inv.total?.amountWithTaxAfterDiscount ?? inv.total?.amountWithTax ?? inv.amount ?? 0) / 100,
+      dueAt: inv.dueAt ?? inv.dueDate ?? undefined,
+    })
+  }
 }
