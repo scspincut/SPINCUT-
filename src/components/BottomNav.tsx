@@ -44,7 +44,13 @@ export default function BottomNav({ cartCount = 0, cartTotal = 0 }: { cartCount?
       icon: (c: string) => (
         <svg width="22" height="22" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
           <rect x="4" y="2" width="16" height="20" rx="2"/>
-          <path d="M8 7h8M8 11h8M8 15h4"/>
+          <rect x="7" y="5" width="10" height="4" rx="1"/>
+          <rect x="7" y="12" width="2.5" height="2" rx="0.5"/>
+          <rect x="10.75" y="12" width="2.5" height="2" rx="0.5"/>
+          <rect x="14.5" y="12" width="2.5" height="2" rx="0.5"/>
+          <rect x="7" y="16" width="2.5" height="2" rx="0.5"/>
+          <rect x="10.75" y="16" width="2.5" height="2" rx="0.5"/>
+          <rect x="14.5" y="16" width="2.5" height="2" rx="0.5"/>
         </svg>
       ),
     },
