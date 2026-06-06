@@ -19,7 +19,6 @@ const TOOL_TYPES = [
   'Diamant',
   'Compression',
   'Ravageuse',
-  'HSS',
 ]
 
 const EMPTY_FORM = { type: '', diametre: '', lc: '', lt: '', dents: '' }
@@ -239,7 +238,7 @@ export default function StockPage() {
               className="w-full py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
               style={{ background: '#d4780f' }}
             >
-              Valider — ajouter au stock
+              Ajouter au stock
             </button>
           </div>
         </div>
