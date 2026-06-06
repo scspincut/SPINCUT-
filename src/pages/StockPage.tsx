@@ -35,6 +35,7 @@ export default function StockPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_stock2_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
 
+  const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
 
@@ -47,6 +48,12 @@ export default function StockPage() {
 
   const setField = (k: keyof typeof EMPTY_FORM, v: string) => {
     setForm(f => ({ ...f, [k]: v }))
+    setFormError('')
+  }
+
+  const closeForm = () => {
+    setShowForm(false)
+    setForm(EMPTY_FORM)
     setFormError('')
   }
 
@@ -70,8 +77,7 @@ export default function StockPage() {
       addedAt: Date.now(),
     }
     setTools(prev => [tool, ...prev])
-    setForm(EMPTY_FORM)
-    setFormError('')
+    closeForm()
   }
 
   const updateQty = (id: string, delta: number) =>
@@ -97,121 +103,147 @@ export default function StockPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-5">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
 
-        {/* Add form */}
-        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-3">
-          <p className="text-white font-bold text-sm">Ajouter un outil</p>
-
-          {/* Type d'outil — full width */}
-          <div>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Type d'outil</p>
-            <select
-              value={form.type}
-              onChange={e => setField('type', e.target.value)}
-              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-              style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', color: form.type ? 'white' : '#444' }}
-            >
-              <option value="" disabled>Choisir…</option>
-              {TOOL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-
-          {/* Diamètre + Dents */}
-          <div className="grid grid-cols-2 gap-2">
-            <NumberField label="Diamètre (mm)" value={form.diametre} onChange={v => setField('diametre', v)} placeholder="ex: 6" />
-            <TextField label="Dents (Z)" value={form.dents} onChange={v => setField('dents', v)} placeholder="ex: 2 ou 2+2" />
-          </div>
-
-          {/* LC + LT */}
-          <div className="grid grid-cols-2 gap-2">
-            <NumberField label="LC — Long. coupe (mm)" value={form.lc} onChange={v => setField('lc', v)} placeholder="ex: 20" />
-            <NumberField label="LT — Long. totale (mm)" value={form.lt} onChange={v => setField('lt', v)} placeholder="ex: 60" />
-          </div>
-
-          {formError && <p className="text-red-400 text-xs">{formError}</p>}
-
+        {/* Header row */}
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>
+            {tools.length === 0 ? 'Aucun outil' : `${tools.length} outil${tools.length > 1 ? 's' : ''}`}
+          </p>
           <button
-            onClick={handleAdd}
-            className="w-full py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white active:scale-95 transition-all"
             style={{ background: '#d4780f' }}
           >
-            Valider — ajouter au stock
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/>
+            </svg>
+            Ajouter un outil
           </button>
         </div>
 
         {/* Stock list */}
-        <div>
-          <p className="text-[10px] uppercase tracking-wider mb-3" style={{ color: '#555' }}>
-            {tools.length === 0 ? 'Aucun outil en stock' : `${tools.length} outil${tools.length > 1 ? 's' : ''} en stock`}
-          </p>
-
-          {tools.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
-                <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-white font-bold">Votre stock est vide</p>
-                <p className="text-[#555] text-sm mt-1">Remplissez le formulaire ci-dessus pour ajouter un outil</p>
-              </div>
+        {tools.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
+              <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {tools.map(tool => (
-                <div key={tool.id} className="rounded-2xl overflow-hidden" style={{ background: '#111', border: '1px solid #2a2a2a' }}>
-                  <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-bold text-sm">Ø {tool.diametre} mm</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-                        <span className="text-[11px]" style={{ color: '#666' }}>Z={tool.dents}</span>
-                        <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
-                        <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
-                      </div>
+            <div>
+              <p className="text-white font-bold">Votre stock est vide</p>
+              <p className="text-[#555] text-sm mt-1">Appuyez sur « Ajouter un outil » pour commencer</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {tools.map(tool => (
+              <div key={tool.id} className="rounded-2xl overflow-hidden" style={{ background: '#111', border: '1px solid #2a2a2a' }}>
+                <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-white font-bold text-sm">Ø {tool.diametre} mm</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
                     </div>
-                    <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div className="px-4 pb-3 flex items-center gap-3 border-t border-[#1a1a1a]">
-                    <span className="text-[11px] text-[#555]">Quantité :</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQty(tool.id, -1)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                      >−</button>
-                      <span
-                        className="w-10 text-center font-black text-lg"
-                        style={{ color: tool.qty === 0 ? '#f87171' : tool.qty <= 2 ? '#fbbf24' : '#4ade80' }}
-                      >{tool.qty}</span>
-                      <button
-                        onClick={() => updateQty(tool.id, +1)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                      >+</button>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                      <span className="text-[11px]" style={{ color: '#666' }}>Z={tool.dents}</span>
+                      <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
+                      <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
                     </div>
-                    {tool.qty === 0 && (
-                      <span className="ml-auto text-[10px] font-bold" style={{ color: '#f87171' }}>Rupture</span>
-                    )}
-                    {tool.qty > 0 && tool.qty <= 2 && (
-                      <span className="ml-auto text-[10px] font-bold" style={{ color: '#fbbf24' }}>Stock faible</span>
-                    )}
                   </div>
+                  <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                <div className="px-4 pb-3 flex items-center gap-3 border-t border-[#1a1a1a]">
+                  <span className="text-[11px] text-[#555]">Quantité :</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateQty(tool.id, -1)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
+                      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                    >−</button>
+                    <span
+                      className="w-10 text-center font-black text-lg"
+                      style={{ color: tool.qty === 0 ? '#f87171' : tool.qty <= 2 ? '#fbbf24' : '#4ade80' }}
+                    >{tool.qty}</span>
+                    <button
+                      onClick={() => updateQty(tool.id, +1)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
+                      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                    >+</button>
+                  </div>
+                  {tool.qty === 0 && (
+                    <span className="ml-auto text-[10px] font-bold" style={{ color: '#f87171' }}>Rupture</span>
+                  )}
+                  {tool.qty > 0 && tool.qty <= 2 && (
+                    <span className="ml-auto text-[10px] font-bold" style={{ color: '#fbbf24' }}>Stock faible</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
+
+      {/* Add tool bottom sheet */}
+      {showForm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.8)' }}
+          onClick={closeForm}
+        >
+          <div
+            className="w-full max-w-lg rounded-t-2xl p-5 space-y-3"
+            style={{ background: '#161616', border: '1px solid #2a2a2a' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-white font-bold text-sm">Ajouter un outil</p>
+              <button onClick={closeForm} className="text-[#555] hover:text-white text-2xl leading-none">×</button>
+            </div>
+
+            {/* Type d'outil */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Type d'outil</p>
+              <select
+                value={form.type}
+                onChange={e => setField('type', e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', color: form.type ? 'white' : '#444' }}
+              >
+                <option value="" disabled>Choisir…</option>
+                {TOOL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+
+            {/* Diamètre + Dents */}
+            <div className="grid grid-cols-2 gap-2">
+              <NumberField label="Diamètre (mm)" value={form.diametre} onChange={v => setField('diametre', v)} placeholder="ex: 6" />
+              <TextField label="Dents (Z)" value={form.dents} onChange={v => setField('dents', v)} placeholder="ex: 2 ou 2+2" />
+            </div>
+
+            {/* LC + LT */}
+            <div className="grid grid-cols-2 gap-2">
+              <NumberField label="LC — Long. coupe (mm)" value={form.lc} onChange={v => setField('lc', v)} placeholder="ex: 20" />
+              <NumberField label="LT — Long. totale (mm)" value={form.lt} onChange={v => setField('lt', v)} placeholder="ex: 60" />
+            </div>
+
+            {formError && <p className="text-red-400 text-xs">{formError}</p>}
+
+            <button
+              onClick={handleAdd}
+              className="w-full py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
+              style={{ background: '#d4780f' }}
+            >
+              Valider — ajouter au stock
+            </button>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
