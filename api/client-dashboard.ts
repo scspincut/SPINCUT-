@@ -12,19 +12,12 @@ const STATE_LABEL: Record<string, string> = {
   paid:      'Payé',
 }
 
-const INVOICE_STATE_LABEL: Record<string, string> = {
-  finalized: 'En attente',
-  sent:      'Envoyée',
-  overdue:   'En retard',
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { clientName, orderIds, invoiceIds } = req.body as {
+  const { clientName, orderIds } = req.body as {
     clientName: string
     orderIds?: string[]
-    invoiceIds?: string[]
   }
 
   if (!clientName) return res.status(400).json({ error: 'clientName requis' })
@@ -34,7 +27,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const abby = new Abby(apiKey)
 
-  // ── 1. Commandes en cours ─────────────────────────────────────────────────
   const orders: {
     id: string; number: string; state: string; label: string
     total: number; date: number; items: { ref: string; designation: string; qty: number }[]
@@ -67,34 +59,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     )
   }
 
-  // ── 2. Factures à régler (par IDs fournis) ────────────────────────────────
-  const invoices: {
-    id: string; number: string; state: string; label: string
-    amount: number; dueAt?: number
-  }[] = []
-
-  if (invoiceIds && invoiceIds.length > 0) {
-    const uniqueInvIds = [...new Set(invoiceIds)].slice(0, 20)
-    await Promise.allSettled(
-      uniqueInvIds.map(async id => {
-        try {
-          const { data: inv } = await abby.invoice.getInvoice({ path: { invoiceId: id } })
-          const i = inv as any
-          const state: string = i.state ?? 'unknown'
-          if (['paid', 'cancelled', 'archived', 'draft'].includes(state)) return
-          invoices.push({
-            id,
-            number: i.number ?? '',
-            state,
-            label: INVOICE_STATE_LABEL[state] ?? 'À régler',
-            amount: (i.total?.amountWithTaxAfterDiscount ?? i.total?.amountWithTax ?? i.amount ?? 0) / 100,
-            dueAt: i.dueAt ?? i.dueDate ?? undefined,
-          })
-        } catch {}
-      })
-    )
-  }
-
   res.setHeader('Cache-Control', 'no-store')
-  return res.status(200).json({ orders, invoices })
+  return res.status(200).json({ orders })
 }
