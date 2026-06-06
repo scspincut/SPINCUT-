@@ -44,7 +44,16 @@ export default function AdminDashboardPage() {
   const [invoiceSaved, setInvoiceSaved] = useState(false)
 
   const saveInvoiceIds = () => {
-    const ids = invoiceInput.split(/[\n,\s]+/).map(s => s.trim()).filter(Boolean)
+    // Accept raw IDs or full Abby URLs like https://app.abby.fr/facturation/factures/019abc...
+    const ids = invoiceInput
+      .split(/[\n,]+/)
+      .map(s => {
+        const trimmed = s.trim()
+        // Extract UUID from URL if it's an Abby URL
+        const match = trimmed.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)
+        return match ? match[0] : trimmed
+      })
+      .filter(Boolean)
     const updated = codes.map(c => c.id === invoiceCodeId ? { ...c, invoiceIds: ids } : c)
     saveAccessCodes(updated)
     setCodes(updated)
@@ -461,7 +470,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
           <h2 className="text-base font-semibold text-white mb-4">Factures Abby par client</h2>
           <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>
-            Colle les IDs de factures Abby (un par ligne ou séparés par virgule). Le client les verra dans l'onglet Factures.
+            Dans Abby, clique sur chaque facture du client → copie l'URL → colle ici (un par ligne). Tu peux coller l'URL complète ou juste l'ID.
           </p>
           <div className="flex flex-col gap-3">
             <select
@@ -487,7 +496,7 @@ export default function AdminDashboardPage() {
                 <textarea
                   value={invoiceInput}
                   onChange={e => { setInvoiceInput(e.target.value); setInvoiceSaved(false) }}
-                  placeholder={'ID1\nID2\nID3'}
+                  placeholder={'ID ou URL Abby, un par ligne:\n019abc...\nhttps://app.abby.fr/facturation/factures/019def...'}
                   rows={4}
                   className="w-full px-3 py-2 rounded-lg text-xs font-mono text-white resize-none"
                   style={{ background: '#0d0d0d', border: '1px solid #2a2a2a', outline: 'none' }}
