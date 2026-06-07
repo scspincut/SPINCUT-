@@ -55,6 +55,15 @@ interface CatalogProduct {
   prix: number; stock: number; pm: boolean; category: string; designation: string
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  classique:   'Carbure monobloc',
+  compression: 'Compression',
+  diamant:     'Diamant',
+  alu:         'Aluminium',
+  ravageuse:   'Ravageuse',
+  gravure:     'Gravure',
+}
+
 function parseDents(s: string): number {
   const n = parseInt(s, 10)
   return isNaN(n) ? 99 : n
@@ -608,6 +617,11 @@ export default function CalculatorPage() {
                       )}
                     </div>
                     <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
+                    {p.category && CATEGORY_LABELS[p.category] && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full w-fit" style={{ background: '#2a1400', color: '#d4780f' }}>
+                        {CATEGORY_LABELS[p.category]}
+                      </span>
+                    )}
                     <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
                     <div>
                       {p.stock === 0
