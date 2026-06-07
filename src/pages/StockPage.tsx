@@ -44,6 +44,7 @@ export default function StockPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [alertTool, setAlertTool] = useState<StockTool | null>(null)
+  const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isTestMode()) {
@@ -190,91 +191,126 @@ export default function StockPage() {
           <div className="space-y-3">
             {tools.map(tool => {
               const atAlert = tool.seuil !== null && tool.qty <= tool.seuil
-              const borderColor = tool.qty === 0 ? '#4a1010' : atAlert ? '#3a2a00' : '#2a2a2a'
-              const qtyColor = tool.qty === 0 ? '#f87171' : atAlert ? '#fbbf24' : '#4ade80'
+              const isEmpty = tool.qty === 0
+              const alertOpen = expandedAlertId === tool.id
+              const borderColor = isEmpty ? '#4a1010' : atAlert ? '#b45309' : '#1e1e1e'
+              const qtyColor   = isEmpty ? '#f87171' : atAlert ? '#fbbf24' : '#4ade80'
+              const hasAlert   = tool.seuil !== null || tool.orderQty !== null
               return (
-                <div key={tool.id} className="rounded-2xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
+                <div key={tool.id} className="rounded-2xl overflow-hidden transition-all" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
 
-                  {/* Header */}
-                  <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
+                  {/* ── Header ─────────────────────────────────────── */}
+                  <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-bold text-sm">Ø {tool.diametre} mm</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
-                        {atAlert && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#3a2a00', color: '#fbbf24' }}>⚠ Seuil atteint</span>
-                        )}
+                        <span className="text-white font-bold text-base">Ø {tool.diametre} mm</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
                       </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-                        <span className="text-[11px]" style={{ color: '#666' }}>Z={tool.dents}</span>
-                        <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
-                        <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
-                      </div>
-                      {tool.notes && (
-                        <p className="text-[11px] mt-1 italic" style={{ color: '#555' }}>{tool.notes}</p>
-                      )}
+                      <p className="text-xs mt-1" style={{ color: '#555' }}>
+                        Z={tool.dents} · LC={tool.lc} mm · LT={tool.lt} mm
+                      </p>
+                      {tool.notes && <p className="text-xs mt-0.5 italic" style={{ color: '#444' }}>{tool.notes}</p>}
                     </div>
-                    <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
+
+                    {/* Actions: cloche + corbeille */}
+                    <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                      <button
+                        onClick={() => setExpandedAlertId(alertOpen ? null : tool.id)}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                        style={{ background: alertOpen || hasAlert ? '#2a1a00' : '#1a1a1a', border: `1px solid ${alertOpen || hasAlert ? '#d4780f44' : '#2a2a2a'}` }}
+                        title="Configurer alerte"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke={alertOpen || hasAlert ? '#d4780f' : '#555'} strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => remove(tool.id)}
+                        className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                      >
+                        <svg className="w-3.5 h-3.5 text-[#444] hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Quantité */}
-                  <div className="px-4 py-2.5 flex items-center gap-3 border-t border-[#1a1a1a]">
-                    <span className="text-[11px] text-[#555] flex-shrink-0">Quantité :</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => updateQty(tool.id, -1)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  {/* ── Quantité ─────────────────────────────────────── */}
+                  <div className="px-4 py-3 border-t border-[#1a1a1a] flex items-center justify-between">
+                    <span className="text-xs font-medium" style={{ color: '#555' }}>Quantité en stock</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateQty(tool.id, -1)}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg text-white active:scale-90 transition-transform"
+                        style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
                       >−</button>
-                      <span className="w-10 text-center font-black text-lg" style={{ color: qtyColor }}>{tool.qty}</span>
-                      <button onClick={() => updateQty(tool.id, +1)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                      <span className="w-12 text-center font-black text-2xl tabular-nums" style={{ color: qtyColor }}>{tool.qty}</span>
+                      <button
+                        onClick={() => updateQty(tool.id, +1)}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg text-white active:scale-90 transition-transform"
+                        style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
                       >+</button>
                     </div>
                   </div>
 
-                  {/* Seuil critique + qté à livrer */}
-                  <div className="px-4 pb-3 flex items-center gap-3 border-t border-[#1a1a1a]">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="#555" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
-                    <div className="flex items-center gap-1.5 flex-1">
-                      <span className="text-[10px] text-[#555] flex-shrink-0">Alerte si ≤</span>
-                      <input
-                        type="number" min={0}
-                        value={tool.seuil ?? ''}
-                        onChange={e => setSeuil(tool.id, e.target.value)}
-                        placeholder="—"
-                        className="w-10 text-center text-xs font-bold rounded-lg py-1 outline-none"
-                        style={{ background: '#161616', color: '#d4780f', border: '1px solid #2a2a2a' }}
-                      />
-                      <span className="text-[10px] text-[#555] flex-shrink-0 ml-1">Livrer</span>
-                      <input
-                        type="number" min={1}
-                        value={tool.orderQty ?? ''}
-                        onChange={e => setOrderQty(tool.id, e.target.value)}
-                        placeholder="—"
-                        className="w-10 text-center text-xs font-bold rounded-lg py-1 outline-none"
-                        style={{ background: '#161616', color: '#d4780f', border: '1px solid #2a2a2a' }}
-                      />
-                      <span className="text-[10px] text-[#555] flex-shrink-0">unité(s)</span>
+                  {/* ── Config alerte (collapsible) ───────────────────── */}
+                  {alertOpen && (
+                    <div className="px-4 py-4 border-t border-[#1e1e1e] grid grid-cols-2 gap-4" style={{ background: '#0e0e0e' }}>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#555' }}>Alerter si stock ≤</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number" min={0}
+                            value={tool.seuil ?? ''}
+                            onChange={e => setSeuil(tool.id, e.target.value)}
+                            placeholder="—"
+                            className="w-16 text-center font-black text-xl rounded-xl py-2 outline-none"
+                            style={{ background: '#161616', color: '#d4780f', border: '1px solid #2a2a2a' }}
+                          />
+                          <span className="text-xs" style={{ color: '#555' }}>unité(s)</span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#555' }}>Quantité à livrer</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number" min={1}
+                            value={tool.orderQty ?? ''}
+                            onChange={e => setOrderQty(tool.id, e.target.value)}
+                            placeholder="—"
+                            className="w-16 text-center font-black text-xl rounded-xl py-2 outline-none"
+                            style={{ background: '#161616', color: '#4ade80', border: '1px solid #2a2a2a' }}
+                          />
+                          <span className="text-xs" style={{ color: '#555' }}>unité(s)</span>
+                        </div>
+                      </div>
                     </div>
-                    {atAlert && (
+                  )}
+
+                  {/* ── Bannière alerte critique ──────────────────────── */}
+                  {atAlert && (
+                    <div className="px-4 py-3 border-t flex items-center justify-between gap-3" style={{ background: '#1a1000', borderColor: '#b45309' }}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base flex-shrink-0">⚠️</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold" style={{ color: '#fbbf24' }}>Seuil atteint</p>
+                          <p className="text-[11px] truncate" style={{ color: '#888' }}>
+                            {tool.orderQty ? `${tool.orderQty} unité${tool.orderQty > 1 ? 's' : ''} à livrer` : 'Définir une quantité de livraison'}
+                          </p>
+                        </div>
+                      </div>
                       <a
                         href={buildWhatsAppMsg(tool)}
                         target="_blank" rel="noopener noreferrer"
-                        className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg"
+                        className="flex-shrink-0 flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition-transform"
                         style={{ background: '#0d2a0d', color: '#4ade80', border: '1px solid #1a4a1a' }}
                       >
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                        Alerter
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Demander livraison
                       </a>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
