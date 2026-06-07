@@ -463,12 +463,6 @@ export default function CalculatorPage() {
               placeholder={operation === 'decoupe' || !operation ? 'Ex: 18' : 'Ex: 8'}
               hint="pour calcul N passes"
             />
-            {!savedMachine.nMax && (
-              <NumberField label="Vitesse broche max — n max (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" hint="facultatif — configurable dans Profil" />
-            )}
-            {!savedMachine.vfMax && (
-              <NumberField label="Vitesse d'avance max — Vf max (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" hint="facultatif — configurable dans Profil" />
-            )}
           </div>
         </div>
 
