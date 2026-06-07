@@ -172,9 +172,7 @@ export function calculate(params: CalculatorParams): CalcResult {
   if (aluMaterials.includes(material)) {
     alerts.push({ type: 'warning', message: "Aluminium : microlubrification obligatoire — sans lubrifiant, l'outil colle et casse immédiatement." });
   }
-  if (toolType === 'hss' && (material === 'mdf' || material === 'melamine')) {
-    alerts.push({ type: 'danger', message: 'Fraise HSS sur MDF/mélaminé : usure en quelques secondes. Utiliser un outil carbure.' });
-  }
+
 
   const vcMaxCoated = vcMax * coatingMult;
 

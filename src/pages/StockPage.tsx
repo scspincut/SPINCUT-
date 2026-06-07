@@ -93,7 +93,8 @@ export default function StockPage() {
         const newQty = Math.max(0, t.qty + delta)
         // Déclencher alerte si seuil atteint après une baisse
         if (delta < 0 && t.seuil !== null && newQty <= t.seuil) {
-          setTimeout(() => setAlertTool({ ...t, qty: newQty }), 50)
+          const triggered = { ...t, qty: newQty }
+          setTimeout(() => { setAlertTool(triggered); sendEmailAlert(triggered) }, 50)
         }
         return { ...t, qty: newQty }
       })
@@ -109,6 +110,20 @@ export default function StockPage() {
 
   const remove = (id: string) =>
     setTools(prev => prev.filter(t => t.id !== id))
+
+  const sendEmailAlert = (tool: StockTool) => {
+    if (isTestMode()) return
+    fetch('/api/stock-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clientName,
+        tool: { type: tool.type, diametre: tool.diametre, lc: tool.lc, lt: tool.lt, dents: tool.dents, notes: tool.notes },
+        qty: tool.qty,
+        orderQty: tool.orderQty ?? 1,
+      }),
+    }).catch(() => {})
+  }
 
   const buildWhatsAppMsg = (tool: StockTool) => {
     const lines = [

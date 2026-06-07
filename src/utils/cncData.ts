@@ -7,7 +7,6 @@ export const TOOL_TYPE_LABELS: Record<ToolType, string> = {
   diamant_coupe:    'Coupe Diamant (1+1 / 2+2 / 3+3)',
   compression:      'Fraise Compression (1+1 / 2+2 / 3+3)',
   ravageuse:        'Ravageuse (ébauche uniquement)',
-  hss:              'HSS / ARS',
 };
 
 export const MATERIAL_LABELS: Record<Material, string> = {
@@ -69,7 +68,6 @@ export const TOOL_MATERIALS: Record<ToolType, Material[]> = {
   diamant_coupe: ['bois_tendre','bois_dur','bois_exotique','mdf','ctp','melamine','panneau_stratifie'],
   compression:   ['bois_tendre','bois_dur','mdf','ctp','melamine'],
   ravageuse:     ['bois_tendre','bois_dur','mdf','ctp','alu_2017','alu_6060'],
-  hss:           ['bois_tendre','bois_dur','ctp','mdf','alu_2017'],
 };
 
 // ─── Diameter steps per tool (from reference tables) ─────────────────────────
@@ -79,7 +77,6 @@ export const DIAMETER_STEPS: Record<ToolType, number[]> = {
   diamant_coupe:    [3, 6, 8, 10, 12, 16, 20],
   compression:      [3, 6, 8, 10, 12, 16, 20],
   ravageuse:        [6, 8, 10, 12, 16, 20],
-  hss:              [3, 6, 8, 10, 12],
 };
 
 export const DIAMETER_OPTIONS = [2, 3, 4, 6, 8, 10, 12, 16, 20];
@@ -135,14 +132,6 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     alu_2017:    [100, 220],
     alu_6060:    [150, 280],
   },
-  // HSS — rare en CNC pro
-  hss: {
-    bois_tendre: [80,  130],
-    bois_dur:    [60,  100],
-    ctp:         [60,  100],
-    mdf:         [50,   90],
-    alu_2017:    [60,  100],
-  },
 };
 
 // ─── fz tables (mm/dent) — indexed by DIAMETER_STEPS[toolType] ───────────────
@@ -192,14 +181,6 @@ export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
     ctp:         [0.115, 0.160, 0.195, 0.230, 0.285, 0.340],
     alu_2017:    [0.035, 0.065, 0.075, 0.095, 0.125, 0.155],
     alu_6060:    [0.048, 0.085, 0.095, 0.115, 0.148, 0.178],
-  },
-  // HSS — steps [3,6,8,10,12]
-  hss: {
-    bois_tendre: [0.025, 0.050, 0.072, 0.095, 0.120],
-    bois_dur:    [0.018, 0.035, 0.052, 0.070, 0.092],
-    ctp:         [0.022, 0.045, 0.065, 0.085, 0.108],
-    mdf:         [0.018, 0.035, 0.052, 0.068, 0.088],
-    alu_2017:    [0.010, 0.018, 0.025, 0.032, 0.040],
   },
 };
 
@@ -349,12 +330,6 @@ export const CONSEILS_OUTIL: Record<ToolType, string[]> = {
     'Toujours passe de finition outil lisse après (stries résiduelles).',
     "Sur alu : arrosage obligatoire, ae réduit à 0.25×D.",
   ],
-  hss: [
-    "Vc max absolument respectée → outil fond si dépassée.",
-    'Jamais à sec sur alu → colle immédiatement.',
-    'Uniquement bois tendre en petites séries.',
-    'Carbure bien plus rentable en production CNC.',
-  ],
 };
 
 // ─── Conseils par matière ─────────────────────────────────────────────────────
@@ -373,14 +348,13 @@ export const CONSEILS_MATIERE: Record<Material, string[]> = {
   bois_exotique: [
     'ASPIRATION OBLIGATOIRE — poussières toxiques (ipé, wengé).',
     'Carbure grain fin ou diamant UNIQUEMENT.',
-    'HSS inutilisable (usure en quelques secondes).',
     'Chip load 1% de D.',
   ],
   mdf: [
     'ASPIRATION PUISSANTE OBLIGATOIRE (formaldéhyde, silice).',
     'Masque FFP2/FFP3 minimum obligatoire.',
     'Outil usé très vite → changer fréquemment.',
-    'Fraise carbure ou diamant — le HSS est inutilisable.',
+    'Fraise carbure ou diamant uniquement.',
   ],
   ctp: [
     'Fraise compression = solution idéale pour les deux faces nettes.',
@@ -398,7 +372,7 @@ export const CONSEILS_MATIERE: Record<Material, string[]> = {
     'Carbure monobloc possible mais durée de vie très courte.',
     'fz prudent, Vc modérée vs mélaminé standard.',
     'Trespa / Formica : couper en découpe nette, pas de stries.',
-    'Jamais de fraise compression ou HSS.',
+    'Jamais de fraise compression.',
   ],
   alu_2017: [
     'MICROLUBRIFICATION ou arrosage continu OBLIGATOIRE.',
@@ -564,10 +538,5 @@ export const TOOL_GUIDE: Record<ToolType, ToolGuide> = {
     matieres_optimales: 'Bois tendre/dur en ébauche rapide, MDF ébauche, CTP, Alu 6060/2017',
     eviter: 'Finition impossible (stries), plastiques, HPL',
     conseil: 'Toujours passe de finition outil lisse après. ap 0.6×D possible. Sur alu : arrosage + ae réduit.',
-  },
-  hss: {
-    matieres_optimales: 'Bois tendre petites séries uniquement',
-    eviter: 'MDF (usure immédiate), mélaminé, bois exotiques, aluminium sans lubrification, HPL',
-    conseil: 'Carbure 10× plus rentable en production CNC. Réserver au bois tendre en série très courte.',
   },
 };

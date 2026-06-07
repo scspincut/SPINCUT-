@@ -1,4 +1,4 @@
-export type ToolType = 'carbure_monobloc' | 'diamant_coupe' | 'compression' | 'ravageuse' | 'hss';
+export type ToolType = 'carbure_monobloc' | 'diamant_coupe' | 'compression' | 'ravageuse';
 export type ToolNotation = '1+1' | '2+2' | '3+3';
 export type Material =
   | 'bois_tendre' | 'bois_dur' | 'bois_exotique'

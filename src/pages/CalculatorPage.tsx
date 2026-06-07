@@ -247,7 +247,6 @@ export default function CalculatorPage() {
 
   const availDiams = toolType ? DIAMETER_OPTIONS.filter(d => {
     if (toolType === 'ravageuse') return d >= 6;
-    if (toolType === 'hss') return d >= 3 && d <= 12;
     if (toolType === 'diamant_coupe' || toolType === 'compression') return d >= 3;
     return true;
   }) : [];
@@ -779,7 +778,7 @@ export default function CalculatorPage() {
                 const cats = [...new Set(MATERIAL_GUIDE.map(m => m.cat))]
                 const TOOL_SHORT: Record<string, string> = {
                   carbure_monobloc: 'Carbure', diamant_coupe: 'Diamant',
-                  compression: 'Compression', ravageuse: 'Ravageuse', hss: 'HSS',
+                  compression: 'Compression', ravageuse: 'Ravageuse',
                 }
                 return (
                   <div className="space-y-4">
