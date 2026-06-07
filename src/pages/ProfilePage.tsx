@@ -30,7 +30,7 @@ export default function ProfilePage() {
   const clientName = clientInfo?.clientName ?? null
 
   const machineKey = `spincut_machine_${clientCode ?? 'guest'}`
-  const [machineType, setMachineTypeState] = useState<string>(() => {
+  const [machineType, ] = useState<string>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_machine_${clientCode ?? 'guest'}`) ?? '{}').type ?? '' } catch { return '' }
   })
   const [machineNMax, setMachineNMax] = useState<string>(() => {
@@ -297,64 +297,43 @@ export default function ProfilePage() {
         </div>
 
         {/* Ma machine */}
-        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-4">
-          <p className="text-white font-bold text-sm">Ma machine CNC</p>
-          <p className="text-xs" style={{ color: '#555' }}>Ces paramètres pré-remplissent automatiquement le calculateur.</p>
-
-          {/* Type de machine */}
+        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: '#555' }}>Type de machine</p>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { id: 'hobby',           label: 'Hobby / Loisir',      sub: 'Shapeoko, X-Carve…' },
-                { id: 'semi_pro',        label: 'Semi-Pro',             sub: 'Stepcraft, Sorotec…' },
-                { id: 'pro_portique',    label: 'Pro Portique',         sub: 'SCM, Biesse, Homag…' },
-                { id: 'centre_usinage',  label: "Centre d'usinage",     sub: 'Fanuc, Haas, DMG…' },
-              ] as const).map(m => (
-                <button
-                  key={m.id}
-                  onClick={() => { setMachineTypeState(m.id); saveMachine(m.id, machineNMax, machineVfMax) }}
-                  className="text-left px-3 py-2.5 rounded-xl transition-all active:scale-95"
-                  style={{
-                    background: machineType === m.id ? '#2a1400' : '#1e1e1e',
-                    border: `1.5px solid ${machineType === m.id ? '#d4780f' : '#2a2a2a'}`,
-                  }}
-                >
-                  <p className="text-xs font-bold" style={{ color: machineType === m.id ? '#d4780f' : '#aaa' }}>{m.label}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{m.sub}</p>
-                </button>
-              ))}
-            </div>
+            <p className="text-white font-bold text-sm">Ma machine CNC</p>
+            <p className="text-xs mt-0.5" style={{ color: '#555' }}>Pré-remplit automatiquement le calculateur.</p>
           </div>
-
-          {/* Limites machine */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>n max (tr/min)</p>
-              <input
-                type="number"
-                value={machineNMax}
-                onChange={e => { setMachineNMax(e.target.value); saveMachine(machineType, e.target.value, machineVfMax) }}
-                placeholder="Ex: 24000"
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
-              />
+              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Vitesse broche max</p>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={machineNMax}
+                  onChange={e => { setMachineNMax(e.target.value); saveMachine(machineType, e.target.value, machineVfMax) }}
+                  placeholder="24000"
+                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444] pr-16"
+                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555' }}>tr/min</span>
+              </div>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Vf max (mm/min)</p>
-              <input
-                type="number"
-                value={machineVfMax}
-                onChange={e => { setMachineVfMax(e.target.value); saveMachine(machineType, machineNMax, e.target.value) }}
-                placeholder="Ex: 6000"
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
-              />
+              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Vitesse avance max</p>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={machineVfMax}
+                  onChange={e => { setMachineVfMax(e.target.value); saveMachine(machineType, machineNMax, e.target.value) }}
+                  placeholder="6000"
+                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444] pr-16"
+                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555' }}>mm/min</span>
+              </div>
             </div>
           </div>
-
-          {(machineType || machineNMax || machineVfMax) && (
-            <p className="text-[10px] text-center" style={{ color: '#2a8a2a' }}>✓ Paramètres machine enregistrés</p>
+          {(machineNMax || machineVfMax) && (
+            <p className="text-[10px] text-center" style={{ color: '#2a8a2a' }}>✓ Enregistré — le calculateur utilise ces valeurs</p>
           )}
         </div>
 
