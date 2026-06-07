@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useClientAuth, getClientCode, isTestMode } from '../hooks/useAuth'
+import { useClientAuth, getClientCode, getAccessCodes, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
 import TestModeBanner from '../components/TestModeBanner'
 
@@ -13,6 +13,8 @@ interface StockTool {
   dents: string
   notes: string
   qty: number
+  seuil: number | null
+  orderQty: number | null
   addedAt: number
 }
 
@@ -30,6 +32,8 @@ export default function StockPage() {
   const { isAuthenticated, logout } = useClientAuth()
 
   const clientCode = getClientCode()
+  const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
+  const clientName = clientInfo?.clientName ?? clientCode ?? 'Client'
   const stockKey = `spincut_stock2_${clientCode ?? 'guest'}`
 
   const [tools, setTools] = useState<StockTool[]>(() => {
@@ -39,6 +43,7 @@ export default function StockPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
+  const [alertTool, setAlertTool] = useState<StockTool | null>(null)
 
   useEffect(() => {
     if (!isTestMode()) {
@@ -71,24 +76,52 @@ export default function StockPage() {
     if (!form.dents.trim()) return setFormError('Nombre de dents requis')
     const tool: StockTool = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      type: form.type,
-      diametre: d,
-      lc,
-      lt,
+      type: form.type, diametre: d, lc, lt,
       dents: form.dents.trim(),
       notes: form.notes.trim(),
-      qty: 0,
+      qty: 0, seuil: null, orderQty: null,
       addedAt: Date.now(),
     }
     setTools(prev => [tool, ...prev])
     closeForm()
   }
 
-  const updateQty = (id: string, delta: number) =>
-    setTools(prev => prev.map(t => t.id === id ? { ...t, qty: Math.max(0, t.qty + delta) } : t))
+  const updateQty = (id: string, delta: number) => {
+    setTools(prev => {
+      const updated = prev.map(t => {
+        if (t.id !== id) return t
+        const newQty = Math.max(0, t.qty + delta)
+        // Déclencher alerte si seuil atteint après une baisse
+        if (delta < 0 && t.seuil !== null && newQty <= t.seuil) {
+          setTimeout(() => setAlertTool({ ...t, qty: newQty }), 50)
+        }
+        return { ...t, qty: newQty }
+      })
+      return updated
+    })
+  }
+
+  const setSeuil = (id: string, val: string) =>
+    setTools(prev => prev.map(t => t.id === id ? { ...t, seuil: val === '' ? null : Math.max(0, parseInt(val) || 0) } : t))
+
+  const setOrderQty = (id: string, val: string) =>
+    setTools(prev => prev.map(t => t.id === id ? { ...t, orderQty: val === '' ? null : Math.max(1, parseInt(val) || 1) } : t))
 
   const remove = (id: string) =>
     setTools(prev => prev.filter(t => t.id !== id))
+
+  const buildWhatsAppMsg = (tool: StockTool) => {
+    const lines = [
+      `🔔 Alerte stock — ${clientName}`,
+      ``,
+      `Outil : ${tool.type} Ø${tool.diametre}mm · Z=${tool.dents} · LC=${tool.lc}mm · LT=${tool.lt}mm`,
+      tool.notes ? `Note : ${tool.notes}` : '',
+      ``,
+      `Quantité restante : ${tool.qty}`,
+      `Quantité à livrer : ${tool.orderQty ?? '?'}`,
+    ].filter(l => l !== null).join('\n')
+    return `https://wa.me/33767739561?text=${encodeURIComponent(lines)}`
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -110,7 +143,6 @@ export default function StockPage() {
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
 
-        {/* Header row */}
         <div className="flex items-center justify-between">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>
             {tools.length === 0 ? 'Aucun outil' : `${tools.length} outil${tools.length > 1 ? 's' : ''}`}
@@ -127,7 +159,6 @@ export default function StockPage() {
           </button>
         </div>
 
-        {/* Stock list */}
         {tools.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
@@ -142,57 +173,96 @@ export default function StockPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {tools.map(tool => (
-              <div key={tool.id} className="rounded-2xl overflow-hidden" style={{ background: '#111', border: '1px solid #2a2a2a' }}>
-                <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-white font-bold text-sm">Ø {tool.diametre} mm</span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
+            {tools.map(tool => {
+              const atAlert = tool.seuil !== null && tool.qty <= tool.seuil
+              const borderColor = tool.qty === 0 ? '#4a1010' : atAlert ? '#3a2a00' : '#2a2a2a'
+              const qtyColor = tool.qty === 0 ? '#f87171' : atAlert ? '#fbbf24' : '#4ade80'
+              return (
+                <div key={tool.id} className="rounded-2xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
+
+                  {/* Header */}
+                  <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-white font-bold text-sm">Ø {tool.diametre} mm</span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
+                        {atAlert && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#3a2a00', color: '#fbbf24' }}>⚠ Seuil atteint</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                        <span className="text-[11px]" style={{ color: '#666' }}>Z={tool.dents}</span>
+                        <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
+                        <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
+                      </div>
+                      {tool.notes && (
+                        <p className="text-[11px] mt-1 italic" style={{ color: '#555' }}>{tool.notes}</p>
+                      )}
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-                      <span className="text-[11px]" style={{ color: '#666' }}>Z={tool.dents}</span>
-                      <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
-                      <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
+                    <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Quantité */}
+                  <div className="px-4 py-2.5 flex items-center gap-3 border-t border-[#1a1a1a]">
+                    <span className="text-[11px] text-[#555] flex-shrink-0">Quantité :</span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => updateQty(tool.id, -1)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
+                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                      >−</button>
+                      <span className="w-10 text-center font-black text-lg" style={{ color: qtyColor }}>{tool.qty}</span>
+                      <button onClick={() => updateQty(tool.id, +1)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
+                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                      >+</button>
                     </div>
-                    {tool.notes && (
-                      <p className="text-[11px] mt-1.5 italic" style={{ color: '#555' }}>{tool.notes}</p>
+                  </div>
+
+                  {/* Seuil critique + qté à livrer */}
+                  <div className="px-4 pb-3 flex items-center gap-3 border-t border-[#1a1a1a]">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="#555" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <span className="text-[10px] text-[#555] flex-shrink-0">Alerte si ≤</span>
+                      <input
+                        type="number" min={0}
+                        value={tool.seuil ?? ''}
+                        onChange={e => setSeuil(tool.id, e.target.value)}
+                        placeholder="—"
+                        className="w-10 text-center text-xs font-bold rounded-lg py-1 outline-none"
+                        style={{ background: '#161616', color: '#d4780f', border: '1px solid #2a2a2a' }}
+                      />
+                      <span className="text-[10px] text-[#555] flex-shrink-0 ml-1">Livrer</span>
+                      <input
+                        type="number" min={1}
+                        value={tool.orderQty ?? ''}
+                        onChange={e => setOrderQty(tool.id, e.target.value)}
+                        placeholder="—"
+                        className="w-10 text-center text-xs font-bold rounded-lg py-1 outline-none"
+                        style={{ background: '#161616', color: '#d4780f', border: '1px solid #2a2a2a' }}
+                      />
+                      <span className="text-[10px] text-[#555] flex-shrink-0">unité(s)</span>
+                    </div>
+                    {atAlert && (
+                      <a
+                        href={buildWhatsAppMsg(tool)}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg"
+                        style={{ background: '#0d2a0d', color: '#4ade80', border: '1px solid #1a4a1a' }}
+                      >
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        Alerter
+                      </a>
                     )}
                   </div>
-                  <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                  </button>
                 </div>
-
-                <div className="px-4 pb-3 flex items-center gap-3 border-t border-[#1a1a1a]">
-                  <span className="text-[11px] text-[#555]">Quantité :</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQty(tool.id, -1)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                    >−</button>
-                    <span
-                      className="w-10 text-center font-black text-lg"
-                      style={{ color: tool.qty === 0 ? '#f87171' : tool.qty <= 2 ? '#fbbf24' : '#4ade80' }}
-                    >{tool.qty}</span>
-                    <button
-                      onClick={() => updateQty(tool.id, +1)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg text-white"
-                      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                    >+</button>
-                  </div>
-                  {tool.qty === 0 && (
-                    <span className="ml-auto text-[10px] font-bold" style={{ color: '#f87171' }}>Rupture</span>
-                  )}
-                  {tool.qty > 0 && tool.qty <= 2 && (
-                    <span className="ml-auto text-[10px] font-bold" style={{ color: '#fbbf24' }}>Stock faible</span>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>
@@ -214,7 +284,6 @@ export default function StockPage() {
               <button onClick={closeForm} className="text-[#555] hover:text-white text-2xl leading-none">×</button>
             </div>
 
-            {/* Type d'outil */}
             <div>
               <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Type d'outil</p>
               <select
@@ -228,19 +297,16 @@ export default function StockPage() {
               </select>
             </div>
 
-            {/* Diamètre + Dents */}
             <div className="grid grid-cols-2 gap-2">
               <NumberField label="Diamètre (mm)" value={form.diametre} onChange={v => setField('diametre', v)} placeholder="ex: 6" />
               <TextField label="Dents (Z)" value={form.dents} onChange={v => setField('dents', v)} placeholder="ex: 2 ou 2+2" />
             </div>
 
-            {/* LC + LT */}
             <div className="grid grid-cols-2 gap-2">
               <NumberField label="LC — Long. coupe (mm)" value={form.lc} onChange={v => setField('lc', v)} placeholder="ex: 20" />
               <NumberField label="LT — Long. totale (mm)" value={form.lt} onChange={v => setField('lt', v)} placeholder="ex: 60" />
             </div>
 
-            {/* Notes libres */}
             <div>
               <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Notes (optionnel)</p>
               <textarea
@@ -266,6 +332,54 @@ export default function StockPage() {
         </div>
       )}
 
+      {/* Alert modal */}
+      {alertTool && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.9)' }}
+        >
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: '#161616', border: '1px solid #3a2a00' }}>
+            <div className="px-5 pt-5 pb-3">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">⚠️</span>
+                <p className="text-[#fbbf24] font-bold text-base">Seuil critique atteint !</p>
+              </div>
+              <p className="text-white font-semibold text-sm">{alertTool.type} Ø{alertTool.diametre}mm · Z={alertTool.dents}</p>
+              <p className="text-[#555] text-xs mt-0.5">LC={alertTool.lc}mm · LT={alertTool.lt}mm</p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex-1 rounded-xl p-3 text-center" style={{ background: '#1a1000', border: '1px solid #3a2a00' }}>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#888' }}>Reste</p>
+                  <p className="text-2xl font-black" style={{ color: '#fbbf24' }}>{alertTool.qty}</p>
+                </div>
+                <div className="flex-1 rounded-xl p-3 text-center" style={{ background: '#0d1a0d', border: '1px solid #1a4a1a' }}>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#888' }}>À livrer</p>
+                  <p className="text-2xl font-black" style={{ color: '#4ade80' }}>{alertTool.orderQty ?? '?'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 pb-5 space-y-2 mt-2">
+              <a
+                href={buildWhatsAppMsg(alertTool)}
+                target="_blank" rel="noopener noreferrer"
+                onClick={() => setAlertTool(null)}
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white"
+                style={{ background: '#075e54' }}
+              >
+                <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Envoyer l'alerte à SPINCUT
+              </a>
+              <button
+                onClick={() => setAlertTool(null)}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold"
+                style={{ color: '#555' }}
+              >
+                Ignorer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
     </div>
   )
@@ -278,11 +392,8 @@ function NumberField({ label, value, onChange, placeholder }: {
     <div>
       <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>{label}</p>
       <input
-        type="number"
-        inputMode="decimal"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
+        type="number" inputMode="decimal" value={value}
+        onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
         style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
       />
@@ -297,10 +408,8 @@ function TextField({ label, value, onChange, placeholder }: {
     <div>
       <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>{label}</p>
       <input
-        type="text"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
+        type="text" value={value}
+        onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
         style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
       />
