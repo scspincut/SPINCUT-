@@ -11,6 +11,7 @@ interface StockTool {
   lc: number
   lt: number
   dents: string
+  notes: string
   qty: number
   addedAt: number
 }
@@ -22,7 +23,7 @@ const TOOL_TYPES = [
   'Ravageuse',
 ]
 
-const EMPTY_FORM = { type: '', diametre: '', lc: '', lt: '', dents: '' }
+const EMPTY_FORM = { type: '', diametre: '', lc: '', lt: '', dents: '', notes: '' }
 
 export default function StockPage() {
   const navigate = useNavigate()
@@ -75,6 +76,7 @@ export default function StockPage() {
       lc,
       lt,
       dents: form.dents.trim(),
+      notes: form.notes.trim(),
       qty: 0,
       addedAt: Date.now(),
     }
@@ -153,6 +155,9 @@ export default function StockPage() {
                       <span className="text-[11px]" style={{ color: '#666' }}>LC={tool.lc}mm</span>
                       <span className="text-[11px]" style={{ color: '#666' }}>LT={tool.lt}mm</span>
                     </div>
+                    {tool.notes && (
+                      <p className="text-[11px] mt-1.5 italic" style={{ color: '#555' }}>{tool.notes}</p>
+                    )}
                   </div>
                   <button onClick={() => remove(tool.id)} className="flex-shrink-0 p-1.5 text-[#333] hover:text-red-400 transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,15 +197,15 @@ export default function StockPage() {
         )}
       </main>
 
-      {/* Add tool bottom sheet */}
+      {/* Add tool modal — centré */}
       {showForm && (
         <div
-          className="fixed inset-0 z-[60] flex items-end justify-center"
-          style={{ background: 'rgba(0,0,0,0.8)' }}
+          className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.85)' }}
           onClick={closeForm}
         >
           <div
-            className="w-full max-w-lg rounded-t-2xl p-5 space-y-3"
+            className="w-full max-w-md rounded-2xl p-5 space-y-3"
             style={{ background: '#161616', border: '1px solid #2a2a2a' }}
             onClick={e => e.stopPropagation()}
           >
@@ -233,6 +238,19 @@ export default function StockPage() {
             <div className="grid grid-cols-2 gap-2">
               <NumberField label="LC — Long. coupe (mm)" value={form.lc} onChange={v => setField('lc', v)} placeholder="ex: 20" />
               <NumberField label="LT — Long. totale (mm)" value={form.lt} onChange={v => setField('lt', v)} placeholder="ex: 60" />
+            </div>
+
+            {/* Notes libres */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Notes (optionnel)</p>
+              <textarea
+                value={form.notes}
+                onChange={e => setField('notes', e.target.value)}
+                placeholder="Marque, fournisseur, utilisation spécifique…"
+                rows={2}
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444] resize-none"
+                style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
+              />
             </div>
 
             {formError && <p className="text-red-400 text-xs">{formError}</p>}
