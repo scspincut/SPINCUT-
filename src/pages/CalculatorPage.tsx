@@ -192,6 +192,7 @@ export default function CalculatorPage() {
 
   const CALC_KEY = 'spincut_calc_params'
   const saved = (() => { try { return JSON.parse(localStorage.getItem(CALC_KEY) ?? '{}') } catch { return {} } })()
+  const savedMachine = (() => { try { return JSON.parse(localStorage.getItem(`spincut_machine_${localStorage.getItem('spincut_client_code') ?? 'guest'}`) ?? '{}') } catch { return {} } })()
 
   // All hooks must be called unconditionally before any early return
   const [toolType, setToolType] = useState<CalculatorParams['toolType'] | null>(saved.toolType ?? null);
@@ -200,8 +201,8 @@ export default function CalculatorPage() {
   const [operation, setOperation] = useState<CalculatorParams['operation'] | null>(saved.operation ?? null);
   const [diameter, setDiameter] = useState<number | null>(saved.diameter ?? null);
   const [zTeeth, setZTeeth] = useState<number | null>(saved.zTeeth ?? null);
-  const [nMax, setNMax] = useState(saved.nMax ?? '');
-  const [vfMax, setVfMax] = useState(saved.vfMax ?? '');
+  const [nMax, setNMax] = useState(savedMachine.nMax ?? saved.nMax ?? '');
+  const [vfMax, setVfMax] = useState(savedMachine.vfMax ?? saved.vfMax ?? '');
   const [thickness, setThickness] = useState(saved.thickness ?? '');
   const [showConseils, setShowConseils] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -268,7 +269,7 @@ export default function CalculatorPage() {
     operation: operation!,
     diameter: safeDiam!,
     zTeeth: effectiveZTeeth,
-    machineType: 'pro_portique',
+    machineType: (savedMachine.type as any) || 'pro_portique',
     coating: 'none',
     nMax: nMax ? parseFloat(nMax) : null,
     vfMax: vfMax ? parseFloat(vfMax) : null,
@@ -462,8 +463,12 @@ export default function CalculatorPage() {
               placeholder={operation === 'decoupe' || !operation ? 'Ex: 18' : 'Ex: 8'}
               hint="pour calcul N passes"
             />
-            <NumberField label="Vitesse broche max — n max (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" hint="facultatif" />
-            <NumberField label="Vitesse d'avance max — Vf max (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" hint="facultatif" />
+            {!savedMachine.nMax && (
+              <NumberField label="Vitesse broche max — n max (tr/min)" value={nMax} onChange={setNMax} placeholder="Ex: 24000" hint="facultatif — configurable dans Profil" />
+            )}
+            {!savedMachine.vfMax && (
+              <NumberField label="Vitesse d'avance max — Vf max (mm/min)" value={vfMax} onChange={setVfMax} placeholder="Ex: 6000" hint="facultatif — configurable dans Profil" />
+            )}
           </div>
         </div>
 

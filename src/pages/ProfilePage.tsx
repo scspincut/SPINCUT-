@@ -29,6 +29,20 @@ export default function ProfilePage() {
   const clientInfo = clientCode ? getAccessCodes().find(c => c.code === clientCode) : null
   const clientName = clientInfo?.clientName ?? null
 
+  const machineKey = `spincut_machine_${clientCode ?? 'guest'}`
+  const [machineType, setMachineTypeState] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(`spincut_machine_${clientCode ?? 'guest'}`) ?? '{}').type ?? '' } catch { return '' }
+  })
+  const [machineNMax, setMachineNMax] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(`spincut_machine_${clientCode ?? 'guest'}`) ?? '{}').nMax ?? '' } catch { return '' }
+  })
+  const [machineVfMax, setMachineVfMax] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(`spincut_machine_${clientCode ?? 'guest'}`) ?? '{}').vfMax ?? '' } catch { return '' }
+  })
+  const saveMachine = (type: string, nMax: string, vfMax: string) => {
+    try { localStorage.setItem(machineKey, JSON.stringify({ type, nMax, vfMax })) } catch {}
+  }
+
   const commPrefKey = `spincut_comm_pref_${clientCode ?? 'guest'}`
   const [commPref, setCommPref] = useState<'whatsapp' | 'email'>(() => {
     try { return (localStorage.getItem(`spincut_comm_pref_${clientCode ?? 'guest'}`) as 'whatsapp' | 'email') ?? 'whatsapp' } catch { return 'whatsapp' }
@@ -279,6 +293,68 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Ma machine */}
+        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-4">
+          <p className="text-white font-bold text-sm">Ma machine CNC</p>
+          <p className="text-xs" style={{ color: '#555' }}>Ces paramètres pré-remplissent automatiquement le calculateur.</p>
+
+          {/* Type de machine */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: '#555' }}>Type de machine</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { id: 'hobby',           label: 'Hobby / Loisir',      sub: 'Shapeoko, X-Carve…' },
+                { id: 'semi_pro',        label: 'Semi-Pro',             sub: 'Stepcraft, Sorotec…' },
+                { id: 'pro_portique',    label: 'Pro Portique',         sub: 'SCM, Biesse, Homag…' },
+                { id: 'centre_usinage',  label: "Centre d'usinage",     sub: 'Fanuc, Haas, DMG…' },
+              ] as const).map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { setMachineTypeState(m.id); saveMachine(m.id, machineNMax, machineVfMax) }}
+                  className="text-left px-3 py-2.5 rounded-xl transition-all active:scale-95"
+                  style={{
+                    background: machineType === m.id ? '#2a1400' : '#1e1e1e',
+                    border: `1.5px solid ${machineType === m.id ? '#d4780f' : '#2a2a2a'}`,
+                  }}
+                >
+                  <p className="text-xs font-bold" style={{ color: machineType === m.id ? '#d4780f' : '#aaa' }}>{m.label}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{m.sub}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Limites machine */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>n max (tr/min)</p>
+              <input
+                type="number"
+                value={machineNMax}
+                onChange={e => { setMachineNMax(e.target.value); saveMachine(machineType, e.target.value, machineVfMax) }}
+                placeholder="Ex: 24000"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Vf max (mm/min)</p>
+              <input
+                type="number"
+                value={machineVfMax}
+                onChange={e => { setMachineVfMax(e.target.value); saveMachine(machineType, machineNMax, e.target.value) }}
+                placeholder="Ex: 6000"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              />
+            </div>
+          </div>
+
+          {(machineType || machineNMax || machineVfMax) && (
+            <p className="text-[10px] text-center" style={{ color: '#2a8a2a' }}>✓ Paramètres machine enregistrés</p>
           )}
         </div>
 
