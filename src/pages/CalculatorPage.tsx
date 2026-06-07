@@ -451,7 +451,23 @@ export default function CalculatorPage() {
           </div>
 
           {/* Machine limits */}
-          <div className="pt-2 border-t border-[#1e1e1e] grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="pt-2 border-t border-[#1e1e1e] space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <NumberField
+                label="n max (tr/min)"
+                value={nMax}
+                onChange={setNMax}
+                placeholder="24000"
+                hint={savedMachine.nMax ? 'depuis profil' : undefined}
+              />
+              <NumberField
+                label="Vf max (mm/min)"
+                value={vfMax}
+                onChange={setVfMax}
+                placeholder="6000"
+                hint={savedMachine.vfMax ? 'depuis profil' : undefined}
+              />
+            </div>
             <NumberField
               label={
                 operation === 'rainure' ? 'Profondeur de rainure (mm)' :
