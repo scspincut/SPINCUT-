@@ -257,9 +257,9 @@ export default function LoginPage() {
             <p className="text-base font-bold text-white">Vous n'êtes pas encore client ?</p>
             <div className="mt-3 space-y-1.5">
               {[
-                'Calculateur CNC — les bons paramètres, du premier coup',
-                'Boutique en ligne — commandez en 30 secondes, 24h/24',
-                'Compte client — historique et suivi de vos commandes',
+                'Calculateur CNC',
+                'Boutique en ligne 24/24',
+                'Gestion de stock',
               ].map(txt => (
                 <div key={txt} className="flex items-start gap-2">
                   <span style={{ color: '#d4780f' }} className="mt-0.5 text-sm">✓</span>
