@@ -11,14 +11,38 @@ function serializeError(err: unknown): string {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { clientName, items, existingBdcId } = req.body as {
+  const { clientName, items, existingBdcId, testMode } = req.body as {
     clientName: string
     items: { ref: string; designation: string; queue: string; quantity: number; price: number; sheet?: string; row?: number }[]
     existingBdcId?: string
+    testMode?: boolean
   }
 
   if (!clientName || !items?.length) {
     return res.status(400).json({ error: 'Données manquantes' })
+  }
+
+  // Mode test : email uniquement, sans BDC Abby
+  if (testMode) {
+    const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
+    const resendKey = process.env.RESEND_API_KEY
+    const from = process.env.RESEND_FROM ?? 'SPINCUT <notifications@spincut.fr>'
+    if (resendKey) {
+      const lignesHtml = items.map(i =>
+        `<tr><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.quantity}×</td><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.ref}</td><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.designation}</td><td style="padding:4px 8px;border-bottom:1px solid #222;text-align:right;">${(i.price * i.quantity).toFixed(2)} €</td></tr>`
+      ).join('')
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from,
+          to: ['scspincut@gmail.com'],
+          subject: `🧪 [TEST] Commande — ${clientName}`,
+          html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#111;color:#eee;border-radius:12px;padding:24px;"><p style="background:#2a1400;color:#d4780f;padding:8px 12px;border-radius:6px;font-size:12px;">⚠️ Email de test — aucun BDC créé dans Abby</p><h2 style="color:#d4780f;margin-top:16px;">Commande TEST SPINCUT</h2><p><strong>Client :</strong> ${clientName}</p><table style="width:100%;border-collapse:collapse;margin:16px 0;"><thead><tr style="color:#888;font-size:12px;"><th style="text-align:left;padding:4px 8px;">Qté</th><th style="text-align:left;padding:4px 8px;">Réf</th><th style="text-align:left;padding:4px 8px;">Désignation</th><th style="text-align:right;padding:4px 8px;">Montant</th></tr></thead><tbody>${lignesHtml}</tbody></table><p style="text-align:right;font-size:16px;"><strong>Total HT : ${total.toFixed(2)} €</strong></p></div>`,
+        }),
+      }).catch(() => {})
+    }
+    return res.status(200).json({ success: true, orderId: 'TEST-0000', isNewBdc: true })
   }
 
   const apiKey = process.env.ABBY_API_KEY
@@ -129,7 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'SPINCUT <onboarding@resend.dev>',
+          from: process.env.RESEND_FROM ?? 'SPINCUT <notifications@spincut.fr>',
           to: ['scspincut@gmail.com'],
           subject: `🛒 Nouvelle commande — ${clientName}`,
           html: `

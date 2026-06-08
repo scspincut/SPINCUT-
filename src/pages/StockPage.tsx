@@ -132,7 +132,6 @@ export default function StockPage() {
     setTools(prev => prev.map(t => t.id === id ? { ...t, position: null } : t))
 
   const sendEmailAlert = (tool: StockTool) => {
-    if (isTestMode()) return
     fetch('/api/stock-alert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

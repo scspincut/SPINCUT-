@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useClientAuth, getAccessCodes, saveAccessCodes, getClientCode } from '../hooks/useAuth'
+import { useClientAuth, getAccessCodes, saveAccessCodes, getClientCode, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
+
+const DEMO_PROFILE = {
+  firstname: 'Jean', lastname: 'MARTIN',
+  emails: ['jean.martin@entreprise.fr'], phone: '06 12 34 56 78',
+  billingAddress: { address: '12 Rue des Artisans', complement: null, city: 'Lyon', zipCode: '69003', country: 'FR' },
+}
 
 interface AbbyAddress {
   address: string | null
@@ -68,6 +74,22 @@ export default function ProfilePage() {
   const [editZip, setEditZip] = useState('')
 
   useEffect(() => {
+    // Mode démo : charger données fictives sans appel Abby
+    if (isTestMode()) {
+      const d = DEMO_PROFILE
+      setProfile({ id: 'demo', orgId: null, ...d })
+      setEditFirstname(d.firstname); setEditLastname(d.lastname)
+      setEditEmail(d.emails[0]); setEditPhone(d.phone)
+      setEditAddr(d.billingAddress.address); setEditComplement('')
+      setEditCity(d.billingAddress.city); setEditZip(d.billingAddress.zipCode)
+      // Pré-remplir machine si vide
+      if (!machineNMax && !machineVfMax) {
+        setMachineNMax('24000'); setMachineVfMax('8000')
+        if (!machineAtc) setMachineAtc('12')
+        saveMachine('24000', '8000', '12')
+      }
+      return
+    }
     if (!clientName) return
     setProfileLoading(true)
     fetch(`/api/client-profile?clientName=${encodeURIComponent(clientName)}`)
