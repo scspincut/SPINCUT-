@@ -613,22 +613,24 @@ export default function CalculatorPage() {
                     key={`${p.ref}__${p.row}`}
                     className="w-44 flex-shrink-0 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2"
                   >
-                    <div className="flex flex-wrap gap-1 items-start">
-                      <button onClick={() => toggleFav(`${p.ref}__${p.row}`)} className="ml-auto p-0.5 -mt-0.5 -mr-0.5 flex-shrink-0" style={{ color: favorites.has(`${p.ref}__${p.row}`) ? '#e03c3c' : '#444' }}>
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="flex flex-wrap gap-1 items-start flex-1 min-w-0">
+                        {p.diametre && p.diametre !== '/' && (
+                          <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#d4780f] px-1.5 py-0.5 rounded">Ø{p.diametre}</span>
+                        )}
+                        {p.dents && p.dents !== '/' && (
+                          <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">Z{p.dents}</span>
+                        )}
+                        {p.lc && p.lc !== '/' && (
+                          <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">LC{p.lc}</span>
+                        )}
+                        {p.pm && (
+                          <span className="text-[10px] font-bold bg-[#0d2a0d] text-green-400 px-1.5 py-0.5 rounded">PM</span>
+                        )}
+                      </div>
+                      <button onClick={() => toggleFav(`${p.ref}__${p.row}`)} className="p-0.5 -mt-0.5 -mr-0.5 flex-shrink-0" style={{ color: favorites.has(`${p.ref}__${p.row}`) ? '#e03c3c' : '#444' }}>
                         <svg width="14" height="14" fill={favorites.has(`${p.ref}__${p.row}`) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                       </button>
-                      {p.diametre && p.diametre !== '/' && (
-                        <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#d4780f] px-1.5 py-0.5 rounded">Ø{p.diametre}</span>
-                      )}
-                      {p.dents && p.dents !== '/' && (
-                        <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">Z{p.dents}</span>
-                      )}
-                      {p.lc && p.lc !== '/' && (
-                        <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">LC{p.lc}</span>
-                      )}
-                      {p.pm && (
-                        <span className="text-[10px] font-bold bg-[#0d2a0d] text-green-400 px-1.5 py-0.5 rounded">PM</span>
-                      )}
                     </div>
                     <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
                     {p.category && CATEGORY_LABELS[p.category] && (
