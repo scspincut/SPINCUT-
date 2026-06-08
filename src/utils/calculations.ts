@@ -154,10 +154,11 @@ export function calculate(params: CalculatorParams): CalcResult {
   }
 
   // PCD/compression : fz trop faible → frottement → surchauffe → casse
-  if ((toolType === 'diamant_coupe' || toolType === 'compression') && fzReel < 0.08) {
+  // Minimum absolu professionnel : 0.15 mm/dent (sources : Amana DRB-250, Wirutex, WOODWEB pros)
+  if ((toolType === 'diamant_coupe' || toolType === 'compression') && fzReel < 0.15) {
     alerts.push({
       type: 'danger',
-      message: `⚠ Charge/dent trop faible (fz = ${fzReel.toFixed(3)} mm) — risque de frottement et surchauffe sur outil diamant. Augmentez la vitesse d'avance machine ou réduisez la broche.`,
+      message: `⚠ Charge/dent trop faible (fz = ${fzReel.toFixed(3)} mm/dent, minimum 0.15 mm) — risque de frottement et surchauffe sur outil diamant/compression. Augmentez la vitesse d'avance ou réduisez la broche.`,
     });
   }
 

@@ -89,31 +89,31 @@ type VcEntry = [number, number];
 export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
   // Carbure monobloc — sources: Onsrud, Vortex Tool, Amana Tool, Leuco, Harvey Performance
   carbure_monobloc: {
-    bois_tendre:       [300, 650],
-    bois_dur:          [250, 550],
+    bois_tendre:       [300, 600],
+    bois_dur:          [250, 500],
     bois_exotique:     [150, 350],
-    mdf:               [280, 600],
-    ctp:               [300, 650],
+    mdf:               [350, 700],
+    ctp:               [300, 600],
     melamine:          [260, 520],
     panneau_stratifie: [180, 400],   // HPL ultra-abrasif (Formica/Trespa) — Vc réduite vs mélaminé
-    alu_2017:          [150, 350],
+    alu_2017:          [150, 300],
     alu_7075:          [100, 280],
     alu_6060:          [200, 480],
     alu_coule:         [100, 260],
-    pvc:               [150, 400],   // PVC expansé (Forex) ou massif — fusion si Vc trop haute
-    pmma:              [150, 460],
+    pvc:               [350, 600],   // Vc apparente élevée car n_machine 12-16k RPM — fz TRÈS élevé obligatoire
+    pmma:              [400, 650],   // n cible 14-18k RPM, Z=1 O-flute, fz modéré
     pc:                [150, 380],
     abs_pom:           [100, 320],
   },
-  // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250, Onsrud, Wirutex
+  // Diamant PCD — sources: Leitz Diamaster PRO³, Amana DRB-250/250, Onsrud, Wirutex, WOODWEB pros
   diamant_coupe: {
-    bois_tendre:       [400, 900],
+    bois_tendre:       [500, 1000],
     bois_dur:          [350, 700],
     bois_exotique:     [300, 600],
-    mdf:               [400, 900],
-    ctp:               [400, 900],
-    melamine:          [380, 750],
-    panneau_stratifie: [350, 700],   // HPL — PCD FORTEMENT RECOMMANDÉ (corindon ultra-abrasif)
+    mdf:               [450, 900],
+    ctp:               [450, 900],
+    melamine:          [450, 900],   // n cible ~18 000 RPM pour Ø12 — fz min 0.15mm/dent impératif
+    panneau_stratifie: [400, 750],   // HPL — PCD FORTEMENT RECOMMANDÉ (corindon ultra-abrasif)
   },
   // Compression — Vortex Tool, Amana Tool, confirmé terrain
   compression: {
@@ -121,7 +121,7 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
     bois_dur:    [280, 540],
     mdf:         [300, 560],
     ctp:         [350, 600],
-    melamine:    [380, 530],   // CONFIRMÉ TERRAIN
+    melamine:    [380, 650],
   },
   // Ravageuse — Amana chipbreaker
   ravageuse: {
@@ -138,40 +138,43 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
 
 export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
   // Carbure monobloc — steps [2,3,4,6,8,10,12,16,20]
+  // Sources: Onsrud chip load charts, Amana Tool, Leuco, Harvey Performance, WOODWEB practitioners
   carbure_monobloc: {
-    bois_tendre:       [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
-    bois_dur:          [0.025, 0.035, 0.045, 0.070, 0.090, 0.115, 0.140, 0.170, 0.210],
+    bois_tendre:       [0.040, 0.060, 0.083, 0.125, 0.168, 0.210, 0.250, 0.305, 0.375],
+    bois_dur:          [0.035, 0.050, 0.064, 0.100, 0.130, 0.165, 0.200, 0.245, 0.300],
     bois_exotique:     [0.018, 0.025, 0.032, 0.050, 0.068, 0.085, 0.100, 0.125, 0.155],
-    mdf:               [0.030, 0.045, 0.058, 0.088, 0.110, 0.140, 0.168, 0.208, 0.255],
-    ctp:               [0.030, 0.045, 0.060, 0.090, 0.120, 0.150, 0.180, 0.220, 0.270],
+    mdf:               [0.050, 0.075, 0.097, 0.147, 0.183, 0.233, 0.280, 0.347, 0.425],
+    ctp:               [0.038, 0.058, 0.077, 0.115, 0.153, 0.192, 0.230, 0.281, 0.345],
     melamine:          [0.022, 0.032, 0.042, 0.065, 0.085, 0.105, 0.130, 0.160, 0.195],
-    panneau_stratifie: [0.018, 0.028, 0.036, 0.055, 0.073, 0.092, 0.113, 0.140, 0.170],   // HPL — fz prudent, ultra-abrasif
-    alu_2017:          [0.006, 0.010, 0.013, 0.022, 0.030, 0.040, 0.050, 0.065, 0.080],
+    panneau_stratifie: [0.018, 0.028, 0.036, 0.055, 0.073, 0.092, 0.113, 0.140, 0.170],
+    alu_2017:          [0.006, 0.010, 0.013, 0.022, 0.030, 0.040, 0.055, 0.070, 0.085],
     alu_7075:          [0.005, 0.008, 0.011, 0.018, 0.025, 0.033, 0.042, 0.053, 0.065],
     alu_6060:          [0.008, 0.012, 0.016, 0.028, 0.040, 0.055, 0.065, 0.085, 0.105],
     alu_coule:         [0.005, 0.008, 0.011, 0.018, 0.024, 0.030, 0.038, 0.048, 0.058],
-    pvc:               [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],   // fz ÉLEVÉ anti-fusion
-    pmma:              [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.201, 0.248, 0.301],
+    pvc:               [0.090, 0.120, 0.160, 0.225, 0.295, 0.360, 0.450, 0.540, 0.625],   // fz TRÈS ÉLEVÉ — évacuer la chaleur avant fusion
+    pmma:              [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.200, 0.248, 0.300],   // Z=1 O-flute, arête polie
     pc:                [0.037, 0.052, 0.072, 0.105, 0.135, 0.165, 0.195, 0.236, 0.283],
     abs_pom:           [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
   },
   // Diamant PCD — steps [3,6,8,10,12,16,20]
+  // Sources: Amana DRB-250 (18 500 RPM / 750 IPM), WOODWEB pros, Wirutex, Leitz Diamaster
+  // fz min ABSOLU 0.15 mm/dent — en dessous = frottement → surchauffe → casse
   diamant_coupe: {
-    bois_tendre:       [0.045, 0.090, 0.125, 0.160, 0.190, 0.230, 0.275],
-    bois_dur:          [0.035, 0.070, 0.100, 0.125, 0.150, 0.185, 0.220],
+    bois_tendre:       [0.066, 0.133, 0.184, 0.236, 0.280, 0.339, 0.405],
+    bois_dur:          [0.051, 0.103, 0.147, 0.183, 0.220, 0.271, 0.323],
     bois_exotique:     [0.028, 0.058, 0.082, 0.105, 0.128, 0.155, 0.188],
-    mdf:               [0.045, 0.090, 0.125, 0.158, 0.185, 0.220, 0.265],
-    ctp:               [0.045, 0.090, 0.135, 0.160, 0.195, 0.230, 0.275],
-    melamine:          [0.035, 0.070, 0.100, 0.128, 0.158, 0.195, 0.230],
-    panneau_stratifie: [0.028, 0.060, 0.088, 0.112, 0.138, 0.170, 0.205],   // HPL — PCD fortement recommandé
+    mdf:               [0.063, 0.126, 0.175, 0.222, 0.260, 0.309, 0.372],
+    ctp:               [0.060, 0.120, 0.180, 0.213, 0.260, 0.307, 0.367],
+    melamine:          [0.062, 0.124, 0.178, 0.227, 0.280, 0.346, 0.408],   // n cible ~18 000 RPM Ø12
+    panneau_stratifie: [0.032, 0.070, 0.102, 0.130, 0.160, 0.197, 0.238],   // HPL très abrasif — fz conservateur
   },
   // Compression — steps [3,6,8,10,12,16,20]
   compression: {
-    bois_tendre: [0.032, 0.078, 0.112, 0.135, 0.168, 0.202, 0.248],
-    bois_dur:    [0.027, 0.062, 0.090, 0.112, 0.135, 0.168, 0.202],
-    mdf:         [0.032, 0.078, 0.112, 0.135, 0.168, 0.202, 0.248],
-    ctp:         [0.035, 0.085, 0.122, 0.148, 0.180, 0.215, 0.260],
-    melamine:    [0.027, 0.068, 0.100, 0.125, 0.148, 0.180, 0.215],
+    bois_tendre: [0.044, 0.107, 0.153, 0.185, 0.230, 0.277, 0.340],
+    bois_dur:    [0.038, 0.087, 0.127, 0.158, 0.190, 0.236, 0.284],
+    mdf:         [0.044, 0.107, 0.153, 0.185, 0.230, 0.277, 0.340],
+    ctp:         [0.047, 0.113, 0.163, 0.197, 0.240, 0.287, 0.347],
+    melamine:    [0.036, 0.092, 0.135, 0.169, 0.200, 0.243, 0.291],
   },
   // Ravageuse — steps [6,8,10,12,16,20]
   ravageuse: {
