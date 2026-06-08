@@ -65,11 +65,23 @@ export default function OrderPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
 
-  const [pendingOrders, setPendingOrders] = useState<AbbyOrder[]>([])
-  const [deliveredOrders, setDeliveredOrders] = useState<AbbyOrder[]>([])
+  const DEMO_PENDING: AbbyOrder[] = isTestMode() ? [
+    { id: 'demo-1', number: 'BDC-2025-042', state: 'pending', label: 'En préparation', total: 187.50, date: Date.now() / 1000 - 86400,
+      items: [{ ref: 'SC-D12-2F', designation: 'Fraise diamant Ø12 2F mélanine', qty: 3 }, { ref: 'SC-C08-2F', designation: 'Fraise carbure Ø8 2F bois', qty: 5 }] },
+  ] : []
+  const DEMO_DELIVERED: AbbyOrder[] = isTestMode() ? [
+    { id: 'demo-2', number: 'BDC-2025-038', state: 'signed', label: 'Livrée', total: 94.00, date: Date.now() / 1000 - 7 * 86400,
+      items: [{ ref: 'SC-C10-2F', designation: 'Fraise carbure Ø10 2F bois dur', qty: 2 }] },
+    { id: 'demo-3', number: 'BDC-2025-031', state: 'signed', label: 'Livrée', total: 312.00, date: Date.now() / 1000 - 21 * 86400,
+      items: [{ ref: 'SC-D16-3F', designation: 'Fraise diamant Ø16 3+3F', qty: 4 }, { ref: 'SC-R12', designation: 'Ravageuse Ø12', qty: 2 }] },
+  ] : []
+
+  const [pendingOrders, setPendingOrders] = useState<AbbyOrder[]>(DEMO_PENDING)
+  const [deliveredOrders, setDeliveredOrders] = useState<AbbyOrder[]>(DEMO_DELIVERED)
   const [showDelivered, setShowDelivered] = useState(false)
 
   useEffect(() => {
+    if (isTestMode()) return
     if (!clientName) return
     const orderIds = [...new Set(
       (() => { try { return (JSON.parse(localStorage.getItem(historyKey) ?? '[]') as OrderHistoryEntry[]).map(h => h.orderId).filter(Boolean) } catch { return [] } })()

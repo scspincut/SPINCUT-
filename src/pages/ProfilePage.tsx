@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, saveAccessCodes, getClientCode, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
+import TestModeBanner from '../components/TestModeBanner'
 
 const DEMO_PROFILE = {
   firstname: 'Jean', lastname: 'MARTIN',
@@ -182,6 +183,7 @@ export default function ProfilePage() {
           </button>
         </div>
       </header>
+      {isTestMode() && <TestModeBanner />}
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-6 space-y-4">
 

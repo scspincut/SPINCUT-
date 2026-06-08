@@ -27,6 +27,7 @@ export function saveAccessCodes(codes: AccessCode[]): void {
 export function isTestMode(): boolean {
   const code = getClientCode()
   if (!code) return false
+  if (code === 'TEST') return true
   return getAccessCodes().find(c => c.code === code)?.isTest === true
 }
 
