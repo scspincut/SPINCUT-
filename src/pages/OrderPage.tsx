@@ -166,7 +166,7 @@ export default function OrderPage() {
       fetch('/api/create-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientName: clientName ?? 'Client TEST', items, testMode: true }),
-      }).then(r => r.json()).then(d => console.log('[TEST email]', d.emailStatus)).catch(e => console.error('[TEST email]', e))
+      }).catch(() => {})
       try { sessionStorage.setItem(TEST_LAST_ORDER_KEY, JSON.stringify(testOrder)) } catch {}
       setLastOrder(testOrder)
       setOrderStatus('success')
