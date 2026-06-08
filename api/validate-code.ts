@@ -20,10 +20,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // GET évite le problème de redirection 302 de Google Apps Script qui perd le corps POST
     const resp = await fetch(`${sheetsUrl}?secret=${encodeURIComponent(sheetsSecret)}&action=getCodes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ secret: sheetsSecret, action: 'getCodes' }),
+      method: 'GET',
     })
     if (!resp.ok) throw new Error(`Sheets HTTP ${resp.status}`)
     const data = await resp.json() as { codes?: { code: string; clientName: string; active: boolean; isTest?: boolean }[] }
