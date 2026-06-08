@@ -121,9 +121,9 @@ export const VC_TABLE: Record<ToolType, Partial<Record<Material, VcEntry>>> = {
   compression: {
     bois_tendre: [350, 600],
     bois_dur:    [280, 540],
-    mdf:         [320, 580],
+    mdf:         [400, 700],   // n~14 600 RPM Ø12 — Vortex Tool / Amana compression confirmé
     ctp:         [350, 600],
-    melamine:    [380, 650],   // n~17 000 RPM Ø12, Vf 6-14k mm/min selon machine
+    melamine:    [450, 800],   // n~16 600 RPM Ø12 — compression carbure pro, Vf 8-16k mm/min
   },
   // Ravageuse — Amana chipbreaker
   ravageuse: {
@@ -159,17 +159,17 @@ export const FZ_TABLE: Record<ToolType, Partial<Record<Material, number[]>>> = {
     abs_pom:           [0.045, 0.060, 0.080, 0.115, 0.150, 0.185, 0.230, 0.275, 0.320],
   },
   // Diamant PCD — steps [3,6,8,10,12,16,20]
-  // Sources: Amana DRB-250 (18 500 RPM / 750 IPM = fz 0.172mm), WOODWEB pros, Wirutex Advanced, Leitz
-  // fz min ABSOLU 0.15 mm/dent — calculateur auto-adapte n si vfMax insuffisante
-  // Note: bois_exotique — fz conservateur (densité élevée, impact brutal sur arêtes PCD)
+  // Ancre : Amana DRB-250 3+3 Ø12 mélaminé → 18 500 RPM / 750 IPM → fz=0.172mm/dent
+  // fzBase Ø12 mélaminé = 0.172 / 0.80 (coeff 3+3) = 0.215mm — toutes valeurs calibrées sur cette référence
+  // fz min ABSOLU 0.15 mm/dent — calculateur auto-adapte n si vfMax machine insuffisante
   diamant_coupe: {
-    bois_tendre:       [0.080, 0.155, 0.210, 0.260, 0.300, 0.360, 0.425],
-    bois_dur:          [0.065, 0.125, 0.170, 0.210, 0.255, 0.308, 0.368],
-    bois_exotique:     [0.040, 0.082, 0.115, 0.145, 0.178, 0.215, 0.258],
-    mdf:               [0.070, 0.138, 0.190, 0.238, 0.280, 0.335, 0.400],
-    ctp:               [0.068, 0.135, 0.195, 0.240, 0.290, 0.348, 0.415],
-    melamine:          [0.070, 0.140, 0.195, 0.248, 0.300, 0.368, 0.435],   // fzCorrige 3+3 ×0.80 = 0.240mm > 0.15 ✓
-    panneau_stratifie: [0.050, 0.100, 0.142, 0.180, 0.220, 0.268, 0.320],   // HPL: fz modéré — 1+1/2+2 recommandés
+    bois_tendre:       [0.067, 0.129, 0.175, 0.217, 0.250, 0.300, 0.354],
+    bois_dur:          [0.055, 0.105, 0.143, 0.177, 0.215, 0.260, 0.310],
+    bois_exotique:     [0.037, 0.076, 0.107, 0.134, 0.165, 0.199, 0.239],   // fz conservateur — densité élevée
+    mdf:               [0.060, 0.118, 0.163, 0.204, 0.240, 0.287, 0.343],
+    ctp:               [0.056, 0.112, 0.161, 0.199, 0.240, 0.288, 0.343],
+    melamine:          [0.050, 0.100, 0.140, 0.178, 0.215, 0.264, 0.312],   // fzCorrige 3+3 Ø12 = 0.215×0.80 = 0.172mm ✓ (Amana DRB-250)
+    panneau_stratifie: [0.043, 0.086, 0.123, 0.156, 0.190, 0.232, 0.277],   // HPL ultra-abrasif — fz modéré, 1+1/2+2 recommandés
   },
   // Compression carbure — steps [3,6,8,10,12,16,20]
   // Valeurs terrain confirmées : chip load 0.004-0.010" selon diamètre et matière
