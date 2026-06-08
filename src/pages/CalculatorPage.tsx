@@ -452,6 +452,17 @@ export default function CalculatorPage() {
 
           {/* Machine limits */}
           <div className="pt-2 border-t border-[#1e1e1e] space-y-4">
+            <NumberField
+              label={
+                operation === 'rainure' ? 'Profondeur de rainure (mm)' :
+                operation === 'poche'   ? 'Profondeur de poche (mm)' :
+                operation === 'gravure' ? 'Profondeur de gravure (mm)' :
+                'Épaisseur matière (mm)'
+              }
+              value={thickness} onChange={setThickness}
+              placeholder={operation === 'decoupe' || !operation ? 'Ex: 18' : 'Ex: 8'}
+              hint="pour calcul N passes"
+            />
             <div className="grid grid-cols-2 gap-4">
               <NumberField
                 label="n max (tr/min)"
@@ -468,17 +479,6 @@ export default function CalculatorPage() {
                 hint={savedMachine.vfMax ? 'depuis profil' : undefined}
               />
             </div>
-            <NumberField
-              label={
-                operation === 'rainure' ? 'Profondeur de rainure (mm)' :
-                operation === 'poche'   ? 'Profondeur de poche (mm)' :
-                operation === 'gravure' ? 'Profondeur de gravure (mm)' :
-                'Épaisseur matière (mm)'
-              }
-              value={thickness} onChange={setThickness}
-              placeholder={operation === 'decoupe' || !operation ? 'Ex: 18' : 'Ex: 8'}
-              hint="pour calcul N passes"
-            />
           </div>
         </div>
 
