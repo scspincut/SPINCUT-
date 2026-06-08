@@ -40,11 +40,45 @@ export function useClientAuth() {
     () => !!localStorage.getItem(CLIENT_SESSION_KEY)
   );
 
-  const login = (code: string): boolean => {
+  const login = async (code: string): Promise<{ ok: boolean; error?: string }> => {
     const normalized = code.trim().toUpperCase();
-    const valid = getAccessCodes().some(c => c.code === normalized && c.active);
-    if (valid) { localStorage.setItem(CLIENT_SESSION_KEY, normalized); setIsAuthenticated(true); }
-    return valid;
+
+    // Toujours valider via l'API pour que les codes Sheets fonctionnent sur tous les appareils
+    try {
+      const resp = await fetch('/api/validate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: normalized }),
+      })
+      if (resp.ok) {
+        const data = await resp.json() as { valid: boolean; clientName?: string; isTest?: boolean }
+        if (data.valid) {
+          // Mettre en cache le code + infos client dans localStorage
+          const existing = getAccessCodes()
+          if (!existing.some(c => c.code === normalized)) {
+            saveAccessCodes([...existing, {
+              id: `remote-${normalized}`,
+              code: normalized,
+              clientName: data.clientName ?? normalized,
+              active: true,
+              isTest: data.isTest ?? false,
+              createdAt: new Date().toISOString().slice(0, 10),
+            }])
+          }
+          localStorage.setItem(CLIENT_SESSION_KEY, normalized)
+          setIsAuthenticated(true)
+          return { ok: true }
+        }
+        return { ok: false }
+      }
+    } catch {
+      // Si l'API est down, fallback sur localStorage
+      const valid = getAccessCodes().some(c => c.code === normalized && c.active);
+      if (valid) { localStorage.setItem(CLIENT_SESSION_KEY, normalized); setIsAuthenticated(true); return { ok: true } }
+      return { ok: false, error: 'Serveur indisponible, code introuvable en local.' }
+    }
+
+    return { ok: false }
   };
 
   const logout = () => { localStorage.removeItem(CLIENT_SESSION_KEY); setIsAuthenticated(false); };

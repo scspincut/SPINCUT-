@@ -41,6 +41,7 @@ function OutlookIcon() {
 export default function LoginPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [prospectName, setProspectName] = useState('')
   const [prospectPhone, setProspectPhone] = useState('')
   const [prospectEmail, setProspectEmail] = useState('')
@@ -86,14 +87,16 @@ export default function LoginPage() {
     setShowMailMenu(true)
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
-    const ok = login(code)
-    if (ok) {
+    setLoading(true)
+    const result = await login(code)
+    setLoading(false)
+    if (result.ok) {
       navigate('/boutique')
     } else {
-      setError('Code invalide. Contactez SPINCUT pour obtenir votre accès.')
+      setError(result.error ?? 'Code invalide. Contactez SPINCUT pour obtenir votre accès.')
     }
   }
 
@@ -229,12 +232,13 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-lg font-semibold text-white transition-colors"
+              disabled={loading}
+              className="w-full py-3 rounded-lg font-semibold text-white transition-colors disabled:opacity-60"
               style={{ background: '#d4780f' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#b86400')}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#b86400' }}
               onMouseLeave={e => (e.currentTarget.style.background = '#d4780f')}
             >
-              Se connecter
+              {loading ? 'Vérification…' : 'Se connecter'}
             </button>
           </form>
 
