@@ -33,8 +33,9 @@ export default function ProfilePage() {
   const savedMachine = (() => { try { return JSON.parse(localStorage.getItem(machineKey) ?? '{}') } catch { return {} } })()
   const [machineNMax, setMachineNMax] = useState<string>(savedMachine.nMax ?? '')
   const [machineVfMax, setMachineVfMax] = useState<string>(savedMachine.vfMax ?? '')
-  const saveMachine = (nMax: string, vfMax: string) => {
-    try { localStorage.setItem(machineKey, JSON.stringify({ nMax, vfMax })) } catch {}
+  const [machineAtc, setMachineAtc] = useState<string>(savedMachine.atcCapacity ? String(savedMachine.atcCapacity) : '')
+  const saveMachine = (nMax: string, vfMax: string, atcCapacity: string) => {
+    try { localStorage.setItem(machineKey, JSON.stringify({ nMax, vfMax, atcCapacity: atcCapacity ? parseInt(atcCapacity) : null })) } catch {}
   }
 
   const commPrefKey = `spincut_comm_pref_${clientCode ?? 'guest'}`
@@ -302,7 +303,7 @@ export default function ProfilePage() {
                 <input
                   type="number"
                   value={machineNMax}
-                  onChange={e => { setMachineNMax(e.target.value); saveMachine(e.target.value, machineVfMax) }}
+                  onChange={e => { setMachineNMax(e.target.value); saveMachine(e.target.value, machineVfMax, machineAtc) }}
                   placeholder="24000"
                   className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
                   style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
@@ -316,7 +317,7 @@ export default function ProfilePage() {
                 <input
                   type="number"
                   value={machineVfMax}
-                  onChange={e => { setMachineVfMax(e.target.value); saveMachine(machineNMax, e.target.value) }}
+                  onChange={e => { setMachineVfMax(e.target.value); saveMachine(machineNMax, e.target.value, machineAtc) }}
                   placeholder="6000"
                   className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
                   style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
@@ -325,7 +326,22 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          {(machineNMax || machineVfMax) && (
+          <div>
+            <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Postes magasin</p>
+            <div className="relative">
+              <input
+                type="number"
+                value={machineAtc}
+                onChange={e => { setMachineAtc(e.target.value); saveMachine(machineNMax, machineVfMax, e.target.value) }}
+                placeholder="12"
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555' }}>postes ATC</span>
+            </div>
+            <p className="text-[10px] mt-1.5" style={{ color: '#444' }}>Permet de suivre les outils montés dans Mon Stock</p>
+          </div>
+          {(machineNMax || machineVfMax || machineAtc) && (
             <p className="text-[10px] text-center" style={{ color: '#2a8a2a' }}>✓ Enregistré — le calculateur utilise ces valeurs</p>
           )}
         </div>

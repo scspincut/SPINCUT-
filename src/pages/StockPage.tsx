@@ -16,6 +16,7 @@ interface StockTool {
   seuil: number | null
   orderQty: number | null
   addedAt: number
+  position: number | null
 }
 
 const TOOL_TYPES = [
@@ -40,11 +41,19 @@ export default function StockPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_stock2_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
 
+  const atcCapacity = (() => {
+    try {
+      const m = JSON.parse(localStorage.getItem(`spincut_machine_${clientCode ?? 'guest'}`) ?? '{}')
+      return m.atcCapacity ? parseInt(m.atcCapacity) : 0
+    } catch { return 0 }
+  })()
+
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [alertTool, setAlertTool] = useState<StockTool | null>(null)
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null)
+  const [mountingToolId, setMountingToolId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isTestMode()) {
@@ -82,6 +91,7 @@ export default function StockPage() {
       notes: form.notes.trim(),
       qty: 0, seuil: null, orderQty: null,
       addedAt: Date.now(),
+      position: null,
     }
     setTools(prev => [tool, ...prev])
     closeForm()
@@ -111,6 +121,15 @@ export default function StockPage() {
 
   const remove = (id: string) =>
     setTools(prev => prev.filter(t => t.id !== id))
+
+  const mountTool = (id: string, position: number) =>
+    setTools(prev => prev.map(t =>
+      t.id === id ? { ...t, position } :
+      t.position === position ? { ...t, position: null } : t
+    ))
+
+  const unmountTool = (id: string) =>
+    setTools(prev => prev.map(t => t.id === id ? { ...t, position: null } : t))
 
   const sendEmailAlert = (tool: StockTool) => {
     if (isTestMode()) return
@@ -148,7 +167,9 @@ return (
 
         <div className="flex items-center justify-between">
           <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>
-            {tools.length === 0 ? 'Aucun outil' : `${tools.length} outil${tools.length > 1 ? 's' : ''}`}
+            {tools.length === 0 ? 'Aucun outil' : atcCapacity > 0
+              ? `${tools.filter(t => t.position !== null).length} sur machine · ${tools.filter(t => t.position === null).length} en stock`
+              : `${tools.length} outil${tools.length > 1 ? 's' : ''}`}
           </p>
           <button
             onClick={() => setShowForm(true)}
@@ -162,6 +183,58 @@ return (
           </button>
         </div>
 
+        {/* ── Sur la machine ── */}
+        {atcCapacity > 0 && (() => {
+          const mounted = tools.filter(t => t.position !== null).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+          return (
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#111', border: '1px solid #1e1e1e' }}>
+              <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-white font-bold text-sm">Sur la machine</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>
+                    {mounted.length}/{atcCapacity} postes magasin
+                  </p>
+                </div>
+                <div className="flex gap-0.5">
+                  {Array.from({ length: Math.min(atcCapacity, 12) }, (_, i) => (
+                    <div key={i} className="w-1.5 h-5 rounded-sm" style={{ background: i < mounted.length ? '#d4780f' : '#2a2a2a' }} />
+                  ))}
+                  {atcCapacity > 12 && <span className="text-[10px] ml-1 self-center" style={{ color: '#444' }}>+{atcCapacity - 12}</span>}
+                </div>
+              </div>
+              {mounted.length === 0 ? (
+                <div className="px-4 pb-4">
+                  <p className="text-[#333] text-xs">Aucun outil monté — utilisez 🔧 sur un outil en stock</p>
+                </div>
+              ) : (
+                <div className="divide-y" style={{ borderColor: '#1a1a1a' }}>
+                  {mounted.map(tool => (
+                    <div key={tool.id} className="px-4 py-3 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0" style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #3a2000' }}>
+                        {tool.position}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
+                          <span className="text-white text-xs font-bold">Ø{tool.diametre}</span>
+                          <span className="text-[11px]" style={{ color: '#555' }}>Z={tool.dents} · LC={tool.lc}</span>
+                        </div>
+                        {tool.notes && <p className="text-[10px] mt-0.5 italic truncate" style={{ color: '#444' }}>{tool.notes}</p>}
+                      </div>
+                      <button
+                        onClick={() => unmountTool(tool.id)}
+                        className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold flex-shrink-0 active:scale-95 transition-all"
+                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#666' }}
+                      >Démonter</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* ── En stock ── */}
         {tools.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
@@ -176,7 +249,12 @@ return (
           </div>
         ) : (
           <div className="space-y-3">
-            {tools.map(tool => {
+            {(() => {
+              const inStock = atcCapacity > 0 ? tools.filter(t => t.position === null) : tools
+              if (atcCapacity > 0 && inStock.length === 0) return (
+                <p className="text-[#333] text-xs text-center py-4">Tous les outils sont montés sur la machine</p>
+              )
+              return inStock.map(tool => {
               const atAlert = tool.seuil !== null && tool.qty <= tool.seuil
               const isEmpty = tool.qty === 0
               const alertOpen = expandedAlertId === tool.id
@@ -197,8 +275,20 @@ return (
                       {tool.notes && <p className="text-xs mt-1 italic" style={{ color: '#444' }}>{tool.notes}</p>}
                     </div>
 
-                    {/* Actions: cloche + corbeille */}
+                    {/* Actions: monter + cloche + corbeille */}
                     <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                      {atcCapacity > 0 && (
+                        <button
+                          onClick={() => setMountingToolId(tool.id)}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                          style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                          title="Monter sur machine"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="#555" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+                          </svg>
+                        </button>
+                      )}
                       <button
                         onClick={() => setExpandedAlertId(alertOpen ? null : tool.id)}
                         className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
@@ -287,10 +377,59 @@ return (
                   )}
                 </div>
               )
-            })}
+            })
+          })()}
           </div>
         )}
       </main>
+
+      {/* Mount position picker */}
+      {mountingToolId && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center"
+          style={{ background: 'rgba(0,0,0,0.8)' }}
+          onClick={() => setMountingToolId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-2xl p-5 space-y-4"
+            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <p className="text-white font-bold text-sm">Choisir un poste magasin</p>
+              <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>
+                {tools.filter(t => t.position !== null).length}/{atcCapacity} postes occupés
+              </p>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {Array.from({ length: atcCapacity }, (_, i) => i + 1).map(pos => {
+                const occupied = tools.find(t => t.position === pos && t.id !== mountingToolId)
+                return (
+                  <button
+                    key={pos}
+                    onClick={() => { mountTool(mountingToolId, pos); setMountingToolId(null) }}
+                    className="aspect-square rounded-xl flex flex-col items-center justify-center transition-all active:scale-95"
+                    style={{
+                      background: occupied ? '#1a0e00' : '#1e1e1e',
+                      border: `1.5px solid ${occupied ? '#3a2000' : '#2a2a2a'}`,
+                    }}
+                  >
+                    <span className="text-xs font-black" style={{ color: occupied ? '#d4780f' : '#aaa' }}>{pos}</span>
+                    {occupied && (
+                      <span className="text-[8px] mt-0.5 text-center leading-tight px-1 truncate w-full" style={{ color: '#d4780f' }}>
+                        Ø{occupied.diametre}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <button onClick={() => setMountingToolId(null)} className="w-full py-3 rounded-xl text-sm" style={{ color: '#555' }}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add tool modal — centré */}
       {showForm && (
