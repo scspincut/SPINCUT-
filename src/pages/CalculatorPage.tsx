@@ -192,7 +192,7 @@ export default function CalculatorPage() {
 
   const CALC_KEY = 'spincut_calc_params'
   const saved = (() => { try { return JSON.parse(localStorage.getItem(CALC_KEY) ?? '{}') } catch { return {} } })()
-  const savedMachine = (() => { try { return JSON.parse(localStorage.getItem(`spincut_machine_${localStorage.getItem('spincut_client_code') ?? 'guest'}`) ?? '{}') } catch { return {} } })()
+  const savedMachine = (() => { try { return JSON.parse(localStorage.getItem(`spincut_machine_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} } })()
 
   // All hooks must be called unconditionally before any early return
   const [toolType, setToolType] = useState<CalculatorParams['toolType'] | null>(saved.toolType ?? null);
