@@ -103,14 +103,22 @@ export function calculate(params: CalculatorParams): CalcResult {
   const apRecommended = baseApFactor * diameter;
   const apUsed = (apOverride !== null && apOverride > 0) ? apOverride : apRecommended;
 
+  // Compression/diamant en découpe : pleine épaisseur obligatoire en 1 seule passe
+  // (la géométrie compression ne fonctionne qu'à travers toute l'épaisseur)
+  const forceFullDepth = (toolType === 'diamant_coupe' || toolType === 'compression')
+    && operation === 'decoupe'
+    && materialThickness !== null && materialThickness > 0;
+
   // Step 16 — Vf_Z
   const vfzInfo = VFZ_TABLE[material];
   const vfZ = vfUsed * vfzInfo.coeff;
 
   // Step 17 — N_passes
   let nPasses: number | null = null;
-  let apReel = apUsed;
-  if (materialThickness !== null && materialThickness > 0 && apUsed > 0) {
+  let apReel = forceFullDepth ? materialThickness! : apUsed;
+  if (forceFullDepth) {
+    nPasses = 1;
+  } else if (materialThickness !== null && materialThickness > 0 && apUsed > 0) {
     nPasses = Math.ceil(materialThickness / apUsed);
     apReel = materialThickness / nPasses;
   }
@@ -145,6 +153,22 @@ export function calculate(params: CalculatorParams): CalcResult {
     });
   }
 
+  // PCD/compression : fz trop faible → frottement → surchauffe → casse
+  if ((toolType === 'diamant_coupe' || toolType === 'compression') && fzReel < 0.08) {
+    alerts.push({
+      type: 'danger',
+      message: `⚠ Charge/dent trop faible (fz = ${fzReel.toFixed(3)} mm) — risque de frottement et surchauffe sur outil diamant. Augmentez la vitesse d'avance machine ou réduisez la broche.`,
+    });
+  }
+
+  // Limites machine non renseignées
+  if (nMax === null || vfMax === null) {
+    alerts.push({
+      type: 'warning',
+      message: `Renseignez vos limites machine (n max / Vf max) dans le profil ou les champs ci-dessus pour adapter les résultats à votre machine.`,
+    });
+  }
+
   // Alerte ap réduit sur petits outils
   if (operation === 'decoupe' && diameter <= 10 && apOverride === null) {
     alerts.push({
@@ -153,11 +177,11 @@ export function calculate(params: CalculatorParams): CalcResult {
     });
   }
 
-  // ap > D : danger casse outil
-  if (apUsed > diameter) {
+  // ap > D : danger casse outil (sauf compression/diamant découpe → pleine épaisseur normale)
+  if (apReel > diameter && !forceFullDepth) {
     alerts.push({
       type: 'danger',
-      message: `Profondeur de passe (${apUsed.toFixed(1)} mm) supérieure au diamètre — risque de casse outil. Réduire ap.`,
+      message: `Profondeur de passe (${apReel.toFixed(1)} mm) supérieure au diamètre — risque de casse outil. Réduire ap.`,
     });
   }
 
@@ -192,9 +216,9 @@ export function calculate(params: CalculatorParams): CalcResult {
     fzReel: parseFloat(fzReel.toFixed(3)),
     rctf: rctf !== null ? parseFloat(rctf.toFixed(2)) : null,
     zCalc,
-    ap: parseFloat(apUsed.toFixed(2)),
+    ap: parseFloat((forceFullDepth ? materialThickness! : apUsed).toFixed(2)),
     ae: parseFloat(ae.toFixed(3)),
-    apLabel: opParams.apLabel,
+    apLabel: forceFullDepth ? '1 passe — pleine épaisseur' : opParams.apLabel,
     aeLabel: opParams.aeLabel,
     vfZ: Math.round(vfZ),
     vfZCoeff: vfzInfo.coeff,
