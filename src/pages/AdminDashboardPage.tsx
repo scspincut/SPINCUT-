@@ -38,6 +38,7 @@ export default function AdminDashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [importMsg, setImportMsg] = useState('')
+  const [showSheetsExport, setShowSheetsExport] = useState(false)
 
   // Import BDC Abby
   const [bdcId, setBdcId] = useState('')
@@ -470,21 +471,93 @@ export default function AdminDashboardPage() {
                 {codes.length}
               </span>
             </h2>
-            <button
-              onClick={refreshCodes}
-              className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
-              style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#f1f1f1')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#8a8a8a')}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <polyline points="23 4 23 10 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <polyline points="1 20 1 14 7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Actualiser
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSheetsExport(true)}
+                className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                style={{ background: '#0a1f0a', color: '#4ade80', border: '1px solid #166534' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#14291e')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#0a1f0a')}
+              >
+                📋 Exporter pour Sheets
+              </button>
+              <button
+                onClick={refreshCodes}
+                className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#f1f1f1')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#8a8a8a')}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polyline points="23 4 23 10 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points="1 20 1 14 7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Actualiser
+              </button>
+            </div>
           </div>
+
+          {/* ── MODALE EXPORT SHEETS ── */}
+          {showSheetsExport && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.85)' }}
+              onClick={() => setShowSheetsExport(false)}
+            >
+              <div
+                className="w-full max-w-2xl rounded-2xl p-6"
+                style={{ background: '#161616', border: '1px solid #2a2a2a' }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Export pour Google Sheets — onglet CODES</h3>
+                  <button onClick={() => setShowSheetsExport(false)} style={{ color: '#8a8a8a' }}>✕</button>
+                </div>
+                <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>
+                  Copie tout le texte ci-dessous, puis dans Google Sheets ouvre l'onglet <strong style={{ color: '#d4780f' }}>CODES</strong>,
+                  clique sur la cellule <strong style={{ color: '#d4780f' }}>A1</strong> et colle (Ctrl+V / Cmd+V).
+                </p>
+                <textarea
+                  readOnly
+                  className="w-full rounded-lg p-3 text-xs font-mono resize-none"
+                  style={{ background: '#0d0d0d', color: '#e2e8f0', border: '1px solid #2a2a2a', height: '260px' }}
+                  value={[
+                    'id\tcode\tclientName\tactive\tisTest\tcreatedAt',
+                    ...codes.map((c, i) => [
+                      c.id || String(i + 1),
+                      c.code,
+                      c.clientName ?? '',
+                      c.active ? 'TRUE' : 'FALSE',
+                      c.isTest ? 'TRUE' : 'FALSE',
+                      c.createdAt ?? '',
+                    ].join('\t')),
+                  ].join('\n')}
+                  onFocus={e => e.target.select()}
+                />
+                <button
+                  className="mt-3 w-full py-2.5 rounded-lg text-sm font-semibold"
+                  style={{ background: '#d4780f', color: '#fff' }}
+                  onClick={() => {
+                    const text = [
+                      'id\tcode\tclientName\tactive\tisTest\tcreatedAt',
+                      ...codes.map((c, i) => [
+                        c.id || String(i + 1),
+                        c.code,
+                        c.clientName ?? '',
+                        c.active ? 'TRUE' : 'FALSE',
+                        c.isTest ? 'TRUE' : 'FALSE',
+                        c.createdAt ?? '',
+                      ].join('\t')),
+                    ].join('\n')
+                    navigator.clipboard.writeText(text)
+                  }}
+                >
+                  Copier tout
+                </button>
+              </div>
+            </div>
+          )}
 
           {codes.length === 0 ? (
             <p className="text-sm text-center py-8" style={{ color: '#8a8a8a' }}>
