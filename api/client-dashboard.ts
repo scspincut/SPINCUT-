@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await Promise.allSettled(
       uniqueIds.map(async id => {
         try {
-          const { data: bdc } = await abby.billing.getBillingById({ path: { billingId: id } })
+          const { data: bdc } = await abby.billing.getBillingById({ path: { documentId: id } })
           const b = bdc as any
           const state: string = b.state ?? 'unknown'
           if (HIDDEN_STATES.has(state)) return

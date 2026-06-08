@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 1. Récupérer le BDC depuis Abby
     const { data: bdc } = await abby.billing.getBillingById({
-      path: { billingId: bdcId.trim() },
+      path: { documentId: bdcId.trim() },
     })
     const bdcAny = bdc as any
     const lines: { reference?: string; designation?: string; quantity?: number }[] = bdcAny.lines ?? []
