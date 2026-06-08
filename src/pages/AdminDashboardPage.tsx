@@ -1,10 +1,45 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAdminAuth } from '../hooks/useAuth'
+import { useAdminAuth, getAccessCodes, saveAccessCodes } from '../hooks/useAuth'
+import { AccessCode } from '../types'
+
+function generateCode(name: string, existing: string[]): string {
+  const normalized = name.toUpperCase()
+    .replace(/[àáâãäåæçèéêëìíîïðñòóôõöùúûüý]/g, (c) => c.normalize('NFD')[0])
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ').trim()
+
+  const stop = new Set(['DE', 'DU', 'LA', 'LE', 'LES', 'ET', 'EN', 'AU', 'AUX', 'L', 'D', 'UN', 'UNE'])
+  const words = normalized.split(' ').filter(w => w.length > 0 && !stop.has(w))
+  if (words.length === 0) words.push(normalized.replace(/\s/g, '') || 'CLI')
+
+  const base = words.length === 1
+    ? words[0]
+    : words[0] + words.slice(1).map(w => w[0]).join('')
+
+  if (!existing.includes(base)) return base
+  for (let i = 2; i <= 99; i++) {
+    const candidate = base + i
+    if (!existing.includes(candidate)) return candidate
+  }
+  return base + Date.now().toString().slice(-2)
+}
 
 export default function AdminDashboardPage() {
   const { isAdmin, adminLogout } = useAdminAuth()
   const navigate = useNavigate()
+
+  // Gestion codes
+  const [codes, setCodes] = useState<AccessCode[]>([])
+  const [newCode, setNewCode] = useState('')
+  const [newClientName, setNewClientName] = useState('')
+  const [newClientPhone, setNewClientPhone] = useState('')
+  const [newIsTest, setNewIsTest] = useState(false)
+  const [createError, setCreateError] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [importStatus, setImportStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [importMsg, setImportMsg] = useState('')
+  const [showSheetsExport, setShowSheetsExport] = useState(false)
 
   // Import BDC Abby
   const [bdcId, setBdcId] = useState('')
@@ -75,8 +110,83 @@ export default function AdminDashboardPage() {
       navigate('/admin', { replace: true })
       return
     }
+    setCodes(getAccessCodes())
     fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
   }, [isAdmin, navigate])
+
+  const refreshCodes = () => setCodes(getAccessCodes())
+
+  const handleCreate = (e: FormEvent) => {
+    e.preventDefault()
+    setCreateError('')
+    const normalized = newCode.trim().toUpperCase()
+    if (!normalized) { setCreateError('Veuillez saisir un code.'); return }
+    if (normalized.length < 4) { setCreateError('Le code doit contenir au moins 4 caractères.'); return }
+    const existing = getAccessCodes()
+    if (existing.some(c => c.code === normalized)) { setCreateError('Ce code existe déjà.'); return }
+    const today = new Date()
+    const createdAt = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`
+    const newEntry: AccessCode = {
+      id: Date.now().toString(), code: normalized, active: true, createdAt,
+      clientName: newClientName.trim() || undefined,
+      clientPhone: newClientPhone.trim() || undefined,
+      isTest: newIsTest || undefined,
+    }
+    const updated = [...existing, newEntry]
+    saveAccessCodes(updated); setCodes(updated)
+    setNewCode(''); setNewClientName(''); setNewClientPhone(''); setNewIsTest(false)
+  }
+
+  const toggleActive = (id: string) => {
+    const updated = codes.map(c => c.id === id ? { ...c, active: !c.active } : c)
+    saveAccessCodes(updated); setCodes(updated)
+  }
+
+  const deleteCode = (id: string) => {
+    const updated = codes.filter(c => c.id !== id)
+    saveAccessCodes(updated); setCodes(updated)
+  }
+
+  const copyLink = (entry: AccessCode) => {
+    const params = new URLSearchParams({ activate: entry.code })
+    if (entry.clientName) params.set('name', entry.clientName)
+    const url = `${window.location.origin}/?${params.toString()}`
+    navigator.clipboard.writeText(url)
+    setCopiedId(entry.code)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const importFromAbby = async () => {
+    setImportStatus('loading'); setImportMsg('')
+    try {
+      const res = await fetch('/api/abby-clients')
+      if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
+      const clients: { id: string; name: string; phone?: string }[] = await res.json()
+      if (clients.length === 0) { setImportMsg('Aucun contact trouvé dans Abby.'); setImportStatus('done'); return }
+      const existing = getAccessCodes()
+      const existingNames = existing.map(c => c.clientName?.toLowerCase()).filter(Boolean)
+      const existingCodes = existing.map(c => c.code)
+      const toAdd: AccessCode[] = []
+      const today = new Date()
+      const createdAt = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`
+      for (const client of clients) {
+        if (existingNames.includes(client.name.toLowerCase())) continue
+        const code = generateCode(client.name, [...existingCodes, ...toAdd.map(c => c.code)])
+        toAdd.push({ id: Date.now().toString() + Math.random(), code, active: true, createdAt, clientName: client.name, clientPhone: client.phone })
+      }
+      if (toAdd.length === 0) {
+        setImportMsg(`Tous les ${clients.length} clients Abby ont déjà un code.`)
+      } else {
+        const updated = [...existing, ...toAdd]
+        saveAccessCodes(updated); setCodes(updated)
+        setImportMsg(`${toAdd.length} code${toAdd.length > 1 ? 's' : ''} importé${toAdd.length > 1 ? 's' : ''} depuis Abby.`)
+      }
+      setImportStatus('done')
+    } catch (e: unknown) {
+      setImportStatus('error')
+      setImportMsg(e instanceof Error ? e.message : 'Erreur inconnue')
+    }
+  }
 
   const handleLogout = () => {
     adminLogout()
@@ -226,6 +336,207 @@ export default function AdminDashboardPage() {
               </p>
             )}
           </div>
+        </div>
+
+        {/* Créer code */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <h2 className="text-base font-semibold text-white mb-4">Codes d'accès</h2>
+          <form onSubmit={handleCreate} className="space-y-3">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={newCode}
+                  onChange={e => { setNewCode(e.target.value.toUpperCase()); setCreateError('') }}
+                  placeholder="CODE (ex: DUPONT)"
+                  className="w-full px-4 py-2.5 rounded-lg text-white placeholder-gray-600 font-mono text-sm tracking-widest outline-none"
+                  style={{ background: '#1e1e1e', border: createError ? '1px solid #ef4444' : '1px solid #2a2a2a' }}
+                  onFocus={e => { if (!createError) e.currentTarget.style.border = '1px solid #d4780f' }}
+                  onBlur={e => { if (!createError) e.currentTarget.style.border = '1px solid #2a2a2a' }}
+                />
+                {createError && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{createError}</p>}
+              </div>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-lg font-semibold text-white transition-colors flex-shrink-0"
+                style={{ background: '#d4780f' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#b86400')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#d4780f')}
+              >
+                Créer
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={newClientName}
+                onChange={e => setNewClientName(e.target.value)}
+                placeholder="Nom du client (optionnel)"
+                className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+              />
+              <input
+                type="text"
+                value={newClientPhone}
+                onChange={e => setNewClientPhone(e.target.value)}
+                placeholder="Téléphone (optionnel)"
+                className="w-full px-3 py-2 rounded-lg text-white text-sm outline-none"
+                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={newIsTest}
+                onChange={e => setNewIsTest(e.target.checked)}
+                className="w-4 h-4 accent-[#d4780f] cursor-pointer"
+              />
+              <span className="text-xs" style={{ color: '#888' }}>Code de test — aucune donnée sauvegardée</span>
+            </label>
+          </form>
+        </div>
+
+        {/* Import Abby */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-white">Importer depuis Abby</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#8a8a8a' }}>Génère automatiquement un code pour chaque client Abby</p>
+            </div>
+            <button
+              onClick={importFromAbby}
+              disabled={importStatus === 'loading'}
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              style={{ background: '#0a1628', color: '#60a5fa', border: '1px solid #1e3a5f' }}
+            >
+              {importStatus === 'loading' ? (
+                <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Importation…</>
+              ) : '↓ Importer'}
+            </button>
+          </div>
+          {importMsg && (
+            <p className="text-xs mt-3 px-3 py-2 rounded-lg" style={{ background: importStatus === 'error' ? '#2a0000' : '#0a1f0a', color: importStatus === 'error' ? '#f87171' : '#4ade80' }}>
+              {importMsg}
+            </p>
+          )}
+        </div>
+
+        {/* Liste des codes */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-white">
+              Codes actifs{' '}
+              <span className="text-sm font-normal px-2 py-0.5 rounded ml-1" style={{ background: '#1e1e1e', color: '#8a8a8a' }}>
+                {codes.length}
+              </span>
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSheetsExport(true)}
+                className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                style={{ background: '#0a1f0a', color: '#4ade80', border: '1px solid #166534' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#14291e')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#0a1f0a')}
+              >
+                Exporter Sheets
+              </button>
+              <button
+                onClick={refreshCodes}
+                className="text-xs px-3 py-1.5 rounded-lg transition-colors"
+                style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#f1f1f1')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#8a8a8a')}
+              >
+                Actualiser
+              </button>
+            </div>
+          </div>
+
+          {showSheetsExport && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }} onClick={() => setShowSheetsExport(false)}>
+              <div className="w-full max-w-2xl rounded-2xl p-6" style={{ background: '#161616', border: '1px solid #2a2a2a' }} onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Export Google Sheets — onglet CODES</h3>
+                  <button onClick={() => setShowSheetsExport(false)} style={{ color: '#8a8a8a' }}>✕</button>
+                </div>
+                <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>
+                  Copie tout le texte, ouvre l'onglet <strong style={{ color: '#d4780f' }}>CODES</strong> dans Sheets, clique cellule <strong style={{ color: '#d4780f' }}>A1</strong> et colle.
+                </p>
+                <textarea
+                  readOnly
+                  className="w-full rounded-lg p-3 text-xs font-mono resize-none"
+                  style={{ background: '#0d0d0d', color: '#e2e8f0', border: '1px solid #2a2a2a', height: '260px' }}
+                  value={['id\tcode\tclientName\tactive\tisTest\tcreatedAt', ...codes.map((c, i) => [c.id || String(i+1), c.code, c.clientName ?? '', c.active ? 'TRUE' : 'FALSE', c.isTest ? 'TRUE' : 'FALSE', c.createdAt ?? ''].join('\t'))].join('\n')}
+                  onFocus={e => e.target.select()}
+                />
+                <button
+                  className="mt-3 w-full py-2.5 rounded-lg text-sm font-semibold"
+                  style={{ background: '#d4780f', color: '#fff' }}
+                  onClick={() => navigator.clipboard.writeText(['id\tcode\tclientName\tactive\tisTest\tcreatedAt', ...codes.map((c, i) => [c.id || String(i+1), c.code, c.clientName ?? '', c.active ? 'TRUE' : 'FALSE', c.isTest ? 'TRUE' : 'FALSE', c.createdAt ?? ''].join('\t'))].join('\n'))}
+                >
+                  Copier tout
+                </button>
+              </div>
+            </div>
+          )}
+
+          {codes.length === 0 ? (
+            <p className="text-sm text-center py-8" style={{ color: '#8a8a8a' }}>Aucun code créé pour l'instant.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #2a2a2a' }}>
+                    <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Code</th>
+                    <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Client</th>
+                    <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Statut</th>
+                    <th className="text-left pb-3 font-medium" style={{ color: '#8a8a8a' }}>Créé</th>
+                    <th className="text-right pb-3 font-medium" style={{ color: '#8a8a8a' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {codes.map(c => (
+                    <tr key={c.id} style={{ borderBottom: '1px solid #1a1a1a' }}>
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold text-white tracking-wider">{c.code}</span>
+                          {c.isTest && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#1a1a00', color: '#fbbf24', border: '1px solid #3a3a00' }}>TEST</span>}
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {c.clientName
+                          ? <div><p className="text-white text-xs font-medium">{c.clientName}</p>{c.clientPhone && <p className="text-xs" style={{ color: '#8a8a8a' }}>{c.clientPhone}</p>}</div>
+                          : <span className="text-xs" style={{ color: '#3a3a3a' }}>—</span>}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded" style={c.active ? { background: '#0a1f0a', color: '#4ade80', border: '1px solid #166534' } : { background: '#1a0a0a', color: '#f87171', border: '1px solid #7f1d1d' }}>
+                          {c.active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4 text-xs" style={{ color: '#8a8a8a' }}>{c.createdAt}</td>
+                      <td className="py-3">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                          <button onClick={() => copyLink(c)} className="text-xs px-3 py-1 rounded transition-colors" style={{ background: '#0a1628', color: copiedId === c.code ? '#4ade80' : '#60a5fa', border: `1px solid ${copiedId === c.code ? '#166534' : '#1e3a5f'}` }}>
+                            {copiedId === c.code ? '✓ Copié !' : 'Lien client'}
+                          </button>
+                          <button onClick={() => toggleActive(c.id)} className="text-xs px-3 py-1 rounded transition-colors" style={{ background: '#1e1e1e', color: c.active ? '#f59e0b' : '#4ade80', border: '1px solid #2a2a2a' }} onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')} onMouseLeave={e => (e.currentTarget.style.background = '#1e1e1e')}>
+                            {c.active ? 'Désactiver' : 'Activer'}
+                          </button>
+                          <button onClick={() => deleteCode(c.id)} className="text-xs px-3 py-1 rounded transition-colors" style={{ background: '#1a0a0a', color: '#f87171', border: '1px solid #7f1d1d' }} onMouseEnter={e => (e.currentTarget.style.background = '#2a1010')} onMouseLeave={e => (e.currentTarget.style.background = '#1a0a0a')}>
+                            Supprimer
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Back */}
