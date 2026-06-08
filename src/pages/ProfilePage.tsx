@@ -292,7 +292,7 @@ export default function ProfilePage() {
         {/* Ma machine */}
         <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-3">
           <div>
-            <p className="text-white font-bold text-sm">Ma machine CNC</p>
+            <p className="text-white font-bold text-sm">Ma machine</p>
             <p className="text-xs mt-0.5" style={{ color: '#555' }}>Pré-remplit automatiquement le calculateur.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
