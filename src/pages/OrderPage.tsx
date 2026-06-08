@@ -198,6 +198,18 @@ export default function OrderPage() {
       setQuantities({})
       try { localStorage.removeItem(cartKey) } catch {}
       fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
+      // Rafraîchir les commandes Abby pour que la nouvelle apparaisse immédiatement en "En cours"
+      if (clientName) {
+        fetch('/api/client-dashboard', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientName, orderIds: [orderId] }),
+        }).then(r => r.json()).then(data => {
+          if (!data.error) {
+            setPendingOrders(data.orders ?? [])
+            setDeliveredOrders(data.delivered ?? [])
+          }
+        }).catch(() => {})
+      }
     } catch (e: unknown) {
       setOrderStatus('error'); setOrderError(e instanceof Error ? e.message : 'Erreur inconnue')
     }
@@ -239,7 +251,7 @@ export default function OrderPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>Elle apparaîtra dans "En cours" une fois traitée</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>Le bon de commande a été créé — visible ci-dessous dans "En cours"</p>
                 </div>
                 <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
               </div>
