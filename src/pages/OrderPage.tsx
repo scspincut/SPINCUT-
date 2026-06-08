@@ -163,11 +163,10 @@ export default function OrderPage() {
       await new Promise(r => setTimeout(r, 800))
       const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
       const testOrder = { items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId: 'TEST-0000', isNewBdc: true }
-      // Envoyer email de notification (sans créer de BDC Abby ni déduire le stock)
       fetch('/api/create-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientName: clientName ?? 'Client TEST', items, testMode: true }),
-      }).catch(() => {})
+      }).then(r => r.json()).then(d => console.log('[TEST email]', d.emailStatus)).catch(e => console.error('[TEST email]', e))
       try { sessionStorage.setItem(TEST_LAST_ORDER_KEY, JSON.stringify(testOrder)) } catch {}
       setLastOrder(testOrder)
       setOrderStatus('success')
