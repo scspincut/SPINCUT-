@@ -190,13 +190,11 @@ return (
                   <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-bold text-base">Ø {tool.diametre} mm</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
+                        <span className="text-white font-bold text-sm">Ø{tool.diametre} mm</span>
+                        <span className="text-xs" style={{ color: '#555' }}>Z={tool.dents} · LC={tool.lc} mm · LT={tool.lt} mm</span>
                       </div>
-                      <p className="text-xs mt-1" style={{ color: '#555' }}>
-                        Z={tool.dents} · LC={tool.lc} mm · LT={tool.lt} mm
-                      </p>
-                      {tool.notes && <p className="text-xs mt-0.5 italic" style={{ color: '#444' }}>{tool.notes}</p>}
+                      {tool.notes && <p className="text-xs mt-1 italic" style={{ color: '#444' }}>{tool.notes}</p>}
                     </div>
 
                     {/* Actions: cloche + corbeille */}
