@@ -54,8 +54,8 @@ export function calculate(params: CalculatorParams): CalcResult {
 
   // Step 6 — Cap n
   const nLimited = nMax !== null && nTheo > nMax;
-  const nUsed = nLimited ? nMax! : nTheo;
-  const vcReelle = (Math.PI * diameter * nUsed) / 1000;
+  let nUsed = nLimited ? nMax! : nTheo;
+  let vcReelle = (Math.PI * diameter * nUsed) / 1000;
 
   // Step 7 — fz from table with interpolation
   let fzBase = interpolateFz(toolType, material, diameter);
@@ -94,7 +94,21 @@ export function calculate(params: CalculatorParams): CalcResult {
   // Step 14 — Cap Vf
   const vfLimited = vfMax !== null && vfTheo > vfMax;
   const vfUsed = vfLimited ? vfMax! : vfTheo;
-  const fzReel = vfUsed / (nUsed * zCalc);
+  let fzReel = vfUsed / (nUsed * zCalc);
+
+  // Step 14b — Auto-adapt broche PCD : si vfMax machine force fz < 0.15mm, réduire n
+  // → affiche toujours des paramètres sûrs, jamais de valeurs qui brûlent l'outil
+  const PCD_FZ_MIN = 0.15;
+  let nPCDAutoAdapted = false;
+  if (toolType === 'diamant_coupe' && vfMax !== null && fzReel < PCD_FZ_MIN) {
+    const nSafe = vfUsed / (zCalc * PCD_FZ_MIN);
+    if (nSafe < nUsed && nSafe > 1000) {
+      nUsed = nSafe;
+      vcReelle = (Math.PI * diameter * nSafe) / 1000;
+      fzReel = PCD_FZ_MIN;
+      nPCDAutoAdapted = true;
+    }
+  }
 
   // Step 15 — ap
   // Règle pro : découpe Ø ≤ 10mm → ap = D/2 (outil fragile), Ø ≥ 12mm → ap = D
@@ -130,15 +144,23 @@ export function calculate(params: CalculatorParams): CalcResult {
   const alerts: Alert[] = [];
 
   // Broche plafonnée par nMax utilisateur
-  if (nLimited) {
+  if (nLimited && !nPCDAutoAdapted) {
     alerts.push({
       type: 'warning',
       message: `Broche à la limite de ta machine — résultats calculés à ${nMax!.toLocaleString('fr-FR')} tr/min.`,
     });
   }
 
+  // Broche réduite automatiquement pour maintenir fz ≥ 0.15mm sur outil diamant
+  if (nPCDAutoAdapted) {
+    alerts.push({
+      type: 'info',
+      message: `Broche réduite à ${Math.round(nUsed).toLocaleString('fr-FR')} tr/min pour maintenir fz = 0.15 mm/dent avec votre Vf max (${vfMax!.toLocaleString('fr-FR')} mm/min) — paramètres adaptés à votre machine.`,
+    });
+  }
+
   // n théorique élevé — vérifier capacité machine
-  if (!nLimited && nTheo > 20000) {
+  if (!nLimited && !nPCDAutoAdapted && nTheo > 20000) {
     alerts.push({
       type: 'warning',
       message: `Vitesse calculée : ${Math.round(nTheo).toLocaleString('fr-FR')} tr/min — vérifiez que votre machine peut atteindre cette vitesse avant d'usiner.`,
@@ -153,12 +175,19 @@ export function calculate(params: CalculatorParams): CalcResult {
     });
   }
 
-  // PCD/compression : fz trop faible → frottement → surchauffe → casse
-  // Minimum absolu professionnel : 0.15 mm/dent (sources : Amana DRB-250, Wirutex, WOODWEB pros)
-  if ((toolType === 'diamant_coupe' || toolType === 'compression') && fzReel < 0.15) {
+  // PCD diamant : fz trop faible même après auto-adapt (machine trop lente pour cet outil)
+  if (toolType === 'diamant_coupe' && fzReel < PCD_FZ_MIN && !nPCDAutoAdapted) {
     alerts.push({
       type: 'danger',
-      message: `⚠ Charge/dent trop faible (fz = ${fzReel.toFixed(3)} mm/dent, minimum 0.15 mm) — risque de frottement et surchauffe sur outil diamant/compression. Augmentez la vitesse d'avance ou réduisez la broche.`,
+      message: `⚠ Charge/dent trop faible (fz = ${fzReel.toFixed(3)} mm/dent, min 0.15 mm) — risque frottement et surchauffe. Augmentez Vf ou réduisez la broche.`,
+    });
+  }
+
+  // Compression carbure : fz très faible (brûlure possible, outil usé prématurément)
+  if (toolType === 'compression' && fzReel < 0.05) {
+    alerts.push({
+      type: 'warning',
+      message: `Avance/dent faible (fz = ${fzReel.toFixed(3)} mm) — risque de brûlure sur compression carbure. Augmentez Vf ou réduisez la broche.`,
     });
   }
 
