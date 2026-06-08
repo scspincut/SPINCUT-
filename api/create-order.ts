@@ -93,7 +93,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           path: { billingId: existingBdcId },
         })
         const bdc = existingBdc as any
-        const isOpen = bdc && bdc.state !== 'paid' && bdc.state !== 'cancelled' && bdc.state !== 'archived'
+        const OPEN_STATES = new Set(['draft', 'finalized', 'sent', 'signed'])
+        const isOpen = bdc && OPEN_STATES.has(bdc.state)
         if (isOpen) {
           step = 'mise à jour lignes BDC existant'
           const existingLines = (bdc.lines ?? []).map((l: any) => ({

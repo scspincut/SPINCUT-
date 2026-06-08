@@ -251,7 +251,7 @@ export default function OrderPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>Le bon de commande a été créé — visible ci-dessous dans "En cours"</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>{lastOrder.isNewBdc ? 'Bon de commande créé — visible ci-dessous dans "En cours"' : 'Ajouté à votre bon de commande en cours'}</p>
                 </div>
                 <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
               </div>
