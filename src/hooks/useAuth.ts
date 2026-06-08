@@ -6,11 +6,18 @@ const ADMIN_SESSION_KEY = 'spincut_admin_session';
 const CLIENT_SESSION_KEY = 'spincut_client_session';
 const ADMIN_PASSWORD = '22102000';
 
+const DEFAULT_CODES: AccessCode[] = [
+  { id: 'default-test', code: 'TEST', active: true, createdAt: '2024-01-01', clientName: 'Démo SPINCUT', isTest: true },
+]
+
 export function getAccessCodes(): AccessCode[] {
   try {
     const s = localStorage.getItem(CODES_KEY);
-    return s ? (JSON.parse(s) as AccessCode[]) : [];
-  } catch { return []; }
+    const stored = s ? (JSON.parse(s) as AccessCode[]) : []
+    // Toujours inclure le code TEST par défaut s'il n'est pas déjà présent
+    const hasTest = stored.some(c => c.code === 'TEST')
+    return hasTest ? stored : [...DEFAULT_CODES, ...stored]
+  } catch { return DEFAULT_CODES; }
 }
 
 export function saveAccessCodes(codes: AccessCode[]): void {
