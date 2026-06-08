@@ -444,7 +444,10 @@ function AbbyOrderCard({ order, delivered }: { order: { id: string; number: stri
           <span className="text-[10px] font-mono font-semibold" style={{ color: '#555' }}>{order.number || `#${order.id.slice(-6)}`}</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={stateColor}>{order.label}</span>
         </div>
-        <span className="text-sm font-bold text-white">{order.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal" style={{ color: '#555' }}>€ HT</span></span>
+        <div className="text-right">
+          <span className="text-sm font-bold text-white">{order.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal" style={{ color: '#555' }}>€ HT</span></span>
+          <p className="text-[10px]" style={{ color: '#444' }}>{(order.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+        </div>
       </div>
       {order.items.length > 0 && (
         <div className="px-4 pb-3 space-y-0.5" style={{ borderTop: '1px solid #1a1a1a' }}>
@@ -469,7 +472,10 @@ function HistoryCard({ entry }: { entry: { date: number; orderId: string; isNewB
         <span className="text-[#888] text-xs">
           {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
         </span>
-        <span className="text-[#d4780f] text-xs font-bold">{entry.total.toFixed(2).replace('.', ',')} € HT</span>
+        <div className="text-right">
+          <span className="text-[#d4780f] text-xs font-bold">{entry.total.toFixed(2).replace('.', ',')} € HT</span>
+          <p className="text-[10px]" style={{ color: '#444' }}>{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+        </div>
       </div>
       <div className="px-4 py-2 space-y-1">
         {entry.items.map((item, j) => (
