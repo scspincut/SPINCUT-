@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (testMode) {
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0)
     const resendKey = process.env.RESEND_API_KEY
-    const from = process.env.RESEND_FROM ?? 'SPINCUT <notifications@spincut.fr>'
+    const from = process.env.RESEND_FROM ?? 'SPINCUT <onboarding@resend.dev>'
     if (resendKey) {
       const lignesHtml = items.map(i =>
         `<tr><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.quantity}×</td><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.ref}</td><td style="padding:4px 8px;border-bottom:1px solid #222;">${i.designation}</td><td style="padding:4px 8px;border-bottom:1px solid #222;text-align:right;">${(i.price * i.quantity).toFixed(2)} €</td></tr>`
@@ -153,7 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM ?? 'SPINCUT <notifications@spincut.fr>',
+          from: process.env.RESEND_FROM ?? 'SPINCUT <onboarding@resend.dev>',
           to: ['scspincut@gmail.com'],
           subject: `🛒 Nouvelle commande — ${clientName}`,
           html: `
