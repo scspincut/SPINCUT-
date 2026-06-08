@@ -49,6 +49,8 @@ export default function LoginPage() {
   const [showForm, setShowForm] = useState(false)
   const [showMailMenu, setShowMailMenu] = useState(false)
   const [sendError, setSendError] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailSending, setEmailSending] = useState(false)
   const [current, setCurrent] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const photos = ['/photo1.jpg', '/photo2.jpg', '/photo3.jpg', '/photo4.png']
@@ -78,13 +80,30 @@ export default function LoginPage() {
     window.open(`https://wa.me/33767739561?text=${encodeURIComponent(buildMessage())}`, '_blank')
   }
 
-  const handleEmail = () => {
+  const handleEmail = async () => {
     if (!prospectName.trim() || !prospectEmail.trim()) {
       setSendError('Veuillez renseigner votre nom et votre email pour envoyer par email.')
       return
     }
     setSendError('')
-    setShowMailMenu(true)
+    setEmailSending(true)
+    try {
+      const r = await fetch('/api/prospect-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: prospectName.trim(), email: prospectEmail.trim(), phone: prospectPhone.trim() || undefined, company: prospectCompany.trim() || undefined }),
+      })
+      if (r.ok) {
+        setEmailSent(true)
+      } else {
+        const d = await r.json().catch(() => ({}))
+        setSendError((d as any).error ?? 'Erreur lors de l\'envoi, réessayez.')
+      }
+    } catch {
+      setSendError('Erreur réseau, réessayez.')
+    } finally {
+      setEmailSending(false)
+    }
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -316,16 +335,23 @@ export default function LoginPage() {
                   </svg>
                   Envoyer via WhatsApp
                 </button>
-                <button
-                  onClick={handleEmail}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-2"
-                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', color: '#aaa', opacity: (!prospectName.trim() || !prospectEmail.trim()) ? 0.4 : 1 }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
-                  </svg>
-                  Envoyer par email
-                </button>
+                {emailSent ? (
+                  <div className="w-full py-3 rounded-lg text-sm text-center font-semibold" style={{ background: '#0d2a1a', border: '1px solid #1a4a2a', color: '#4ade80' }}>
+                    ✓ Demande envoyée — SPINCUT vous contactera bientôt
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleEmail}
+                    disabled={emailSending}
+                    className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                    style={{ background: '#1e1e1e', border: '1px solid #2a2a2a', color: '#aaa', opacity: (!prospectName.trim() || !prospectEmail.trim()) ? 0.4 : 1 }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+                    </svg>
+                    {emailSending ? 'Envoi…' : 'Envoyer par email'}
+                  </button>
+                )}
                 {sendError && (
                   <p className="text-xs text-center" style={{ color: '#ef4444' }}>{sendError}</p>
                 )}
