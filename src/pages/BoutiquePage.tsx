@@ -1065,6 +1065,7 @@ export default function BoutiquePage() {
                 <div className="grid grid-cols-2 gap-3">
                   {cmtGroups.map(group => {
                     const anyInStock = group.products.some(p => p.stock > 0)
+                    const anyFaved   = group.products.some(p => favorites.has(uid(p)))
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
                     const minPrice   = prices.length ? Math.min(...prices) : 0
@@ -1072,14 +1073,14 @@ export default function BoutiquePage() {
                       ? group.products[0].designation
                       : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
                     return (
-                      <button
+                      <div
                         key={group.key}
-                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
                         style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
                         {/* Photo */}
-                        <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
+                        <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}
+                          onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}>
                           {group.photoUrl
                             ? (() => {
                                 const urls = [group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]
@@ -1105,9 +1106,16 @@ export default function BoutiquePage() {
                             style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
                             {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
+                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+                            style={{ background: anyFaved ? '#e03c3c' : 'rgba(0,0,0,0.6)', border: `1px solid ${anyFaved ? '#e03c3c' : '#2a2a2a'}` }}>
+                            <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                          </button>
                         </div>
                         {/* Infos */}
-                        <div className="px-2.5 py-2.5">
+                        <div className="px-2.5 py-2.5" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}>
                           <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
                           <div className="mt-1.5">
                             {minPrice > 0
@@ -1116,7 +1124,7 @@ export default function BoutiquePage() {
                             }
                           </div>
                         </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
@@ -1132,6 +1140,7 @@ export default function BoutiquePage() {
                 <div className="grid grid-cols-2 gap-3">
                   {lamesGroups.map(group => {
                     const anyInStock = group.products.some(p => p.stock > 0)
+                    const anyFaved   = group.products.some(p => favorites.has(uid(p)))
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
                     const minPrice   = prices.length ? Math.min(...prices) : 0
@@ -1139,13 +1148,13 @@ export default function BoutiquePage() {
                       ? group.products[0].designation
                       : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
                     return (
-                      <button
+                      <div
                         key={group.key}
-                        onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
                         style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
                       >
-                        <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
+                        <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}
+                          onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}>
                           {group.photoUrl
                             ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} externalIdx={syncPhotoIdx} />
                             : <div className="absolute inset-0 flex items-center justify-center"
@@ -1166,8 +1175,15 @@ export default function BoutiquePage() {
                             style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
                             {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
+                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+                            style={{ background: anyFaved ? '#e03c3c' : 'rgba(0,0,0,0.6)', border: `1px solid ${anyFaved ? '#e03c3c' : '#2a2a2a'}` }}>
+                            <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                          </button>
                         </div>
-                        <div className="px-2.5 py-2.5">
+                        <div className="px-2.5 py-2.5" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}>
                           <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
                           <div className="mt-1.5">
                             {minPrice > 0
@@ -1176,7 +1192,7 @@ export default function BoutiquePage() {
                             }
                           </div>
                         </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
