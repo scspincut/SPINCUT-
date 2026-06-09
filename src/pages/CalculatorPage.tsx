@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 
 function AppleMailIcon() {
   return (
@@ -213,6 +213,8 @@ export default function CalculatorPage() {
   const [savedThisCalc, setSavedThisCalc] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dropIdx, setDropIdx] = useState<number | null>(null);
+  const histListRef = useRef<HTMLDivElement>(null);
+  const dragItemCount = useRef(0);
   const [showMailMenu, setShowMailMenu] = useState(false);
   const [showGlossaire, setShowGlossaire] = useState(false);
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
@@ -705,9 +707,12 @@ export default function CalculatorPage() {
             </button>
 
             {showHistory && (
-              <div className="px-4 pb-4 space-y-1.5">
+              <div
+                ref={histListRef}
+                className="px-4 pb-4 space-y-1.5"
+                style={{ touchAction: dragIdx !== null ? 'none' : 'auto' }}
+              >
                 {(() => {
-                  // Build display order with drag-in-progress reordering
                   let display = [...history]
                   if (dragIdx !== null && dropIdx !== null && dragIdx !== dropIdx) {
                     const [moved] = display.splice(dragIdx, 1)
@@ -716,33 +721,47 @@ export default function CalculatorPage() {
                   return display.map((entry, visualIdx) => {
                     const origIdx = history.findIndex(e => e.id === entry.id)
                     const isDragging = dragIdx === origIdx
+                    const isTarget = dropIdx === visualIdx && dragIdx !== null && dragIdx !== visualIdx
                     return (
                       <div
                         key={entry.id}
-                        onDragOver={e => { e.preventDefault(); setDropIdx(visualIdx) }}
-                        onDrop={() => {
-                          if (dragIdx !== null && dragIdx !== visualIdx) {
-                            const arr = [...history]
-                            arr.splice(visualIdx, 0, arr.splice(dragIdx, 1)[0])
-                            setHistory(arr)
-                            saveHistory(arr, clientCode)
-                          }
-                          setDragIdx(null); setDropIdx(null)
-                        }}
-                        className="rounded-xl border flex items-center gap-2 transition-all"
+                        className="rounded-xl border flex items-center gap-2"
                         style={{
                           background: isDragging ? '#2a1800' : '#1a1a1a',
-                          borderColor: isDragging ? '#d4780f55' : '#2a2a2a',
-                          opacity: isDragging ? 0.6 : 1,
+                          borderColor: isTarget ? '#d4780f' : isDragging ? '#d4780f44' : '#2a2a2a',
+                          opacity: isDragging ? 0.55 : 1,
+                          transition: dragIdx === null ? 'border-color 0.15s' : 'none',
                         }}
                       >
-                        {/* Drag handle */}
+                        {/* Drag handle — pointer capture */}
                         <div
-                          draggable
-                          onDragStart={() => { setDragIdx(origIdx); setDropIdx(origIdx) }}
-                          onDragEnd={() => { setDragIdx(null); setDropIdx(null) }}
-                          className="pl-3 py-3 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
-                          style={{ color: '#333' }}
+                          className="pl-3 py-3.5 flex-shrink-0 select-none"
+                          style={{ color: '#3a3a3a', cursor: dragIdx !== null ? 'grabbing' : 'grab', touchAction: 'none' }}
+                          onPointerDown={e => {
+                            e.preventDefault()
+                            ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+                            dragItemCount.current = history.length
+                            setDragIdx(origIdx)
+                            setDropIdx(origIdx)
+                          }}
+                          onPointerMove={e => {
+                            if (dragIdx === null || !histListRef.current) return
+                            const rect = histListRef.current.getBoundingClientRect()
+                            const relY = e.clientY - rect.top
+                            const itemH = rect.height / dragItemCount.current
+                            const newDrop = Math.max(0, Math.min(dragItemCount.current - 1, Math.floor(relY / itemH)))
+                            setDropIdx(newDrop)
+                          }}
+                          onPointerUp={() => {
+                            if (dragIdx !== null && dropIdx !== null && dragIdx !== dropIdx) {
+                              const arr = [...history]
+                              arr.splice(dropIdx, 0, arr.splice(dragIdx, 1)[0])
+                              setHistory(arr)
+                              saveHistory(arr, clientCode)
+                            }
+                            setDragIdx(null); setDropIdx(null)
+                          }}
+                          onPointerCancel={() => { setDragIdx(null); setDropIdx(null) }}
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
@@ -750,7 +769,7 @@ export default function CalculatorPage() {
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0 py-3 cursor-pointer" onClick={() => reloadEntry(entry)}>
+                        <div className="flex-1 min-w-0 py-3 cursor-pointer" onClick={() => dragIdx === null && reloadEntry(entry)}>
                           <p className="text-white text-sm font-medium truncate">
                             {TOOL_TYPE_LABELS[entry.params.toolType]} Ø{entry.params.diameter} · {MATERIAL_LABELS[entry.params.material]}
                           </p>
@@ -764,7 +783,7 @@ export default function CalculatorPage() {
                         {/* Delete */}
                         <button
                           onClick={() => setHistory(deleteFromHistory(entry.id, clientCode))}
-                          className="pr-3 py-3 flex-shrink-0 active:scale-90 transition-transform"
+                          className="pr-3 py-3.5 flex-shrink-0 active:scale-90 transition-transform"
                           style={{ color: '#3a3a3a' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
