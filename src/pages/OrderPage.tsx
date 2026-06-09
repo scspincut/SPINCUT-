@@ -458,10 +458,9 @@ function AbbyOrderCard({ order, delivered }: { order: AbbyOrder; delivered?: boo
     <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
-          {order.number
-            ? <span className="text-[10px] font-mono font-semibold" style={{ color: '#555' }}>{order.number}</span>
-            : <span className="text-[10px] font-semibold italic" style={{ color: '#444' }}>Brouillon</span>
-          }
+          {order.number && (
+            <span className="text-[10px] font-mono font-semibold" style={{ color: '#555' }}>{order.number}</span>
+          )}
           <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={stateColor}>
             {isDelivered ? 'Livré' : isPartial ? 'Livraison partielle' : order.label}
           </span>
