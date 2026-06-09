@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, FormEvent } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAdminAuth, getAccessCodes, saveAccessCodes } from '../hooks/useAuth'
 import { AccessCode } from '../types'
 
@@ -36,12 +36,12 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate()
 
   // Onglet actif
-  const [activeTab, setActiveTab] = useState<'stock' | 'commandes'>('stock')
+  const [activeTab, setActiveTab] = useState<'codes' | 'stock' | 'commandes'>('commandes')
 
   // Commandes en cours
   const [adminOrders, setAdminOrders] = useState<AdminOrder[]>([])
   const [ordersLoading, setOrdersLoading] = useState(false)
-  const [ordersError, setOrdersError] = useState('')
+  const [_ordersError, setOrdersError] = useState('')
   const [deliverStatus, setDeliverStatus] = useState<Record<string, 'idle' | 'loading' | 'done' | 'error'>>({})
   const [deliverWaUrls, setDeliverWaUrls] = useState<Record<string, string | null>>({})
   const [showDelivered, setShowDelivered] = useState(false)
@@ -297,9 +297,9 @@ export default function AdminDashboardPage() {
 
         {/* Onglets */}
         <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid #2a2a2a' }}>
-          {(['stock', 'commandes'] as const).map(tab => {
+          {(['codes', 'stock', 'commandes'] as const).map(tab => {
             const pending = adminOrders.filter(o => o.status === 'en_cours' || o.status === 'livre_partiel')
-            const label = tab === 'stock' ? 'Stock & Codes' : 'Commandes'
+            const label = tab === 'codes' ? 'Codes' : tab === 'stock' ? 'Stock' : 'Commandes'
             const count = tab === 'commandes' && pending.length > 0 ? pending.length : null
             return (
               <button
@@ -323,10 +323,7 @@ export default function AdminDashboardPage() {
           const recentDelivered = adminOrders.filter(o => o.status === 'livre').slice(0, 10)
           return (
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs" style={{ color: '#8a8a8a' }}>
-                  {ordersLoading ? 'Chargement…' : `${pending.length} commande${pending.length !== 1 ? 's' : ''} en attente`}
-                </p>
+              <div className="flex items-center justify-end">
                 <button
                   onClick={fetchAdminOrders}
                   disabled={ordersLoading}
@@ -337,15 +334,9 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
-              {ordersError && (
-                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#2a0000', color: '#f87171' }}>
-                  {ordersError.includes('GAS') || ordersError.includes('action') ? 'GAS non mis à jour — ajoutez le code COMMANDES à votre Apps Script' : ordersError}
-                </p>
-              )}
-
-              {!ordersLoading && pending.length === 0 && !ordersError && (
+              {pending.length === 0 && (
                 <div className="text-center py-10">
-                  <p className="text-[#555] text-sm">Aucune commande en attente</p>
+                  <p className="text-[#555] text-sm">Pas de commande à livrer</p>
                 </div>
               )}
 
@@ -633,6 +624,11 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
+        </>}
+
+        {/* ─── ONGLET CODES ─── */}
+        {activeTab === 'codes' && <>
+
         {/* Créer code */}
         <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
           <h2 className="text-base font-semibold text-white mb-4">Codes d'accès</h2>
@@ -836,21 +832,6 @@ export default function AdminDashboardPage() {
 
         </>}
 
-        {/* Back */}
-        <div className="flex justify-center">
-          <Link
-            to="/calculator"
-            className="text-sm transition-colors flex items-center gap-2"
-            style={{ color: '#8a8a8a' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#d4780f')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#8a8a8a')}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Retour au calculateur
-          </Link>
-        </div>
       </main>
 
       <footer className="text-center py-4 text-xs" style={{ color: '#4a4a4a', borderTop: '1px solid #1a1a1a' }}>
