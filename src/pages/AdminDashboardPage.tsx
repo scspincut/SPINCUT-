@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
   const fetchAdminOrders = async () => {
     setOrdersLoading(true); setOrdersError('')
     try {
-      const r = await fetch('/api/orders-list')
+      const r = await fetch('/api/orders')
       const data = await r.json()
       if (!r.ok) throw new Error(data.error ?? 'Erreur serveur')
       setAdminOrders(Array.isArray(data) ? data : [])
@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
   const handleDeliver = async (orderId: string, status: 'livre' | 'livre_partiel') => {
     setDeliverStatus(prev => ({ ...prev, [orderId]: 'loading' }))
     try {
-      const r = await fetch('/api/deliver-order', {
+      const r = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, status }),
