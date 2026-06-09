@@ -207,6 +207,15 @@ export function calculate(params: CalculatorParams): CalcResult {
     });
   }
 
+  // PCD pleine épaisseur > 1×D : évacuation copeaux critique
+  if (toolType === 'diamant_coupe' && forceFullDepth && materialThickness !== null && materialThickness > diameter) {
+    const ratio = (materialThickness / diameter).toFixed(1)
+    alerts.push({
+      type: 'warning',
+      message: `Épaisseur ${materialThickness} mm = ${ratio}×D — évacuation copeaux critique à cette profondeur. Aspiration puissante en continu obligatoire. Sans aspiration industrielle : réduire Vf de 40 %.`,
+    })
+  }
+
   // ap > D : danger casse outil (sauf compression/diamant découpe → pleine épaisseur normale)
   if (apReel > diameter && !forceFullDepth) {
     alerts.push({
