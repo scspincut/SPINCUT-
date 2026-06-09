@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (e) {
       emailStatus = `fetch error: ${e instanceof Error ? e.message : String(e)}`
     }
-    return res.status(200).json({ success: true, orderId: 'TEST-0000', isNewBdc: true, emailStatus })
+    return res.status(200).json({ success: true, orderId: 'TEST-0000', isNewBdc: true, emailStatus, blNumber: 'BL-TEST-001' })
   }
 
   const apiKey = process.env.ABBY_API_KEY
@@ -173,28 +173,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 4b — Logger la commande dans GAS COMMANDES (uniquement pour nouveau BDC)
-    if (isNewBdc && orderId && sheetsUrl && sheetsSecret) {
-      const itemsSummary = items.map(i => ({ ref: i.ref, qty: i.quantity }))
-      await fetch(sheetsUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          secret: sheetsSecret,
-          action: 'logOrder',
-          order: {
-            uuid: orderId,
-            clientName,
-            clientCode: clientCode ?? '',
-            date: Date.now(),
-            items: JSON.stringify(itemsSummary),
-            total,
-            clientEmail: clientEmail ?? '',
-            clientPhone: clientPhone ?? '',
-            commPref: commPref ?? 'email',
-          },
-        }),
-      }).catch(() => {})
+    // 4b — Numéro BL + log dans GAS (pour chaque commande/livraison)
+    let blNumber = ''
+    if (orderId && sheetsUrl && sheetsSecret) {
+      try {
+        const itemsSummary = items.map(i => ({ ref: i.ref, qty: i.quantity }))
+        const gasResp = await fetch(sheetsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: sheetsSecret,
+            action: 'logOrder',
+            order: {
+              uuid: orderId,
+              clientName,
+              clientCode: clientCode ?? '',
+              date: Date.now(),
+              items: JSON.stringify(itemsSummary),
+              total,
+              clientEmail: clientEmail ?? '',
+              clientPhone: clientPhone ?? '',
+              commPref: commPref ?? 'email',
+              isNewBdc,
+            },
+          }),
+        })
+        if (gasResp.ok) {
+          const gasData = await gasResp.json().catch(() => null)
+          if (gasData?.blNumber) blNumber = gasData.blNumber
+        }
+      } catch {}
+    }
+    // Fallback si GAS ne retourne pas encore de numéro BL
+    if (!blNumber) {
+      const d = new Date()
+      blNumber = `BL-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-${String(Date.now()).slice(-4)}`
     }
 
     // 5 — Email de notification admin via Resend
@@ -215,6 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#111;color:#eee;border-radius:12px;padding:24px;">
               <h2 style="color:#d4780f;margin-top:0;">Nouvelle commande SPINCUT</h2>
               <p><strong>Client :</strong> ${clientName}</p>
+              <p><strong>BL :</strong> <span style="color:#d4780f;font-family:monospace;">${blNumber}</span></p>
               <p><strong>BDC :</strong> ${orderId} ${isNewBdc ? '(nouveau)' : '(enrichi)'}</p>
               ${clientCommPref === 'whatsapp' ? '<p style="color:#fbbf24;font-size:12px;">📱 Ce client préfère être contacté par WhatsApp</p>' : ''}
               <table style="width:100%;border-collapse:collapse;margin:16px 0;">
@@ -248,6 +262,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               <h2 style="color:#d4780f;margin-top:0;">Commande bien reçue ✓</h2>
               <p>Bonjour ${clientName.split(' ')[0] || clientName},</p>
               <p>Votre commande a bien été reçue. Nous vous informerons dès qu'elle sera disponible.</p>
+              <p style="margin-top:12px;">Référence de livraison : <strong style="color:#d4780f;font-family:monospace;">${blNumber}</strong></p>
               <table style="width:100%;border-collapse:collapse;margin:16px 0;">
                 <thead><tr style="color:#888;font-size:12px;">
                   <th style="text-align:left;padding:4px 8px;">Qté</th>
@@ -265,7 +280,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }).catch(() => {})
     }
 
-    return res.status(200).json({ success: true, orderId, isNewBdc })
+    return res.status(200).json({ success: true, orderId, isNewBdc, blNumber })
 
   } catch (err: unknown) {
     return res.status(500).json({ error: `Erreur Abby (${step}) : ${serializeError(err)}` })

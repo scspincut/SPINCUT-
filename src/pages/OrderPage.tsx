@@ -15,6 +15,7 @@ interface OrderHistoryEntry {
   date: number
   orderId: string
   isNewBdc: boolean
+  blNumber?: string
   items: { ref: string; designation: string; quantity: number; price: number }[]
   total: number
 }
@@ -23,6 +24,16 @@ type AbbyOrder = {
   id: string; number: string; state: string; label: string
   total: number; date: number; items: { ref: string; designation: string; qty: number }[]
   deliveryStatus?: 'livre' | 'livre_partiel'
+}
+
+type BDCGroup = {
+  orderId: string
+  bdcNumber: string
+  state: string
+  bls: OrderHistoryEntry[]
+  totalHT: number
+  date: number
+  isInvoiced: boolean
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
@@ -52,7 +63,10 @@ export default function OrderPage() {
     return 'idle'
   })
   const [orderError, setOrderError] = useState('')
-  const [lastOrder, setLastOrder] = useState<{ items: { ref: string; designation: string; quantity: number; price: number }[]; total: number; orderId: string; isNewBdc: boolean } | null>(() => {
+  const [lastOrder, setLastOrder] = useState<{
+    items: { ref: string; designation: string; quantity: number; price: number }[]
+    total: number; orderId: string; isNewBdc: boolean; blNumber?: string
+  } | null>(() => {
     if (isTestMode()) {
       try { const s = sessionStorage.getItem(TEST_LAST_ORDER_KEY); return s ? JSON.parse(s) : null } catch { return null }
     }
@@ -62,20 +76,43 @@ export default function OrderPage() {
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
   })
+
+  // Demo data for test mode — illustre tout le parcours BL
+  const DEMO_PENDING: AbbyOrder[] = isTestMode() ? [
+    { id: 'demo-1', number: '', state: 'draft', label: 'Brouillon', total: 187.50,
+      date: Date.now() / 1000 - 86400,
+      items: [{ ref: 'SC-D12-2F', designation: 'Fraise diamant Ø12 2F mélanine', qty: 3 },
+              { ref: 'SC-C08-2F', designation: 'Fraise carbure Ø8 2F bois', qty: 5 }] },
+  ] : []
+
+  const DEMO_DELIVERED: AbbyOrder[] = isTestMode() ? [
+    { id: 'demo-2', number: 'BDC-2025-038', state: 'delivered', label: 'Livré', total: 94.00,
+      date: Date.now() / 1000 - 7 * 86400,
+      items: [{ ref: 'SC-C10-2F', designation: 'Fraise carbure Ø10 2F bois dur', qty: 2 }] },
+    { id: 'demo-3', number: 'BDC-2025-031', state: 'invoiced', label: 'Facturé', total: 312.00,
+      date: Date.now() / 1000 - 21 * 86400,
+      items: [{ ref: 'SC-D16-3F', designation: 'Fraise diamant Ø16 3+3F', qty: 4 },
+              { ref: 'SC-R12', designation: 'Ravageuse Ø12', qty: 2 }] },
+  ] : []
+
+  const DEMO_HISTORY: OrderHistoryEntry[] = isTestMode() ? [
+    { date: Date.now() - 86400000, orderId: 'demo-1', isNewBdc: true, blNumber: 'BL-202606-001',
+      items: [{ ref: 'SC-D12-2F', designation: 'Fraise diamant Ø12 2F mélanine', quantity: 3, price: 37.50 },
+              { ref: 'SC-C08-2F', designation: 'Fraise carbure Ø8 2F bois', quantity: 5, price: 15.00 }],
+      total: 187.50 },
+    { date: Date.now() - 7 * 86400000, orderId: 'demo-2', isNewBdc: true, blNumber: 'BL-202606-002',
+      items: [{ ref: 'SC-C10-2F', designation: 'Fraise carbure Ø10 2F bois dur', quantity: 2, price: 47.00 }],
+      total: 94.00 },
+    { date: Date.now() - 21 * 86400000, orderId: 'demo-3', isNewBdc: true, blNumber: 'BL-202605-001',
+      items: [{ ref: 'SC-D16-3F', designation: 'Fraise diamant Ø16 3+3F', quantity: 4, price: 63.00 },
+              { ref: 'SC-R12', designation: 'Ravageuse Ø12', quantity: 2, price: 45.00 }],
+      total: 342.00 },
+  ] : []
+
   const [orderHistory, setOrderHistory] = useState<OrderHistoryEntry[]>(() => {
+    if (isTestMode()) return DEMO_HISTORY
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
-
-  const DEMO_PENDING: AbbyOrder[] = isTestMode() ? [
-    { id: 'demo-1', number: 'BDC-2025-042', state: 'pending', label: 'En préparation', total: 187.50, date: Date.now() / 1000 - 86400,
-      items: [{ ref: 'SC-D12-2F', designation: 'Fraise diamant Ø12 2F mélanine', qty: 3 }, { ref: 'SC-C08-2F', designation: 'Fraise carbure Ø8 2F bois', qty: 5 }] },
-  ] : []
-  const DEMO_DELIVERED: AbbyOrder[] = isTestMode() ? [
-    { id: 'demo-2', number: 'BDC-2025-038', state: 'signed', label: 'Livrée', total: 94.00, date: Date.now() / 1000 - 7 * 86400,
-      items: [{ ref: 'SC-C10-2F', designation: 'Fraise carbure Ø10 2F bois dur', qty: 2 }] },
-    { id: 'demo-3', number: 'BDC-2025-031', state: 'signed', label: 'Livrée', total: 312.00, date: Date.now() / 1000 - 21 * 86400,
-      items: [{ ref: 'SC-D16-3F', designation: 'Fraise diamant Ø16 3+3F', qty: 4 }, { ref: 'SC-R12', designation: 'Ravageuse Ø12', qty: 2 }] },
-  ] : []
 
   const [pendingOrders, setPendingOrders] = useState<AbbyOrder[]>(DEMO_PENDING)
   const [deliveredOrders, setDeliveredOrders] = useState<AbbyOrder[]>(DEMO_DELIVERED)
@@ -134,6 +171,36 @@ export default function OrderPage() {
       .filter((p): p is CatalogProduct => !!p && p.stock > 0)
   }, [orderHistory, catalog])
 
+  // Calcul BLs en cours / groupes livrés / historique sans correspondance Abby
+  const { pendingBLs, deliveredGroups, unknownBLs } = useMemo(() => {
+    const pendingIds  = new Set(pendingOrders.map(o => o.id))
+    const deliveredIds = new Set(deliveredOrders.map(o => o.id))
+    const knownIds    = new Set([...pendingIds, ...deliveredIds])
+
+    const pendingBLs  = orderHistory.filter(e => pendingIds.has(e.orderId))
+    const unknownBLs  = orderHistory.filter(e => !knownIds.has(e.orderId))
+
+    const deliveredHist = orderHistory.filter(e => deliveredIds.has(e.orderId))
+    const groupMap = new Map<string, { bls: OrderHistoryEntry[]; abbyOrder: AbbyOrder | undefined }>()
+    for (const bl of deliveredHist) {
+      if (!groupMap.has(bl.orderId)) {
+        groupMap.set(bl.orderId, { bls: [], abbyOrder: deliveredOrders.find(o => o.id === bl.orderId) })
+      }
+      groupMap.get(bl.orderId)!.bls.push(bl)
+    }
+    const deliveredGroups: BDCGroup[] = [...groupMap.entries()].map(([orderId, { bls, abbyOrder }]) => ({
+      orderId,
+      bdcNumber: abbyOrder?.number ?? '',
+      state: abbyOrder?.state ?? 'delivered',
+      bls: bls.sort((a, b) => b.date - a.date),
+      totalHT: bls.reduce((s, b) => s + b.total, 0),
+      date: Math.max(...bls.map(b => b.date)),
+      isInvoiced: ['invoiced', 'paid'].includes(abbyOrder?.state ?? ''),
+    })).sort((a, b) => b.date - a.date)
+
+    return { pendingBLs, deliveredGroups, unknownBLs }
+  }, [orderHistory, pendingOrders, deliveredOrders])
+
   if (!isAuthenticated) { navigate('/'); return null }
   localStorage.setItem('spincut_last_section', '/commande')
 
@@ -147,9 +214,7 @@ export default function OrderPage() {
   const itemCount = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
   const hasItems  = itemCount > 0
 
-  // Delivered orders from localStorage not already in Abby delivered list
-  const abbyDeliveredIds = new Set(deliveredOrders.map(o => o.id))
-  const historyOnlyDelivered = orderHistory.filter(h => !abbyDeliveredIds.has(h.orderId))
+  const totalDeliveredCount = deliveredGroups.reduce((s, g) => s + g.bls.length, 0) + unknownBLs.length
 
   const sendOrder = async () => {
     if (orderStatus === 'loading') return
@@ -163,7 +228,20 @@ export default function OrderPage() {
     if (isTestMode()) {
       await new Promise(r => setTimeout(r, 800))
       const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
-      const testOrder = { items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId: 'TEST-0000', isNewBdc: true }
+      const testTotal = orderedItems.reduce((s, i) => s + i.price * i.quantity, 0)
+      const blNum = `BL-TEST-${String(Date.now()).slice(-3)}`
+      const testOrder = { items: orderedItems, total: testTotal, orderId: 'TEST-0000', isNewBdc: true, blNumber: blNum }
+      // Ajouter à orderHistory et pendingOrders pour voir dans "En cours"
+      const testEntry: OrderHistoryEntry = { date: Date.now(), orderId: 'TEST-0000', isNewBdc: true, blNumber: blNum, items: orderedItems, total: testTotal }
+      setOrderHistory(prev => [testEntry, ...prev].slice(0, 30))
+      setPendingOrders(prev => {
+        if (prev.find(o => o.id === 'TEST-0000')) return prev
+        return [...prev, {
+          id: 'TEST-0000', number: '', state: 'draft', label: 'Brouillon', total: testTotal,
+          date: Date.now() / 1000,
+          items: orderedItems.map(i => ({ ref: i.ref, designation: i.designation, qty: i.quantity })),
+        }]
+      })
       fetch('/api/create-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientName: clientName ?? 'Client TEST', items, testMode: true }),
@@ -184,10 +262,10 @@ export default function OrderPage() {
         body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', clientCode: clientCode ?? '', commPref, items, existingBdcId }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
-      const { orderId, isNewBdc } = await res.json()
+      const { orderId, isNewBdc, blNumber = '' } = await res.json()
       try { localStorage.setItem(bdcKey, JSON.stringify(orderId)) } catch {}
       const entry: OrderHistoryEntry = {
-        date: Date.now(), orderId, isNewBdc,
+        date: Date.now(), orderId, isNewBdc, blNumber,
         items: items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price })),
         total: items.reduce((s, i) => s + i.price * i.quantity, 0),
       }
@@ -195,12 +273,11 @@ export default function OrderPage() {
       setOrderHistory(newHistory)
       try { localStorage.setItem(historyKey, JSON.stringify(newHistory)) } catch {}
       const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
-      setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId, isNewBdc })
+      setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId, isNewBdc, blNumber })
       setOrderStatus('success')
       setQuantities({})
       try { localStorage.removeItem(cartKey) } catch {}
       fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
-      // Rafraîchir les commandes Abby pour que la nouvelle apparaisse immédiatement en "En cours"
       if (clientName) {
         fetch('/api/client-dashboard', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -253,7 +330,15 @@ export default function OrderPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>{lastOrder.isNewBdc ? 'Bon de commande créé — visible ci-dessous dans "En cours"' : 'Ajouté à votre bon de commande en cours'}</p>
+                  {lastOrder.blNumber ? (
+                    <p className="text-[10px] mt-0.5 font-mono font-semibold" style={{ color: '#4ade80' }}>
+                      {lastOrder.blNumber} — En attente de livraison
+                    </p>
+                  ) : (
+                    <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>
+                      {lastOrder.isNewBdc ? 'Bon de commande créé' : 'Ajouté au bon de commande en cours'}
+                    </p>
+                  )}
                 </div>
                 <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
               </div>
@@ -366,27 +451,25 @@ export default function OrderPage() {
           )}
         </section>
 
-        {/* ── SECTION 2 : EN COURS ── */}
+        {/* ── SECTION 2 : LIVRAISONS EN COURS ── */}
         <section>
-          <SectionTitle icon="clock" label="Commandes en cours" count={pendingOrders.length || undefined} />
-          {pendingOrders.length === 0 ? (
-            <p className="text-[#444] text-sm text-center py-6">Aucune commande en cours</p>
+          <SectionTitle icon="clock" label="Livraisons en cours" count={pendingBLs.length || undefined} />
+          {pendingBLs.length === 0 ? (
+            <p className="text-[#444] text-sm text-center py-6">Aucune livraison en cours</p>
           ) : (
             <div className="space-y-2">
-              {pendingOrders.map(order => (
-                <AbbyOrderCard key={order.id} order={order} />
-              ))}
+              {pendingBLs.map((bl, i) => <BLCard key={i} entry={bl} />)}
             </div>
           )}
         </section>
 
-        {/* ── SECTION 3 : LIVRÉES ── */}
+        {/* ── SECTION 3 : LIVRAISONS LIVRÉES + FACTURES ── */}
         <section>
           <button
             className="w-full flex items-center justify-between mb-3"
             onClick={() => setShowDelivered(v => !v)}
           >
-            <SectionTitle icon="check" label="Commandes livrées" count={(deliveredOrders.length + historyOnlyDelivered.length) || undefined} noMargin />
+            <SectionTitle icon="check" label="Livraisons & factures" count={totalDeliveredCount || undefined} noMargin />
             <svg className={`w-4 h-4 text-[#555] transition-transform flex-shrink-0 ${showDelivered ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
             </svg>
@@ -394,15 +477,21 @@ export default function OrderPage() {
 
           {showDelivered && (
             <div className="space-y-2">
-              {deliveredOrders.length === 0 && historyOnlyDelivered.length === 0 && (
-                <p className="text-[#444] text-sm text-center py-6">Aucune commande livrée pour l'instant</p>
+              {deliveredGroups.length === 0 && unknownBLs.length === 0 && (
+                <p className="text-[#444] text-sm text-center py-6">Aucune livraison terminée pour l'instant</p>
               )}
-              {deliveredOrders.map(order => (
-                <AbbyOrderCard key={order.id} order={order} delivered />
+
+              {deliveredGroups.map(group => (
+                <BDCGroupCard key={group.orderId} group={group} />
               ))}
-              {historyOnlyDelivered.map((entry, i) => (
-                <HistoryCard key={i} entry={entry} />
-              ))}
+
+              {unknownBLs.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#2a2a2a] px-1 pt-2">Historique</p>
+                  {unknownBLs.map((bl, i) => <BLCard key={i} entry={bl} delivered />)}
+                </div>
+              )}
+
               {orderHistory.length > 0 && (
                 <button
                   onClick={() => {
@@ -428,9 +517,9 @@ export default function OrderPage() {
 
 function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock' | 'check'; label: string; count?: number; noMargin?: boolean }) {
   const icons = {
-    cart: <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>,
+    cart:  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>,
     clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
-    check: <><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></>,
+    check: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>,
   }
   return (
     <div className={`flex items-center gap-2 ${noMargin ? '' : 'mb-3'}`}>
@@ -445,67 +534,93 @@ function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock'
   )
 }
 
-function AbbyOrderCard({ order, delivered }: { order: AbbyOrder; delivered?: boolean }) {
-  const isPartial = order.deliveryStatus === 'livre_partiel'
-  const isDelivered = delivered || order.deliveryStatus === 'livre'
-  const stateColor = isDelivered
-    ? { bg: '#0d1a0d', color: '#4ade80' }
-    : isPartial ? { bg: '#1a1200', color: '#fbbf24' }
-    : order.state === 'signed' ? { bg: '#0d1a0d', color: '#4ade80' }
-    : { bg: '#1a1000', color: '#d4780f' }
-  const borderColor = isDelivered ? '#1a3a1a' : isPartial ? '#3a2a00' : '#2a1a00'
+// Carte individuelle d'un BL (livraison)
+function BLCard({ entry, delivered }: { entry: OrderHistoryEntry; delivered?: boolean }) {
+  const borderColor = delivered ? '#1a2a1a' : '#2a1a00'
+  const blColor     = delivered ? '#555' : '#d4780f'
+  const statusStyle = delivered
+    ? { background: '#0d1a0d', color: '#4ade80' }
+    : { background: '#1a1000', color: '#d4780f' }
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
-      <div className="px-4 py-3 flex items-center justify-between">
+      <div className="px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
-          {order.number && (
-            <span className="text-[10px] font-mono font-semibold" style={{ color: '#555' }}>{order.number}</span>
+          {entry.blNumber && (
+            <span className="text-[10px] font-mono font-semibold" style={{ color: blColor }}>{entry.blNumber}</span>
           )}
-          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={stateColor}>
-            {isDelivered ? 'Livré' : isPartial ? 'Livraison partielle' : order.label}
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={statusStyle}>
+            {delivered ? 'Livré' : 'En attente de livraison'}
           </span>
         </div>
-        <div className="text-right">
-          <span className="text-sm font-bold text-white">{order.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal" style={{ color: '#555' }}>€ HT</span></span>
-          <p className="text-[10px]" style={{ color: '#444' }}>{(order.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+        <div className="text-right flex-shrink-0">
+          <span className="text-sm font-bold text-white">{fmt(entry.total)} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
+          <p className="text-[10px] text-[#333]">{fmt(entry.total * 1.2)} € TTC</p>
         </div>
       </div>
-      {order.items.length > 0 && (
-        <div className="px-4 pb-3 space-y-0.5" style={{ borderTop: '1px solid #1a1a1a' }}>
-          {order.items.map((it, i) => (
-            <p key={i} className="text-[11px]" style={{ color: '#555' }}>
-              {it.qty}× {it.designation || it.ref}
-            </p>
-          ))}
-        </div>
-      )}
-      {order.date > 0 && (
-        <p className="px-4 pb-2 text-[10px]" style={{ color: '#333' }}>{new Date(order.date * 1000 > Date.now() * 10 ? order.date : order.date * 1000).toLocaleDateString('fr-FR')}</p>
-      )}
+      <div className="px-4 pb-2 space-y-0.5" style={{ borderTop: '1px solid #161616' }}>
+        {entry.items.map((it, i) => (
+          <p key={i} className="text-[11px] text-[#555]">{it.quantity}× {it.designation}</p>
+        ))}
+      </div>
+      <p className="px-4 pb-2 text-[10px] text-[#2a2a2a]">
+        {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+      </p>
     </div>
   )
 }
 
-function HistoryCard({ entry }: { entry: { date: number; orderId: string; isNewBdc: boolean; items: { ref: string; designation: string; quantity: number; price: number }[]; total: number } }) {
+// Groupe d'un BDC mensuel avec ses BLs (dépliable)
+function BDCGroupCard({ group }: { group: BDCGroup }) {
+  const [open, setOpen] = useState(false)
+
+  const isInvoiced  = group.isInvoiced
+  const isPaid      = group.state === 'paid'
+  const statusLabel = isPaid ? 'Payé' : isInvoiced ? 'Facturé' : 'Livré'
+  const statusStyle = isInvoiced
+    ? { background: '#0d0d2a', color: '#818cf8' }
+    : { background: '#0d1a0d', color: '#4ade80' }
+  const borderColor = isInvoiced ? '#1a1a3a' : '#1a2a1a'
+
+  const monthLabel = new Date(group.date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const blCount    = group.bls.length
+
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
-      <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid #1a1a1a' }}>
-        <span className="text-[#888] text-xs">
-          {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-        </span>
-        <div className="text-right">
-          <span className="text-[#d4780f] text-xs font-bold">{entry.total.toFixed(2).replace('.', ',')} € HT</span>
-          <p className="text-[10px]" style={{ color: '#444' }}>{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
+      <button
+        className="w-full px-4 py-3 flex items-center justify-between gap-2"
+        onClick={() => setOpen(v => !v)}
+      >
+        <div className="flex items-center gap-2 flex-wrap text-left min-w-0">
+          {group.bdcNumber && (
+            <span className="text-[10px] font-mono font-semibold text-[#555] flex-shrink-0">{group.bdcNumber}</span>
+          )}
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold flex-shrink-0" style={statusStyle}>{statusLabel}</span>
+          <span className="text-[11px] text-[#888] capitalize truncate">{monthLabel}</span>
+          <span className="text-[10px] text-[#444] flex-shrink-0">{blCount} BL{blCount > 1 ? 's' : ''}</span>
         </div>
-      </div>
-      <div className="px-4 py-2 space-y-1">
-        {entry.items.map((item, j) => (
-          <div key={j} className="flex items-center justify-between text-xs">
-            <span className="text-[#555] truncate flex-1 mr-2">{item.quantity}× {item.designation}</span>
-            <span className="text-[#333] flex-shrink-0">{(item.quantity * item.price).toFixed(2).replace('.', ',')} €</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="text-right">
+            <span className="text-sm font-bold text-white">{fmt(group.totalHT)} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
+            <p className="text-[10px] text-[#333]">{fmt(group.totalHT * 1.2)} € TTC</p>
           </div>
-        ))}
-      </div>
+          <svg className={`w-4 h-4 text-[#555] transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+          </svg>
+        </div>
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3 space-y-2" style={{ borderTop: '1px solid #1a1a1a' }}>
+          <div className="pt-2 space-y-2">
+            {group.bls.map((bl, i) => <BLCard key={i} entry={bl} delivered />)}
+          </div>
+          {isInvoiced && (
+            <div className="mt-1 px-3 py-2 rounded-lg text-[10px] text-center" style={{ background: '#0d0d2a', color: '#818cf8', border: '1px solid #1a1a3a' }}>
+              Bon de commande clôturé · Facture émise
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
