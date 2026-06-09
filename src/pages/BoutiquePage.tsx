@@ -193,6 +193,8 @@ export default function BoutiquePage() {
 
   const [homeView, setHomeView] = useState(true)
   const [favsView, setFavsView] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
   const [heroBg, setHeroBg] = useState(0)
   const [shopTab, setShopTab] = useState<'cnc' | 'cmt' | 'lames'>('cnc')
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
@@ -245,10 +247,10 @@ export default function BoutiquePage() {
 
   const [syncPhotoIdx, setSyncPhotoIdx] = useState(0)
   useEffect(() => {
-    if (!favsView && shopTab !== 'lames' && shopTab !== 'cmt') return
+    if (shopTab !== 'lames' && shopTab !== 'cmt') return
     const t = setInterval(() => setSyncPhotoIdx(i => i + 1), 2000)
     return () => clearInterval(t)
-  }, [shopTab, favsView])
+  }, [shopTab])
 
   useEffect(() => { localStorage.setItem('spincut_last_section', '/boutique') }, [])
   useEffect(() => {
@@ -343,19 +345,10 @@ export default function BoutiquePage() {
   }, [activeTabCatalog, shopTab])
 
   const currentCMTGroup = useMemo(() => {
-    if (!selectedProduct || selectedProduct.sheet !== 'STOCK A1') return null
-    const map = new Map<string, CatalogProduct[]>()
-    for (const p of catalog) {
-      if (p.sheet !== 'STOCK A1') continue
-      const k = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
-      if (!map.has(k)) map.set(k, [])
-      map.get(k)!.push(p)
-    }
+    if (!selectedProduct || shopTab !== 'cmt') return null
     const key = CMT_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
-    const prods = map.get(key)
-    if (!prods) return null
-    return { key, photoUrl: CMT_PHOTO_MAP[prods[0].ref] ?? null, products: prods }
-  }, [selectedProduct, catalog])
+    return cmtGroups.find(g => g.key === key) ?? null
+  }, [selectedProduct, shopTab, cmtGroups])
 
   const lamesGroups = useMemo(() => {
     if (shopTab !== 'lames') return []
@@ -371,19 +364,10 @@ export default function BoutiquePage() {
   }, [activeTabCatalog, shopTab])
 
   const currentLamesGroup = useMemo(() => {
-    if (!selectedProduct || selectedProduct.sheet !== 'STOCK A3') return null
-    const map = new Map<string, CatalogProduct[]>()
-    for (const p of catalog) {
-      if (p.sheet !== 'STOCK A3') continue
-      const k = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
-      if (!map.has(k)) map.set(k, [])
-      map.get(k)!.push(p)
-    }
+    if (!selectedProduct || shopTab !== 'lames') return null
     const key = LAMES_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
-    const prods = map.get(key)
-    if (!prods) return null
-    return { key, photoUrl: LAMES_PHOTO_MAP[prods[0].ref] ?? null, products: prods }
-  }, [selectedProduct, catalog])
+    return lamesGroups.find(g => g.key === key) ?? null
+  }, [selectedProduct, shopTab, lamesGroups])
 
   const currentPhotoGroup = currentCMTGroup ?? currentLamesGroup
   const currentPhoto2 = currentPhotoGroup?.photoUrl ? (LAMES_PHOTO2_MAP[currentPhotoGroup.photoUrl] ?? null) : null
@@ -429,38 +413,61 @@ export default function BoutiquePage() {
 
   const favoriteItems = useMemo(() => catalog.filter(p => favorites.has(uid(p))), [catalog, favorites])
 
-  const favCMTGroups = useMemo(() => {
-    const map = new Map<string, CatalogProduct[]>()
-    for (const p of catalog) {
-      if (p.sheet !== 'STOCK A1') continue
-      const k = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
-      if (!map.has(k)) map.set(k, [])
-      map.get(k)!.push(p)
-    }
-    return [...map.entries()]
-      .map(([k, products]) => ({ key: k, photoUrl: CMT_PHOTO_MAP[products[0].ref] ?? null, products }))
-      .filter(g => g.products.some(p => favorites.has(uid(p))))
-  }, [catalog, favorites])
+  // ── Search ────────────────────────────────────────────────────────────────
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return null
+    const match = (p: CatalogProduct) =>
+      p.ref.toLowerCase().includes(q) ||
+      (p.designation ?? '').toLowerCase().includes(q) ||
+      (p.diametre ?? '').toLowerCase().includes(q) ||
+      (p.famille ?? '').toLowerCase().includes(q) ||
+      (CATEGORY_META[p.category]?.label ?? '').toLowerCase().includes(q)
 
-  const favLamesGroups = useMemo(() => {
-    const map = new Map<string, CatalogProduct[]>()
-    for (const p of catalog) {
-      if (p.sheet !== 'STOCK A3') continue
-      const k = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
-      if (!map.has(k)) map.set(k, [])
-      map.get(k)!.push(p)
-    }
-    return [...map.entries()]
-      .map(([k, products]) => ({ key: k, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products }))
-      .filter(g => g.products.some(p => favorites.has(uid(p))))
-  }, [catalog, favorites])
+    const matched = catalog.filter(match)
 
-  const favCNCItems = useMemo(() =>
-    favoriteItems.filter(p => p.sheet === 'STOCK A0' || p.sheet === 'STOCK A2'),
-  [favoriteItems])
+    // CNC — grouped by category (order preserved)
+    const cncMatched = matched.filter(p => ['STOCK A0', 'STOCK A2'].includes(p.sheet))
+    const cncGroups: { catId: string; label: string; products: CatalogProduct[] }[] = []
+    for (const [catId, meta] of Object.entries(CATEGORY_META).sort((a, b) => a[1].order - b[1].order)) {
+      const ps = cncMatched.filter(p => p.category === catId)
+      if (ps.length > 0) cncGroups.push({ catId, label: meta.label, products: ps })
+    }
+
+    // CMT — photo groups (any product in group matches → show group)
+    const cmtAll = catalog.filter(p => p.sheet === 'STOCK A1')
+    const cmtMatchedRefs = new Set(matched.filter(p => p.sheet === 'STOCK A1').map(p => p.ref))
+    const cmtMap = new Map<string, CatalogProduct[]>()
+    for (const p of cmtAll) {
+      const key = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!cmtMap.has(key)) cmtMap.set(key, [])
+      cmtMap.get(key)!.push(p)
+    }
+    const cmtRes = [...cmtMap.entries()]
+      .filter(([, prods]) => prods.some(p => cmtMatchedRefs.has(p.ref)))
+      .map(([key, products]) => ({ key, photoUrl: CMT_PHOTO_MAP[products[0].ref] ?? null, products }))
+
+    // Lames — photo groups
+    const lamesAll = catalog.filter(p => p.sheet === 'STOCK A3')
+    const lamesMatchedRefs = new Set(matched.filter(p => p.sheet === 'STOCK A3').map(p => p.ref))
+    const lamesMap = new Map<string, CatalogProduct[]>()
+    for (const p of lamesAll) {
+      const key = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!lamesMap.has(key)) lamesMap.set(key, [])
+      lamesMap.get(key)!.push(p)
+    }
+    const lamesRes = [...lamesMap.entries()]
+      .filter(([, prods]) => prods.some(p => lamesMatchedRefs.has(p.ref)))
+      .map(([key, products]) => ({ key, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products }))
+
+    const total = cncMatched.length + cmtRes.reduce((s, g) => s + g.products.length, 0) + lamesRes.reduce((s, g) => s + g.products.length, 0)
+    return { cncGroups, cmtRes, lamesRes, total }
+  }, [searchQuery, catalog])
+
+  const clearSearch = () => setSearchQuery('')
 
   const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
-  const goHome  = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
+  const goHome  = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false); clearSearch() }
   const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
   const enterFavs = () => { setHomeView(false); setFavsView(true); setActiveCategory(null); resetFilters() }
 
@@ -557,18 +564,48 @@ export default function BoutiquePage() {
           </button>
         </div>
         {!homeView && !favsView && (
-          <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
-            {SHOP_TABS.map(t => (
-              <button key={t.id}
-                onClick={() => { setShopTab(t.id as typeof shopTab); setActiveCategory(null); resetFilters() }}
-                className="flex-1 py-3 flex items-center justify-center transition-colors"
-                style={{ borderBottom: shopTab === t.id ? '2px solid #d4780f' : '2px solid transparent' }}
-              >
-                <span className="text-[11px] font-bold leading-tight text-center"
-                  style={{ color: shopTab === t.id ? '#d4780f' : '#888' }}>{t.label}</span>
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
+              {SHOP_TABS.map(t => (
+                <button key={t.id}
+                  onClick={() => { setShopTab(t.id as typeof shopTab); setActiveCategory(null); resetFilters(); clearSearch() }}
+                  className="flex-1 py-3 flex items-center justify-center transition-colors"
+                  style={{ borderBottom: shopTab === t.id && !searchQuery ? '2px solid #d4780f' : '2px solid transparent' }}
+                >
+                  <span className="text-[11px] font-bold leading-tight text-center"
+                    style={{ color: shopTab === t.id && !searchQuery ? '#d4780f' : '#888' }}>{t.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="px-4 py-2 max-w-2xl mx-auto">
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  style={{ color: searchFocused || searchQuery ? '#d4780f' : '#444' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                </svg>
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  placeholder="Rechercher — réf, diamètre, type…"
+                  className="w-full pl-9 pr-9 py-2 rounded-xl text-sm text-white outline-none placeholder-[#444] transition-colors"
+                  style={{
+                    background: '#0d0d0d',
+                    border: `1px solid ${searchFocused || searchQuery ? '#d4780f55' : '#1e1e1e'}`,
+                  }}
+                />
+                {searchQuery && (
+                  <button onClick={clearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-white transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
         )}
       </header>
 
@@ -749,136 +786,155 @@ export default function BoutiquePage() {
                 </button>
               </div>
             ) : (
-              <>
-                {/* ── CMT favoris ── */}
-                {favCMTGroups.length > 0 && (
-                  <div className="px-4 pt-4 pb-2">
-                    <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">Fraises Défonceuse</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {favCMTGroups.map(group => {
-                        const groupFaved = group.products.some(p => favorites.has(uid(p)))
-                        const anyInStock = group.products.some(p => p.stock > 0)
-                        const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
-                        const prices     = group.products.map(p => p.prix).filter(x => x > 0)
-                        const minPrice   = prices.length ? Math.min(...prices) : 0
-                        const groupName  = group.products.length === 1
-                          ? group.products[0].designation
-                          : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
-                        return (
-                          <button key={group.key}
-                            onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
-                            className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
-                            style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
-                          >
-                            <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
-                              {group.photoUrl
-                                ? (() => {
-                                    const urls = [group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]
-                                    return urls.length > 1
-                                      ? <AutoPhoto urls={urls} externalIdx={syncPhotoIdx} />
-                                      : <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
-                                  })()
-                                : <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}><span className="text-[#d4780f22] font-black text-4xl select-none">S</span></div>
-                              }
-                              <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
-                              {totalQty > 0 && <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>}
-                              {group.products.length > 1 && <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">{group.products.length} dim.</span>}
-                              <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
-                                style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
-                                {anyInStock ? '● Stock' : '● Rupture'}
-                              </span>
-                              <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
-                                className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                                style={{ background: 'rgba(0,0,0,0.5)' }}>
-                                <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
-                                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                                </svg>
-                              </button>
-                            </div>
-                            <div className="px-2.5 py-2.5">
-                              <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
-                              <div className="mt-1.5">
-                                {minPrice > 0 ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span> : <span className="text-[#444] text-[10px]">Sur devis</span>}
-                              </div>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Lames favoris ── */}
-                {favLamesGroups.length > 0 && (
-                  <div className="px-4 pt-4 pb-2">
-                    <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">Lames Carbure</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {favLamesGroups.map(group => {
-                        const groupFaved = group.products.some(p => favorites.has(uid(p)))
-                        const anyInStock = group.products.some(p => p.stock > 0)
-                        const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
-                        const prices     = group.products.map(p => p.prix).filter(x => x > 0)
-                        const minPrice   = prices.length ? Math.min(...prices) : 0
-                        const groupName  = group.products.length === 1
-                          ? group.products[0].designation
-                          : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
-                        return (
-                          <button key={group.key}
-                            onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
-                            className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
-                            style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
-                          >
-                            <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
-                              {group.photoUrl
-                                ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} externalIdx={syncPhotoIdx} />
-                                : <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}><span className="text-[#d4780f22] font-black text-4xl select-none">S</span></div>
-                              }
-                              <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
-                              {totalQty > 0 && <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>}
-                              {group.products.length > 1 && <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">{group.products.length} dim.</span>}
-                              <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
-                                style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
-                                {anyInStock ? '● Stock' : '● Rupture'}
-                              </span>
-                              <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
-                                className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                                style={{ background: 'rgba(0,0,0,0.5)' }}>
-                                <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
-                                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                                </svg>
-                              </button>
-                            </div>
-                            <div className="px-2.5 py-2.5">
-                              <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
-                              <div className="mt-1.5">
-                                {minPrice > 0 ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span> : <span className="text-[#444] text-[10px]">Sur devis</span>}
-                              </div>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Fraises CNC favoris ── */}
-                {favCNCItems.length > 0 && (
-                  <>
-                    {(favCMTGroups.length > 0 || favLamesGroups.length > 0) && (
-                      <p className="px-4 pt-4 pb-1 text-[#444] text-[10px] uppercase tracking-widest font-bold">Fraises CNC</p>
-                    )}
-                    <div className="divide-y divide-[#161616]">
-                      {favCNCItems.map(item => renderProductRow(item))}
-                    </div>
-                  </>
-                )}
-              </>
+              <div className="divide-y divide-[#161616]">
+                {favoriteItems.map(item => renderProductRow(item))}
+              </div>
             )}
           </>
         )}
 
+        {/* ── SEARCH RESULTS ── */}
+        {!homeView && !favsView && searchResults && (
+          <div className="pb-8">
+            <div className="px-4 pt-4 pb-3 flex items-center gap-2">
+              <p className="text-[#555] text-xs flex-1">
+                <span className="text-white font-semibold">{searchResults.total}</span> résultat{searchResults.total !== 1 ? 's' : ''} pour «&nbsp;<span style={{ color: '#d4780f' }}>{searchQuery}</span>&nbsp;»
+              </p>
+              <button onClick={clearSearch} className="text-xs text-[#555] hover:text-white transition-colors">Effacer</button>
+            </div>
+
+            {searchResults.total === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
+                <svg className="w-10 h-10 text-[#2a2a2a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                </svg>
+                <p className="text-[#444] text-sm">Aucun résultat pour «&nbsp;{searchQuery}&nbsp;»</p>
+                <p className="text-[#333] text-xs">Essayez une référence, un diamètre ou un type</p>
+              </div>
+            )}
+
+            {/* CNC — groupé par catégorie */}
+            {searchResults.cncGroups.length > 0 && (
+              <div className="mb-2">
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#444' }}>Fraises CNC</span>
+                  <div className="flex-1 h-px" style={{ background: '#1e1e1e' }}/>
+                </div>
+                {searchResults.cncGroups.map(group => (
+                  <div key={group.catId}>
+                    <div className="px-4 py-1.5 flex items-center gap-2">
+                      <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                        style={{ background: '#1a0a00', color: '#d4780f' }}>{group.label}</span>
+                      <span className="text-[10px]" style={{ color: '#333' }}>{group.products.length}</span>
+                    </div>
+                    <div className="divide-y divide-[#161616]">
+                      {group.products.map(p => renderProductRow(p))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* CMT — cartes photo */}
+            {searchResults.cmtRes.length > 0 && (
+              <div className="mb-2">
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#444' }}>Fraises Défonceuse CMT</span>
+                  <div className="flex-1 h-px" style={{ background: '#1e1e1e' }}/>
+                </div>
+                <div className="px-4 grid grid-cols-2 gap-3">
+                  {searchResults.cmtRes.map(group => {
+                    const anyFaved = group.products.some(p => favorites.has(uid(p)))
+                    const anyInStock = group.products.some(p => p.stock > 0)
+                    const minPrix = Math.min(...group.products.map(p => p.prix).filter(v => v > 0))
+                    const photo2 = group.photoUrl ? (LAMES_PHOTO2_MAP[group.photoUrl] ?? null) : null
+                    const photoSrc = photo2
+                      ? (Math.floor(syncPhotoIdx / 2) % 2 === 0 ? group.photoUrl : photo2)
+                      : group.photoUrl
+                    return (
+                      <div key={group.key} className="rounded-2xl overflow-hidden flex flex-col"
+                        style={{ background: '#111', border: '1px solid #1e1e1e' }}>
+                        <div className="relative aspect-square bg-[#0a0a0a]" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
+                          {photoSrc
+                            ? <img src={photoSrc} alt="" className="w-full h-full object-contain p-3"/>
+                            : <div className="w-full h-full flex items-center justify-center text-[#2a2a2a] text-3xl font-black">CMT</div>}
+                          {!anyInStock && (
+                            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                              <span className="text-[10px] font-bold text-red-400 bg-black/80 px-2 py-1 rounded-lg">Rupture</span>
+                            </div>
+                          )}
+                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+                            style={{ background: anyFaved ? '#d4780f' : 'rgba(0,0,0,0.7)', border: `1px solid ${anyFaved ? '#d4780f' : '#2a2a2a'}` }}>
+                            <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="p-3" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
+                          <p className="text-white text-xs font-bold truncate">{group.products[0].designation || group.products[0].famille || group.products[0].ref}</p>
+                          <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{group.products.length} variante{group.products.length > 1 ? 's' : ''}</p>
+                          {minPrix > 0 && <p className="text-[11px] font-bold mt-1" style={{ color: '#d4780f' }}>dès {minPrix.toFixed(2).replace('.', ',')} €</p>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Lames — cartes photo */}
+            {searchResults.lamesRes.length > 0 && (
+              <div className="mb-2">
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#444' }}>Lames Carbure</span>
+                  <div className="flex-1 h-px" style={{ background: '#1e1e1e' }}/>
+                </div>
+                <div className="px-4 grid grid-cols-2 gap-3">
+                  {searchResults.lamesRes.map(group => {
+                    const anyFaved = group.products.some(p => favorites.has(uid(p)))
+                    const anyInStock = group.products.some(p => p.stock > 0)
+                    const minPrix = Math.min(...group.products.map(p => p.prix).filter(v => v > 0))
+                    const photo2 = group.photoUrl ? (LAMES_PHOTO2_MAP[group.photoUrl] ?? null) : null
+                    const photoSrc = photo2
+                      ? (Math.floor(syncPhotoIdx / 2) % 2 === 0 ? group.photoUrl : photo2)
+                      : group.photoUrl
+                    return (
+                      <div key={group.key} className="rounded-2xl overflow-hidden flex flex-col"
+                        style={{ background: '#111', border: '1px solid #1e1e1e' }}>
+                        <div className="relative aspect-square bg-[#0a0a0a]" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
+                          {photoSrc
+                            ? <img src={photoSrc} alt="" className="w-full h-full object-contain p-3"/>
+                            : <div className="w-full h-full flex items-center justify-center text-[#2a2a2a] text-3xl font-black">LAME</div>}
+                          {!anyInStock && (
+                            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                              <span className="text-[10px] font-bold text-red-400 bg-black/80 px-2 py-1 rounded-lg">Rupture</span>
+                            </div>
+                          )}
+                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
+                            style={{ background: anyFaved ? '#d4780f' : 'rgba(0,0,0,0.7)', border: `1px solid ${anyFaved ? '#d4780f' : '#2a2a2a'}` }}>
+                            <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="p-3" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
+                          <p className="text-white text-xs font-bold truncate">{group.products[0].designation || group.products[0].famille || group.products[0].ref}</p>
+                          <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{group.products.length} variante{group.products.length > 1 ? 's' : ''}</p>
+                          {minPrix > 0 && <p className="text-[11px] font-bold mt-1" style={{ color: '#d4780f' }}>dès {minPrix.toFixed(2).replace('.', ',')} €</p>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── SHOP VIEW ── */}
-        {!homeView && !favsView && (
+        {!homeView && !favsView && !searchResults && (
           <>
             {/* Barre retour / filtres */}
             {!catalogLoading && !catalogError && (activeCategory || !usesCategories) && (
@@ -1010,7 +1066,6 @@ export default function BoutiquePage() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {cmtGroups.map(group => {
-                    const groupFaved = group.products.some(p => favorites.has(uid(p)))
                     const anyInStock = group.products.some(p => p.stock > 0)
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
@@ -1052,13 +1107,6 @@ export default function BoutiquePage() {
                             style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
                             {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
-                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
-                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                            style={{ background: 'rgba(0,0,0,0.5)' }}>
-                            <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                            </svg>
-                          </button>
                         </div>
                         {/* Infos */}
                         <div className="px-2.5 py-2.5">
@@ -1085,7 +1133,6 @@ export default function BoutiquePage() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {lamesGroups.map(group => {
-                    const groupFaved = group.products.some(p => favorites.has(uid(p)))
                     const anyInStock = group.products.some(p => p.stock > 0)
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
@@ -1121,13 +1168,6 @@ export default function BoutiquePage() {
                             style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
                             {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
-                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
-                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
-                            style={{ background: 'rgba(0,0,0,0.5)' }}>
-                            <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                            </svg>
-                          </button>
                         </div>
                         <div className="px-2.5 py-2.5">
                           <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
@@ -1284,14 +1324,9 @@ export default function BoutiquePage() {
                         <div key={key} className="rounded-xl border border-[#252525] p-3 space-y-2"
                           style={{ background: qty > 0 ? '#130e00' : '#1a1a1a' }}>
                           {/* Ref + specs */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between gap-2">
                             <span className="font-mono text-[10px] text-[#555] bg-black/40 px-1.5 py-0.5 rounded">{v.ref}</span>
                             <StockBadge stock={v.stock}/>
-                            <button onClick={() => toggleFav(key)} className="ml-auto flex-shrink-0" style={{ color: favorites.has(key) ? '#e03c3c' : '#555' }}>
-                              <svg width="13" height="13" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                              </svg>
-                            </button>
                           </div>
                           <div className="flex gap-1.5">
                             {(currentLamesGroup ? [
