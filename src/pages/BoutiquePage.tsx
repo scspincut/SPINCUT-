@@ -413,7 +413,7 @@ export default function BoutiquePage() {
 
   const favoriteItems = useMemo(() => catalog.filter(p => favorites.has(uid(p))), [catalog, favorites])
 
-  // ── Search ────────────────────────────────────────────────────────────────
+  // ── Search (scoped to active tab) ────────────────────────────────────────
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     if (!q) return null
@@ -424,45 +424,43 @@ export default function BoutiquePage() {
       (p.famille ?? '').toLowerCase().includes(q) ||
       (CATEGORY_META[p.category]?.label ?? '').toLowerCase().includes(q)
 
-    const matched = catalog.filter(match)
-
-    // CNC — grouped by category (order preserved)
-    const cncMatched = matched.filter(p => ['STOCK A0', 'STOCK A2'].includes(p.sheet))
-    const cncGroups: { catId: string; label: string; products: CatalogProduct[] }[] = []
-    for (const [catId, meta] of Object.entries(CATEGORY_META).sort((a, b) => a[1].order - b[1].order)) {
-      const ps = cncMatched.filter(p => p.category === catId)
-      if (ps.length > 0) cncGroups.push({ catId, label: meta.label, products: ps })
+    if (shopTab === 'cnc') {
+      const matched = catalog.filter(p => ['STOCK A0', 'STOCK A2'].includes(p.sheet) && match(p))
+      const cncGroups: { catId: string; label: string; products: CatalogProduct[] }[] = []
+      for (const [catId, meta] of Object.entries(CATEGORY_META).sort((a, b) => a[1].order - b[1].order)) {
+        const ps = matched.filter(p => p.category === catId)
+        if (ps.length > 0) cncGroups.push({ catId, label: meta.label, products: ps })
+      }
+      return { cncGroups, cmtRes: [], lamesRes: [], total: matched.length }
     }
 
-    // CMT — photo groups (any product in group matches → show group)
-    const cmtAll = catalog.filter(p => p.sheet === 'STOCK A1')
-    const cmtMatchedRefs = new Set(matched.filter(p => p.sheet === 'STOCK A1').map(p => p.ref))
-    const cmtMap = new Map<string, CatalogProduct[]>()
-    for (const p of cmtAll) {
-      const key = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
-      if (!cmtMap.has(key)) cmtMap.set(key, [])
-      cmtMap.get(key)!.push(p)
+    if (shopTab === 'cmt') {
+      const matchedRefs = new Set(catalog.filter(p => p.sheet === 'STOCK A1' && match(p)).map(p => p.ref))
+      const map = new Map<string, CatalogProduct[]>()
+      for (const p of catalog.filter(p => p.sheet === 'STOCK A1')) {
+        const key = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+        if (!map.has(key)) map.set(key, [])
+        map.get(key)!.push(p)
+      }
+      const cmtRes = [...map.entries()]
+        .filter(([, prods]) => prods.some(p => matchedRefs.has(p.ref)))
+        .map(([key, products]) => ({ key, photoUrl: CMT_PHOTO_MAP[products[0].ref] ?? null, products }))
+      return { cncGroups: [], cmtRes, lamesRes: [], total: cmtRes.reduce((s, g) => s + g.products.length, 0) }
     }
-    const cmtRes = [...cmtMap.entries()]
-      .filter(([, prods]) => prods.some(p => cmtMatchedRefs.has(p.ref)))
-      .map(([key, products]) => ({ key, photoUrl: CMT_PHOTO_MAP[products[0].ref] ?? null, products }))
 
-    // Lames — photo groups
-    const lamesAll = catalog.filter(p => p.sheet === 'STOCK A3')
-    const lamesMatchedRefs = new Set(matched.filter(p => p.sheet === 'STOCK A3').map(p => p.ref))
-    const lamesMap = new Map<string, CatalogProduct[]>()
-    for (const p of lamesAll) {
+    // lames
+    const matchedRefs = new Set(catalog.filter(p => p.sheet === 'STOCK A3' && match(p)).map(p => p.ref))
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of catalog.filter(p => p.sheet === 'STOCK A3')) {
       const key = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
-      if (!lamesMap.has(key)) lamesMap.set(key, [])
-      lamesMap.get(key)!.push(p)
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(p)
     }
-    const lamesRes = [...lamesMap.entries()]
-      .filter(([, prods]) => prods.some(p => lamesMatchedRefs.has(p.ref)))
+    const lamesRes = [...map.entries()]
+      .filter(([, prods]) => prods.some(p => matchedRefs.has(p.ref)))
       .map(([key, products]) => ({ key, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products }))
-
-    const total = cncMatched.length + cmtRes.reduce((s, g) => s + g.products.length, 0) + lamesRes.reduce((s, g) => s + g.products.length, 0)
-    return { cncGroups, cmtRes, lamesRes, total }
-  }, [searchQuery, catalog])
+    return { cncGroups: [], cmtRes: [], lamesRes, total: lamesRes.reduce((s, g) => s + g.products.length, 0) }
+  }, [searchQuery, shopTab, catalog])
 
   const clearSearch = () => setSearchQuery('')
 
