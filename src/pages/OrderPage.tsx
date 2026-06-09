@@ -22,6 +22,7 @@ interface OrderHistoryEntry {
 type AbbyOrder = {
   id: string; number: string; state: string; label: string
   total: number; date: number; items: { ref: string; designation: string; qty: number }[]
+  deliveryStatus?: 'livre' | 'livre_partiel'
 }
 
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
@@ -177,9 +178,10 @@ export default function OrderPage() {
     try {
       let existingBdcId: string | undefined
       try { existingBdcId = JSON.parse(localStorage.getItem(bdcKey) ?? 'null') ?? undefined } catch {}
+      const commPref = (() => { try { return localStorage.getItem(`spincut_comm_pref_${clientCode ?? 'guest'}`) ?? 'email' } catch { return 'email' } })()
       const res = await fetch('/api/create-order', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', items, existingBdcId }),
+        body: JSON.stringify({ clientName: clientName ?? 'Client SPINCUT', clientCode: clientCode ?? '', commPref, items, existingBdcId }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Erreur serveur')
       const { orderId, isNewBdc } = await res.json()
@@ -443,17 +445,23 @@ function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock'
   )
 }
 
-function AbbyOrderCard({ order, delivered }: { order: { id: string; number: string; state: string; label: string; total: number; date: number; items: { ref: string; designation: string; qty: number }[] }; delivered?: boolean }) {
-  const stateColor = delivered
+function AbbyOrderCard({ order, delivered }: { order: AbbyOrder; delivered?: boolean }) {
+  const isPartial = order.deliveryStatus === 'livre_partiel'
+  const isDelivered = delivered || order.deliveryStatus === 'livre'
+  const stateColor = isDelivered
     ? { bg: '#0d1a0d', color: '#4ade80' }
+    : isPartial ? { bg: '#1a1200', color: '#fbbf24' }
     : order.state === 'signed' ? { bg: '#0d1a0d', color: '#4ade80' }
     : { bg: '#1a1000', color: '#d4780f' }
+  const borderColor = isDelivered ? '#1a3a1a' : isPartial ? '#3a2a00' : '#2a1a00'
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${delivered ? '#1a3a1a' : '#2a1a00'}` }}>
+    <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-mono font-semibold" style={{ color: '#555' }}>{order.number || `#${order.id.slice(-6)}`}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={stateColor}>{order.label}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={stateColor}>
+            {isDelivered ? 'Livré' : isPartial ? 'Livraison partielle' : order.label}
+          </span>
         </div>
         <div className="text-right">
           <span className="text-sm font-bold text-white">{order.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal" style={{ color: '#555' }}>€ HT</span></span>

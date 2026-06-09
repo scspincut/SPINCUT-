@@ -12,13 +12,13 @@ const STATE_LABEL: Record<string, string> = {
   paid:      'Payée',
 }
 
-// BDC converti en facture = livré
 const DELIVERED_STATES = new Set(['invoiced', 'delivered', 'paid'])
 const HIDDEN_STATES    = new Set(['cancelled', 'archived'])
 
 type OrderEntry = {
   id: string; number: string; state: string; label: string
   total: number; date: number; items: { ref: string; designation: string; qty: number }[]
+  deliveryStatus?: 'livre' | 'livre_partiel'
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -69,6 +69,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch {}
       })
     )
+  }
+
+  // Enrichir avec le statut GAS (livré / livré partiellement marqué par admin)
+  const sheetsUrl = process.env.SHEETS_API_URL
+  const sheetsSecret = process.env.SHEETS_SECRET
+  if (sheetsUrl && sheetsSecret) {
+    try {
+      const gasResp = await fetch(
+        `${sheetsUrl}?secret=${encodeURIComponent(sheetsSecret)}&action=orders&clientName=${encodeURIComponent(clientName)}`
+      )
+      if (gasResp.ok) {
+        const gasOrders = await gasResp.json()
+        if (Array.isArray(gasOrders)) {
+          const gasMap = new Map<string, string>(gasOrders.map((o: any) => [String(o.uuid), String(o.status || 'en_cours')]))
+
+          // Déplacer vers "livré" si GAS dit 'livre'
+          const toMove: string[] = []
+          for (const order of pending) {
+            const gs = gasMap.get(order.id)
+            if (gs === 'livre') {
+              order.deliveryStatus = 'livre'
+              order.label = 'Livré'
+              delivered.push(order)
+              toMove.push(order.id)
+            } else if (gs === 'livre_partiel') {
+              order.deliveryStatus = 'livre_partiel'
+            }
+          }
+          // Retirer du pending ceux qui sont livrés
+          for (const id of toMove) {
+            const idx = pending.findIndex(o => o.id === id)
+            if (idx !== -1) pending.splice(idx, 1)
+          }
+        }
+      }
+    } catch {}
   }
 
   // Tri par date décroissante

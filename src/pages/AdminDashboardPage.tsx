@@ -25,9 +25,58 @@ function generateCode(name: string, existing: string[]): string {
   return base + Date.now().toString().slice(-2)
 }
 
+interface AdminOrder {
+  uuid: string; clientName: string; clientCode: string; date: number
+  items: string; total: number; status: string; updatedAt: number
+  clientEmail: string; clientPhone: string; commPref: string
+}
+
 export default function AdminDashboardPage() {
   const { isAdmin, adminLogout } = useAdminAuth()
   const navigate = useNavigate()
+
+  // Onglet actif
+  const [activeTab, setActiveTab] = useState<'stock' | 'commandes'>('stock')
+
+  // Commandes en cours
+  const [adminOrders, setAdminOrders] = useState<AdminOrder[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [ordersError, setOrdersError] = useState('')
+  const [deliverStatus, setDeliverStatus] = useState<Record<string, 'idle' | 'loading' | 'done' | 'error'>>({})
+  const [deliverWaUrls, setDeliverWaUrls] = useState<Record<string, string | null>>({})
+  const [showDelivered, setShowDelivered] = useState(false)
+
+  const fetchAdminOrders = async () => {
+    setOrdersLoading(true); setOrdersError('')
+    try {
+      const r = await fetch('/api/orders-list')
+      const data = await r.json()
+      if (!r.ok) throw new Error(data.error ?? 'Erreur serveur')
+      setAdminOrders(Array.isArray(data) ? data : [])
+    } catch (e) {
+      setOrdersError(e instanceof Error ? e.message : 'Erreur inconnue')
+    } finally {
+      setOrdersLoading(false)
+    }
+  }
+
+  const handleDeliver = async (orderId: string, status: 'livre' | 'livre_partiel') => {
+    setDeliverStatus(prev => ({ ...prev, [orderId]: 'loading' }))
+    try {
+      const r = await fetch('/api/deliver-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status }),
+      })
+      const data = await r.json()
+      if (!r.ok) throw new Error(data.error ?? 'Erreur serveur')
+      setDeliverStatus(prev => ({ ...prev, [orderId]: 'done' }))
+      setDeliverWaUrls(prev => ({ ...prev, [orderId]: data.waUrl ?? null }))
+      setAdminOrders(prev => prev.map(o => o.uuid === orderId ? { ...o, status } : o))
+    } catch {
+      setDeliverStatus(prev => ({ ...prev, [orderId]: 'error' }))
+    }
+  }
 
   // Gestion codes
   const [codes, setCodes] = useState<AccessCode[]>([])
@@ -132,13 +181,14 @@ export default function AdminDashboardPage() {
   }
 
   useEffect(() => {
-    if (!isAdmin) {
-      navigate('/admin', { replace: true })
-      return
-    }
+    if (!isAdmin) { navigate('/admin', { replace: true }); return }
     setCodes(getAccessCodes())
     fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
   }, [isAdmin, navigate])
+
+  useEffect(() => {
+    if (activeTab === 'commandes' && isAdmin) fetchAdminOrders()
+  }, [activeTab, isAdmin])
 
   const refreshCodes = () => setCodes(getAccessCodes())
 
@@ -243,10 +293,178 @@ export default function AdminDashboardPage() {
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 flex flex-col gap-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white">Administration SPINCUT</h1>
-          <p className="text-sm mt-1" style={{ color: '#8a8a8a' }}>
-            Gestion du stock
-          </p>
         </div>
+
+        {/* Onglets */}
+        <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid #2a2a2a' }}>
+          {(['stock', 'commandes'] as const).map(tab => {
+            const pending = adminOrders.filter(o => o.status === 'en_cours' || o.status === 'livre_partiel')
+            const label = tab === 'stock' ? 'Stock & Codes' : 'Commandes'
+            const count = tab === 'commandes' && pending.length > 0 ? pending.length : null
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="flex-1 py-3 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                style={activeTab === tab
+                  ? { background: '#d4780f', color: '#fff' }
+                  : { background: '#161616', color: '#8a8a8a' }}
+              >
+                {label}
+                {count && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: activeTab === tab ? 'rgba(255,255,255,0.25)' : '#2a1400', color: activeTab === tab ? '#fff' : '#d4780f' }}>{count}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* ─── ONGLET COMMANDES ─── */}
+        {activeTab === 'commandes' && (() => {
+          const pending = adminOrders.filter(o => o.status === 'en_cours' || o.status === 'livre_partiel')
+          const recentDelivered = adminOrders.filter(o => o.status === 'livre').slice(0, 10)
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs" style={{ color: '#8a8a8a' }}>
+                  {ordersLoading ? 'Chargement…' : `${pending.length} commande${pending.length !== 1 ? 's' : ''} en attente`}
+                </p>
+                <button
+                  onClick={fetchAdminOrders}
+                  disabled={ordersLoading}
+                  className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                  style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                >
+                  {ordersLoading ? '…' : '↻ Actualiser'}
+                </button>
+              </div>
+
+              {ordersError && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#2a0000', color: '#f87171' }}>
+                  {ordersError.includes('GAS') || ordersError.includes('action') ? 'GAS non mis à jour — ajoutez le code COMMANDES à votre Apps Script' : ordersError}
+                </p>
+              )}
+
+              {!ordersLoading && pending.length === 0 && !ordersError && (
+                <div className="text-center py-10">
+                  <p className="text-[#555] text-sm">Aucune commande en attente</p>
+                </div>
+              )}
+
+              {pending.map(order => {
+                const ds = deliverStatus[order.uuid] ?? 'idle'
+                const waUrl = deliverWaUrls[order.uuid]
+                let parsedItems: { ref: string; qty: number }[] = []
+                try { parsedItems = JSON.parse(order.items) } catch {}
+                const itemsLabel = parsedItems.slice(0, 2).map(i => `${i.qty}× ${i.ref}`).join(', ') +
+                  (parsedItems.length > 2 ? ` +${parsedItems.length - 2} autre${parsedItems.length - 2 > 1 ? 's' : ''}` : '')
+                const dateStr = order.date ? new Date(order.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
+                const isPartial = order.status === 'livre_partiel'
+
+                return (
+                  <div key={order.uuid} className="rounded-xl p-4" style={{ background: '#161616', border: `1px solid ${isPartial ? '#3a2a00' : '#2a2a2a'}` }}>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div>
+                        <p className="text-white font-semibold text-sm">{order.clientName}</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: '#555' }}>{itemsLabel}</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: '#666' }}>{dateStr}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-white font-bold">{Number(order.total).toFixed(2).replace('.', ',')} €</p>
+                        <p className="text-[10px]" style={{ color: '#555' }}>HT</p>
+                        {isPartial && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#1a1200', color: '#fbbf24' }}>Partiel</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {ds === 'done' && waUrl && (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold mb-2"
+                        style={{ background: '#0d2010', color: '#4ade80', border: '1px solid #166534' }}
+                      >
+                        ✓ Livré — Notifier par WhatsApp
+                      </a>
+                    )}
+                    {ds === 'done' && !waUrl && (
+                      <p className="text-xs text-center py-2 mb-2" style={{ color: '#4ade80' }}>✓ Statut mis à jour — notification envoyée</p>
+                    )}
+
+                    {ds !== 'done' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleDeliver(order.uuid, 'livre')}
+                          disabled={ds === 'loading'}
+                          className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
+                          style={{ background: '#0a1f0a', color: '#4ade80', border: '1px solid #166534' }}
+                        >
+                          {ds === 'loading' ? '…' : '✓ Livré'}
+                        </button>
+                        <button
+                          onClick={() => handleDeliver(order.uuid, 'livre_partiel')}
+                          disabled={ds === 'loading'}
+                          className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
+                          style={{ background: '#1a1200', color: '#fbbf24', border: '1px solid #78350f' }}
+                        >
+                          {ds === 'loading' ? '…' : '⚡ Partiel'}
+                        </button>
+                        {order.commPref === 'whatsapp' && order.clientPhone && (
+                          <a
+                            href={`https://wa.me/${order.clientPhone.replace(/\s/g, '').replace(/^0/, '33')}?text=${encodeURIComponent(`Bonjour ${order.clientName.split(' ')[0]} 👋`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2.5 rounded-lg text-xs font-bold"
+                            style={{ background: '#0a1628', color: '#60a5fa', border: '1px solid #1e3a5f' }}
+                          >
+                            WA
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Livrées récemment */}
+              {recentDelivered.length > 0 && (
+                <div>
+                  <button
+                    className="w-full flex items-center justify-between py-2"
+                    onClick={() => setShowDelivered(v => !v)}
+                  >
+                    <span className="text-xs font-semibold" style={{ color: '#555' }}>Livrées récemment ({recentDelivered.length})</span>
+                    <svg className={`w-3.5 h-3.5 transition-transform ${showDelivered ? 'rotate-180' : ''}`} fill="none" stroke="#555" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+                  {showDelivered && (
+                    <div className="flex flex-col gap-2 mt-1">
+                      {recentDelivered.map(order => {
+                        let parsedItems: { ref: string; qty: number }[] = []
+                        try { parsedItems = JSON.parse(order.items) } catch {}
+                        const dateStr = order.date ? new Date(order.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
+                        return (
+                          <div key={order.uuid} className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: '#0d1a0d', border: '1px solid #1a3a1a' }}>
+                            <div>
+                              <p className="text-sm font-medium text-white">{order.clientName}</p>
+                              <p className="text-[11px]" style={{ color: '#3a6a3a' }}>{parsedItems.slice(0, 2).map(i => `${i.qty}× ${i.ref}`).join(', ')}{parsedItems.length > 2 ? ` +${parsedItems.length - 2}` : ''}</p>
+                              <p className="text-[10px]" style={{ color: '#2a4a2a' }}>{dateStr}</p>
+                            </div>
+                            <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: '#0a2a0a', color: '#4ade80' }}>✓</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* ─── ONGLET STOCK ─── */}
+        {activeTab === 'stock' && <>
 
         {/* Import BDC Abby */}
         <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
@@ -615,6 +833,8 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </div>
+
+        </>}
 
         {/* Back */}
         <div className="flex justify-center">
