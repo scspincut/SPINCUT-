@@ -1,7 +1,6 @@
 import { CalculatorParams, ToolNotation } from '../types';
 
-const HISTORY_KEY = 'spincut_calc_history';
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 10;
 
 export interface HistoryEntry {
   id: string;
@@ -24,16 +23,25 @@ export interface HistoryEntry {
   };
 }
 
-export function loadHistory(): HistoryEntry[] {
+function historyKey(clientCode: string | null) {
+  return `spincut_calc_history_${clientCode ?? 'guest'}`;
+}
+
+export function loadHistory(clientCode: string | null): HistoryEntry[] {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return JSON.parse(localStorage.getItem(historyKey(clientCode)) || '[]');
   } catch { return []; }
 }
 
-export function pushToHistory(entry: HistoryEntry): HistoryEntry[] {
-  const history = loadHistory();
+export function saveHistory(entries: HistoryEntry[], clientCode: string | null): void {
+  try {
+    localStorage.setItem(historyKey(clientCode), JSON.stringify(entries.slice(0, MAX_HISTORY)));
+  } catch {}
+}
+
+export function pushToHistory(entry: HistoryEntry, clientCode: string | null): HistoryEntry[] {
+  const history = loadHistory(clientCode);
   const last = history[0];
-  // Replace last entry if same core params (fine-tuning nMax/vfMax)
   const isSame = last &&
     last.params.toolType  === entry.params.toolType  &&
     last.params.material  === entry.params.material  &&
@@ -47,25 +55,12 @@ export function pushToHistory(entry: HistoryEntry): HistoryEntry[] {
     : [entry, ...history];
 
   const trimmed = updated.slice(0, MAX_HISTORY);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  saveHistory(trimmed, clientCode);
   return trimmed;
 }
 
-export function groupByDay(entries: HistoryEntry[]): [string, HistoryEntry[]][] {
-  const groups = new Map<string, HistoryEntry[]>();
-  const now = new Date();
-  const todayStr = now.toDateString();
-  const yesterdayStr = new Date(now.getTime() - 86400000).toDateString();
-
-  for (const entry of entries) {
-    const d = new Date(entry.timestamp);
-    const label =
-      d.toDateString() === todayStr     ? "Aujourd'hui" :
-      d.toDateString() === yesterdayStr ? "Hier" :
-      d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-    const arr = groups.get(label) ?? [];
-    arr.push(entry);
-    groups.set(label, arr);
-  }
-  return [...groups.entries()];
+export function deleteFromHistory(id: string, clientCode: string | null): HistoryEntry[] {
+  const updated = loadHistory(clientCode).filter(e => e.id !== id);
+  saveHistory(updated, clientCode);
+  return updated;
 }

@@ -46,7 +46,7 @@ import {
 } from '../utils/cncData';
 import BottomNav from '../components/BottomNav';
 import { useClientAuth, getClientCode } from '../hooks/useAuth';
-import { HistoryEntry, loadHistory, pushToHistory, groupByDay } from '../utils/history';
+import { HistoryEntry, loadHistory, pushToHistory, saveHistory, deleteFromHistory } from '../utils/history';
 
 interface CatalogProduct {
   sheet: string; row: number; ref: string; famille: string
@@ -190,9 +190,10 @@ export default function CalculatorPage() {
   const { isAuthenticated, logout } = useClientAuth();
   const isAdmin = localStorage.getItem('spincut_admin_session') === 'true';
 
-  const CALC_KEY = 'spincut_calc_params'
+  const clientCode = getClientCode()
+  const CALC_KEY = `spincut_calc_params_${clientCode ?? 'guest'}`
   const saved = (() => { try { return JSON.parse(localStorage.getItem(CALC_KEY) ?? '{}') } catch { return {} } })()
-  const savedMachine = (() => { try { return JSON.parse(localStorage.getItem(`spincut_machine_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} } })()
+  const savedMachine = (() => { try { return JSON.parse(localStorage.getItem(`spincut_machine_${clientCode ?? 'guest'}`) ?? '{}') } catch { return {} } })()
 
   // All hooks must be called unconditionally before any early return
   const [toolType, setToolType] = useState<CalculatorParams['toolType'] | null>(saved.toolType ?? null);
@@ -201,15 +202,17 @@ export default function CalculatorPage() {
   const [operation, setOperation] = useState<CalculatorParams['operation'] | null>(saved.operation ?? null);
   const [diameter, setDiameter] = useState<number | null>(saved.diameter ?? null);
   const [zTeeth, setZTeeth] = useState<number | null>(saved.zTeeth ?? null);
-  const [nMax, setNMax] = useState(savedMachine.nMax ?? saved.nMax ?? '');
-  const [vfMax, setVfMax] = useState(savedMachine.vfMax ?? saved.vfMax ?? '');
+  const [nMax, setNMax] = useState<string>(saved.nMax ?? savedMachine.nMax ?? '');
+  const [vfMax, setVfMax] = useState<string>(saved.vfMax ?? savedMachine.vfMax ?? '');
   const [thickness, setThickness] = useState(saved.thickness ?? '');
   const [showConseils, setShowConseils] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [guideTab, setGuideTab] = useState<'matiere' | 'fraise'>('matiere');
   const [showHistory, setShowHistory] = useState(false);
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory(getClientCode()));
   const [savedThisCalc, setSavedThisCalc] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dropIdx, setDropIdx] = useState<number | null>(null);
   const [showMailMenu, setShowMailMenu] = useState(false);
   const [showGlossaire, setShowGlossaire] = useState(false);
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
@@ -333,7 +336,7 @@ export default function CalculatorPage() {
       params: { toolType: toolType!, notation, material: safeMat, operation, diameter: safeDiam, zTeeth: effectiveZTeeth, nMax, vfMax, thickness },
       result: { n: result.n, vf: result.vf, vc: result.vc },
     };
-    setHistory(pushToHistory(entry));
+    setHistory(pushToHistory(entry, clientCode));
     setSavedThisCalc(true);
   };
 
@@ -577,7 +580,7 @@ export default function CalculatorPage() {
                   : 'bg-[#1e1e1e] border-[#d4780f]/40 text-[#d4780f] hover:bg-[#d4780f]/10 active:scale-95'
               }`}
             >
-              {savedThisCalc ? '✓ Calcul sauvegardé dans l\'historique' : '💾 Sauvegarder ce calcul'}
+              {savedThisCalc ? '✓ Sauvegardé' : '♥ Sauvegarder ce calcul'}
             </button>
           </div>
         )}
@@ -682,7 +685,7 @@ export default function CalculatorPage() {
           </div>
         )}
 
-        {/* History */}
+        {/* Saved calcs */}
         {history.length > 0 && (
           <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
             <button
@@ -690,11 +693,11 @@ export default function CalculatorPage() {
               className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
             >
               <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">
-                🕐 Historique
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                Calculs sauvegardés
                 <span className="bg-[#d4780f]/20 text-[#d4780f] text-xs px-2 py-0.5 rounded-full font-normal">
-                  {history.length}
+                  {history.length}/10
                 </span>
-                <span className="text-[#333] text-xs font-normal">/ 20 max</span>
               </h2>
               <svg className={`w-5 h-5 text-[#555] transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -702,39 +705,76 @@ export default function CalculatorPage() {
             </button>
 
             {showHistory && (
-              <div className="px-5 pb-5 space-y-5">
-                {groupByDay(history).map(([dayLabel, entries]) => (
-                  <div key={dayLabel}>
-                    <p className="text-[#444] text-[10px] font-semibold tracking-[0.2em] uppercase mb-2">
-                      {dayLabel}
-                    </p>
-                    <div className="space-y-2">
-                      {entries.map(entry => (
+              <div className="px-4 pb-4 space-y-1.5">
+                {(() => {
+                  // Build display order with drag-in-progress reordering
+                  let display = [...history]
+                  if (dragIdx !== null && dropIdx !== null && dragIdx !== dropIdx) {
+                    const [moved] = display.splice(dragIdx, 1)
+                    display.splice(dropIdx, 0, moved)
+                  }
+                  return display.map((entry, visualIdx) => {
+                    const origIdx = history.findIndex(e => e.id === entry.id)
+                    const isDragging = dragIdx === origIdx
+                    return (
+                      <div
+                        key={entry.id}
+                        onDragOver={e => { e.preventDefault(); setDropIdx(visualIdx) }}
+                        onDrop={() => {
+                          if (dragIdx !== null && dragIdx !== visualIdx) {
+                            const arr = [...history]
+                            arr.splice(visualIdx, 0, arr.splice(dragIdx, 1)[0])
+                            setHistory(arr)
+                            saveHistory(arr, clientCode)
+                          }
+                          setDragIdx(null); setDropIdx(null)
+                        }}
+                        className="rounded-xl border flex items-center gap-2 transition-all"
+                        style={{
+                          background: isDragging ? '#2a1800' : '#1a1a1a',
+                          borderColor: isDragging ? '#d4780f55' : '#2a2a2a',
+                          opacity: isDragging ? 0.6 : 1,
+                        }}
+                      >
+                        {/* Drag handle */}
                         <div
-                          key={entry.id}
-                          className="bg-[#1a1a1a] rounded-xl p-3 border border-[#2a2a2a] flex items-center justify-between gap-3"
+                          draggable
+                          onDragStart={() => { setDragIdx(origIdx); setDropIdx(origIdx) }}
+                          onDragEnd={() => { setDragIdx(null); setDropIdx(null) }}
+                          className="pl-3 py-3 cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
+                          style={{ color: '#333' }}
                         >
-                          <div className="min-w-0">
-                            <p className="text-white text-sm font-medium truncate">
-                              {TOOL_TYPE_LABELS[entry.params.toolType]} Ø{entry.params.diameter} · {MATERIAL_LABELS[entry.params.material]}
-                            </p>
-                            <p className="text-[#666] text-xs mt-0.5">
-                              {OPERATION_LABELS[entry.params.operation]} &nbsp;·&nbsp;
-                              <span className="text-[#d4780f]">n {entry.result.n.toLocaleString('fr-FR')} tr/min</span>
-                              &nbsp;·&nbsp; Vf {entry.result.vf.toLocaleString('fr-FR')} mm/min
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => reloadEntry(entry)}
-                            className="flex-shrink-0 text-xs text-[#d4780f] border border-[#d4780f]/30 px-2.5 py-1.5 rounded-lg hover:bg-[#d4780f]/10 transition-colors"
-                          >
-                            ↩ Recharger
-                          </button>
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
+                          </svg>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 py-3 cursor-pointer" onClick={() => reloadEntry(entry)}>
+                          <p className="text-white text-sm font-medium truncate">
+                            {TOOL_TYPE_LABELS[entry.params.toolType]} Ø{entry.params.diameter} · {MATERIAL_LABELS[entry.params.material]}
+                          </p>
+                          <p className="text-[#666] text-xs mt-0.5">
+                            {OPERATION_LABELS[entry.params.operation]} ·&nbsp;
+                            <span className="text-[#d4780f]">n {entry.result.n.toLocaleString('fr-FR')} tr/min</span>
+                            &nbsp;· Vf {entry.result.vf.toLocaleString('fr-FR')} mm/min
+                          </p>
+                        </div>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => setHistory(deleteFromHistory(entry.id, clientCode))}
+                          className="pr-3 py-3 flex-shrink-0 active:scale-90 transition-transform"
+                          style={{ color: '#3a3a3a' }}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             )}
           </div>
