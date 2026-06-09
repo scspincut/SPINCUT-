@@ -228,6 +228,13 @@ export default function BoutiquePage() {
     try { localStorage.setItem(favKey, JSON.stringify([...next])) } catch {}
     return next
   })
+  const toggleGroupFav = (products: CatalogProduct[]) => setFavorites(prev => {
+    const next = new Set(prev)
+    const anyFaved = products.some(p => prev.has(uid(p)))
+    products.forEach(p => anyFaved ? next.delete(uid(p)) : next.add(uid(p)))
+    try { localStorage.setItem(favKey, JSON.stringify([...next])) } catch {}
+    return next
+  })
 
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(cartKey) ?? '{}') } catch { return {} }
@@ -238,10 +245,10 @@ export default function BoutiquePage() {
 
   const [syncPhotoIdx, setSyncPhotoIdx] = useState(0)
   useEffect(() => {
-    if (shopTab !== 'lames' && shopTab !== 'cmt') return
+    if (!favsView && shopTab !== 'lames' && shopTab !== 'cmt') return
     const t = setInterval(() => setSyncPhotoIdx(i => i + 1), 2000)
     return () => clearInterval(t)
-  }, [shopTab])
+  }, [shopTab, favsView])
 
   useEffect(() => { localStorage.setItem('spincut_last_section', '/boutique') }, [])
   useEffect(() => {
@@ -336,10 +343,19 @@ export default function BoutiquePage() {
   }, [activeTabCatalog, shopTab])
 
   const currentCMTGroup = useMemo(() => {
-    if (!selectedProduct || shopTab !== 'cmt') return null
+    if (!selectedProduct || selectedProduct.sheet !== 'STOCK A1') return null
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of catalog) {
+      if (p.sheet !== 'STOCK A1') continue
+      const k = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!map.has(k)) map.set(k, [])
+      map.get(k)!.push(p)
+    }
     const key = CMT_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
-    return cmtGroups.find(g => g.key === key) ?? null
-  }, [selectedProduct, shopTab, cmtGroups])
+    const prods = map.get(key)
+    if (!prods) return null
+    return { key, photoUrl: CMT_PHOTO_MAP[prods[0].ref] ?? null, products: prods }
+  }, [selectedProduct, catalog])
 
   const lamesGroups = useMemo(() => {
     if (shopTab !== 'lames') return []
@@ -355,10 +371,19 @@ export default function BoutiquePage() {
   }, [activeTabCatalog, shopTab])
 
   const currentLamesGroup = useMemo(() => {
-    if (!selectedProduct || shopTab !== 'lames') return null
+    if (!selectedProduct || selectedProduct.sheet !== 'STOCK A3') return null
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of catalog) {
+      if (p.sheet !== 'STOCK A3') continue
+      const k = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!map.has(k)) map.set(k, [])
+      map.get(k)!.push(p)
+    }
     const key = LAMES_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
-    return lamesGroups.find(g => g.key === key) ?? null
-  }, [selectedProduct, shopTab, lamesGroups])
+    const prods = map.get(key)
+    if (!prods) return null
+    return { key, photoUrl: LAMES_PHOTO_MAP[prods[0].ref] ?? null, products: prods }
+  }, [selectedProduct, catalog])
 
   const currentPhotoGroup = currentCMTGroup ?? currentLamesGroup
   const currentPhoto2 = currentPhotoGroup?.photoUrl ? (LAMES_PHOTO2_MAP[currentPhotoGroup.photoUrl] ?? null) : null
@@ -403,6 +428,36 @@ export default function BoutiquePage() {
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
   const favoriteItems = useMemo(() => catalog.filter(p => favorites.has(uid(p))), [catalog, favorites])
+
+  const favCMTGroups = useMemo(() => {
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of catalog) {
+      if (p.sheet !== 'STOCK A1') continue
+      const k = CMT_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!map.has(k)) map.set(k, [])
+      map.get(k)!.push(p)
+    }
+    return [...map.entries()]
+      .map(([k, products]) => ({ key: k, photoUrl: CMT_PHOTO_MAP[products[0].ref] ?? null, products }))
+      .filter(g => g.products.some(p => favorites.has(uid(p))))
+  }, [catalog, favorites])
+
+  const favLamesGroups = useMemo(() => {
+    const map = new Map<string, CatalogProduct[]>()
+    for (const p of catalog) {
+      if (p.sheet !== 'STOCK A3') continue
+      const k = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      if (!map.has(k)) map.set(k, [])
+      map.get(k)!.push(p)
+    }
+    return [...map.entries()]
+      .map(([k, products]) => ({ key: k, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products }))
+      .filter(g => g.products.some(p => favorites.has(uid(p))))
+  }, [catalog, favorites])
+
+  const favCNCItems = useMemo(() =>
+    favoriteItems.filter(p => p.sheet === 'STOCK A0' || p.sheet === 'STOCK A2'),
+  [favoriteItems])
 
   const selectCategory = (id: string) => { setActiveCategory(id); setFiltersOpen(false); resetFilters() }
   const goHome  = () => { setHomeView(true); setFavsView(false); setActiveCategory(null); resetFilters(); setFiltersOpen(false) }
@@ -694,9 +749,130 @@ export default function BoutiquePage() {
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-[#161616]">
-                {favoriteItems.map(item => renderProductRow(item))}
-              </div>
+              <>
+                {/* ── CMT favoris ── */}
+                {favCMTGroups.length > 0 && (
+                  <div className="px-4 pt-4 pb-2">
+                    <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">Fraises Défonceuse</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {favCMTGroups.map(group => {
+                        const groupFaved = group.products.some(p => favorites.has(uid(p)))
+                        const anyInStock = group.products.some(p => p.stock > 0)
+                        const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
+                        const prices     = group.products.map(p => p.prix).filter(x => x > 0)
+                        const minPrice   = prices.length ? Math.min(...prices) : 0
+                        const groupName  = group.products.length === 1
+                          ? group.products[0].designation
+                          : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
+                        return (
+                          <button key={group.key}
+                            onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
+                            className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
+                            style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                          >
+                            <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
+                              {group.photoUrl
+                                ? (() => {
+                                    const urls = [group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]
+                                    return urls.length > 1
+                                      ? <AutoPhoto urls={urls} externalIdx={syncPhotoIdx} />
+                                      : <img src={group.photoUrl} alt="" className="absolute inset-0 w-full h-full object-contain" style={{ padding: '8px' }} />
+                                  })()
+                                : <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}><span className="text-[#d4780f22] font-black text-4xl select-none">S</span></div>
+                              }
+                              <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
+                              {totalQty > 0 && <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>}
+                              {group.products.length > 1 && <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">{group.products.length} dim.</span>}
+                              <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
+                                style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
+                                {anyInStock ? '● Stock' : '● Rupture'}
+                              </span>
+                              <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                                className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                                style={{ background: 'rgba(0,0,0,0.5)' }}>
+                                <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
+                                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                </svg>
+                              </button>
+                            </div>
+                            <div className="px-2.5 py-2.5">
+                              <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
+                              <div className="mt-1.5">
+                                {minPrice > 0 ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span> : <span className="text-[#444] text-[10px]">Sur devis</span>}
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Lames favoris ── */}
+                {favLamesGroups.length > 0 && (
+                  <div className="px-4 pt-4 pb-2">
+                    <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">Lames Carbure</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {favLamesGroups.map(group => {
+                        const groupFaved = group.products.some(p => favorites.has(uid(p)))
+                        const anyInStock = group.products.some(p => p.stock > 0)
+                        const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
+                        const prices     = group.products.map(p => p.prix).filter(x => x > 0)
+                        const minPrice   = prices.length ? Math.min(...prices) : 0
+                        const groupName  = group.products.length === 1
+                          ? group.products[0].designation
+                          : group.products[0].designation.replace(/\s+[DSRZLI]=.*/i, '').replace(/\s+\d.*/,'').trim().replace(/[-–.,\s]+$/, '').trim()
+                        return (
+                          <button key={group.key}
+                            onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}
+                            className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
+                            style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                          >
+                            <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}>
+                              {group.photoUrl
+                                ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} externalIdx={syncPhotoIdx} />
+                                : <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}><span className="text-[#d4780f22] font-black text-4xl select-none">S</span></div>
+                              }
+                              <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
+                              {totalQty > 0 && <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>}
+                              {group.products.length > 1 && <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">{group.products.length} dim.</span>}
+                              <span className="absolute bottom-2 left-2 text-[8px] font-semibold px-1.5 py-0.5 rounded-full"
+                                style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
+                                {anyInStock ? '● Stock' : '● Rupture'}
+                              </span>
+                              <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                                className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                                style={{ background: 'rgba(0,0,0,0.5)' }}>
+                                <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
+                                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                </svg>
+                              </button>
+                            </div>
+                            <div className="px-2.5 py-2.5">
+                              <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
+                              <div className="mt-1.5">
+                                {minPrice > 0 ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span> : <span className="text-[#444] text-[10px]">Sur devis</span>}
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Fraises CNC favoris ── */}
+                {favCNCItems.length > 0 && (
+                  <>
+                    {(favCMTGroups.length > 0 || favLamesGroups.length > 0) && (
+                      <p className="px-4 pt-4 pb-1 text-[#444] text-[10px] uppercase tracking-widest font-bold">Fraises CNC</p>
+                    )}
+                    <div className="divide-y divide-[#161616]">
+                      {favCNCItems.map(item => renderProductRow(item))}
+                    </div>
+                  </>
+                )}
+              </>
             )}
           </>
         )}
@@ -834,6 +1010,7 @@ export default function BoutiquePage() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {cmtGroups.map(group => {
+                    const groupFaved = group.products.some(p => favorites.has(uid(p)))
                     const anyInStock = group.products.some(p => p.stock > 0)
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
@@ -875,6 +1052,13 @@ export default function BoutiquePage() {
                             style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
                             {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
+                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(0,0,0,0.5)' }}>
+                            <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                            </svg>
+                          </button>
                         </div>
                         {/* Infos */}
                         <div className="px-2.5 py-2.5">
@@ -901,6 +1085,7 @@ export default function BoutiquePage() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {lamesGroups.map(group => {
+                    const groupFaved = group.products.some(p => favorites.has(uid(p)))
                     const anyInStock = group.products.some(p => p.stock > 0)
                     const totalQty   = group.products.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
                     const prices     = group.products.map(p => p.prix).filter(x => x > 0)
@@ -936,6 +1121,13 @@ export default function BoutiquePage() {
                             style={{ background: anyInStock ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', color: anyInStock ? '#4ade80' : '#ef4444' }}>
                             {anyInStock ? '● Stock' : '● Rupture'}
                           </span>
+                          <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
+                            className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(0,0,0,0.5)' }}>
+                            <svg width="12" height="12" fill={groupFaved ? '#e03c3c' : 'none'} stroke={groupFaved ? '#e03c3c' : 'white'} strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                            </svg>
+                          </button>
                         </div>
                         <div className="px-2.5 py-2.5">
                           <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
@@ -1092,9 +1284,14 @@ export default function BoutiquePage() {
                         <div key={key} className="rounded-xl border border-[#252525] p-3 space-y-2"
                           style={{ background: qty > 0 ? '#130e00' : '#1a1a1a' }}>
                           {/* Ref + specs */}
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
                             <span className="font-mono text-[10px] text-[#555] bg-black/40 px-1.5 py-0.5 rounded">{v.ref}</span>
                             <StockBadge stock={v.stock}/>
+                            <button onClick={() => toggleFav(key)} className="ml-auto flex-shrink-0" style={{ color: favorites.has(key) ? '#e03c3c' : '#555' }}>
+                              <svg width="13" height="13" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                              </svg>
+                            </button>
                           </div>
                           <div className="flex gap-1.5">
                             {(currentLamesGroup ? [
