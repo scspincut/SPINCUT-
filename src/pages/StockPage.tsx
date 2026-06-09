@@ -202,7 +202,7 @@ return (
                   </p>
                 </div>
               </div>
-              <div className="px-4 pb-4 grid grid-cols-4 gap-2">
+              <div className="px-3 pb-3 grid grid-cols-6 gap-1.5">
                 {Array.from({ length: atcCapacity }, (_, i) => i + 1).map(pos => {
                   const tool = tools.find(t => t.position === pos)
                   const meta = tool ? (TYPE_META[tool.type] ?? TYPE_META['Carbure monobloc']) : null
@@ -210,21 +210,20 @@ return (
                     <button
                       key={pos}
                       onClick={() => unmountTool(tool.id)}
-                      className="aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95"
+                      className="aspect-square rounded-lg flex flex-col items-center justify-center gap-0 transition-all active:scale-95"
                       style={{ background: meta!.bg, border: `1.5px solid ${meta!.color}44` }}
                       title={`Poste ${pos} — ${tool.type} Ø${tool.diametre} · Appuyer pour démonter`}
                     >
-                      <span className="text-[9px] font-semibold" style={{ color: meta!.color + 'aa' }}>{pos}</span>
-                      <span className="text-[10px] font-black" style={{ color: meta!.color }}>Ø{tool.diametre}</span>
-                      <span className="text-[8px]" style={{ color: meta!.color + '88' }}>{meta!.abbr}</span>
+                      <span className="text-[8px] font-semibold leading-none" style={{ color: meta!.color + 'aa' }}>{pos}</span>
+                      <span className="text-[9px] font-black leading-tight" style={{ color: meta!.color }}>Ø{tool.diametre}</span>
                     </button>
                   ) : (
                     <div
                       key={pos}
-                      className="aspect-square rounded-xl flex items-center justify-center"
-                      style={{ background: '#0d0d0d', border: '1.5px solid #1e1e1e' }}
+                      className="aspect-square rounded-lg flex items-center justify-center"
+                      style={{ background: '#0d0d0d', border: '1.5px solid #1a1a1a' }}
                     >
-                      <span className="text-xs font-bold" style={{ color: '#2a2a2a' }}>{pos}</span>
+                      <span className="text-[9px] font-bold" style={{ color: '#252525' }}>{pos}</span>
                     </div>
                   )
                 })}
