@@ -45,6 +45,7 @@ export default function AdminDashboardPage() {
   const [deliverStatus, setDeliverStatus] = useState<Record<string, 'idle' | 'loading' | 'done' | 'error'>>({})
   const [deliverWaUrls, setDeliverWaUrls] = useState<Record<string, string | null>>({})
   const [showDelivered, setShowDelivered] = useState(false)
+  const [showPicking, setShowPicking] = useState(false)
 
   const fetchAdminOrders = async () => {
     setOrdersLoading(true); setOrdersError('')
@@ -319,112 +320,206 @@ export default function AdminDashboardPage() {
 
         {/* ─── ONGLET COMMANDES ─── */}
         {activeTab === 'commandes' && (() => {
-          const pending = adminOrders.filter(o => o.status === 'en_cours' || o.status === 'livre_partiel')
-          const recentDelivered = adminOrders.filter(o => o.status === 'livre').slice(0, 10)
+          const pending = adminOrders
+            .filter(o => o.status === 'en_cours' || o.status === 'livre_partiel')
+            .sort((a, b) => a.date - b.date) // FIFO — plus ancienne en premier
+
+          const recentDelivered = adminOrders.filter(o => o.status === 'livre').slice(0, 15)
+
+          // Stats globales
+          const totalItems = pending.reduce((s, o) => {
+            try { return s + (JSON.parse(o.items) as { qty: number }[]).reduce((ss, i) => ss + i.qty, 0) } catch { return s }
+          }, 0)
+          const totalHT = pending.reduce((s, o) => s + Number(o.total), 0)
+
+          // Liste de picking : consolidation par ref
+          const pickingMap: Record<string, number> = {}
+          pending.forEach(o => {
+            try {
+              const items: { ref: string; qty: number }[] = JSON.parse(o.items)
+              items.forEach(i => { pickingMap[i.ref] = (pickingMap[i.ref] ?? 0) + i.qty })
+            } catch {}
+          })
+          const pickingList = Object.entries(pickingMap).sort((a, b) => b[1] - a[1])
+
           return (
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-end">
-                <button
-                  onClick={fetchAdminOrders}
-                  disabled={ordersLoading}
-                  className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                  style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
-                >
-                  {ordersLoading ? '…' : '↻ Actualiser'}
-                </button>
+
+              {/* ── Header stats + actions ── */}
+              <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-3" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+                <div className="flex items-center gap-4 flex-wrap">
+                  {pending.length > 0 ? (
+                    <>
+                      <div>
+                        <p className="text-2xl font-bold text-white leading-none">{pending.length}</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>commande{pending.length > 1 ? 's' : ''}</p>
+                      </div>
+                      <div style={{ borderLeft: '1px solid #2a2a2a', paddingLeft: '1rem' }}>
+                        <p className="text-lg font-bold" style={{ color: '#d4780f' }}>{totalItems}</p>
+                        <p className="text-[10px]" style={{ color: '#555' }}>articles</p>
+                      </div>
+                      <div style={{ borderLeft: '1px solid #2a2a2a', paddingLeft: '1rem' }}>
+                        <p className="text-lg font-bold text-white">{totalHT.toFixed(0)} €</p>
+                        <p className="text-[10px]" style={{ color: '#555' }}>HT total</p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm" style={{ color: '#555' }}>Aucune commande en attente</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {pending.length > 0 && (
+                    <button
+                      onClick={() => setShowPicking(v => !v)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors"
+                      style={showPicking
+                        ? { background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f55' }
+                        : { background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                    >
+                      📦 Picking
+                    </button>
+                  )}
+                  <button
+                    onClick={fetchAdminOrders}
+                    disabled={ordersLoading}
+                    className="text-xs px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                    style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                  >
+                    {ordersLoading ? '…' : '↻'}
+                  </button>
+                </div>
               </div>
 
-              {pending.length === 0 && (
-                <div className="text-center py-10">
-                  <p className="text-[#555] text-sm">Pas de commande à livrer</p>
+              {/* ── Mode picking ── */}
+              {showPicking && pickingList.length > 0 && (
+                <div className="rounded-xl p-4" style={{ background: '#0d0a00', border: '1px solid #3a2a00' }}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#d4780f' }}>
+                    Liste de picking — {totalItems} articles à préparer
+                  </p>
+                  <div className="space-y-1.5">
+                    {pickingList.map(([ref, qty]) => (
+                      <div key={ref} className="flex items-center justify-between">
+                        <span className="font-mono text-sm text-white">{ref}</span>
+                        <span className="text-sm font-bold tabular-nums" style={{ color: '#d4780f' }}>× {qty}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] mt-3 pt-3" style={{ color: '#3a2a00', borderTop: '1px solid #2a1a00' }}>
+                    Couvre toutes les commandes en attente
+                  </p>
                 </div>
               )}
 
+              {/* ── Cartes commandes ── */}
               {pending.map(order => {
                 const ds = deliverStatus[order.uuid] ?? 'idle'
                 const waUrl = deliverWaUrls[order.uuid]
                 let parsedItems: { ref: string; qty: number }[] = []
                 try { parsedItems = JSON.parse(order.items) } catch {}
-                const itemsLabel = parsedItems.slice(0, 2).map(i => `${i.qty}× ${i.ref}`).join(', ') +
-                  (parsedItems.length > 2 ? ` +${parsedItems.length - 2} autre${parsedItems.length - 2 > 1 ? 's' : ''}` : '')
                 const dateStr = order.date ? new Date(order.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
                 const isPartial = order.status === 'livre_partiel'
+                const isWA = order.commPref === 'whatsapp'
+                const firstName = order.clientName?.split(' ')[0] ?? order.clientName
+
+                const waOrderText = `Bonjour ${firstName} 👋\n\nVotre commande SPINCUT est prête.\n\n${parsedItems.map(i => `• ${i.qty}× ${i.ref}`).join('\n')}\n\nÀ très vite !\nSPINCUT`
 
                 return (
-                  <div key={order.uuid} className="rounded-xl p-4" style={{ background: '#161616', border: `1px solid ${isPartial ? '#3a2a00' : '#2a2a2a'}` }}>
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <p className="text-white font-semibold text-sm">{order.clientName}</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: '#555' }}>{itemsLabel}</p>
-                        <p className="text-[11px] mt-0.5" style={{ color: '#666' }}>{dateStr}</p>
+                  <div key={order.uuid} className="rounded-xl overflow-hidden" style={{ background: '#161616', border: `1px solid ${isPartial ? '#3a2800' : '#2a2a2a'}` }}>
+
+                    {/* En-tête commande */}
+                    <div className="px-4 py-3 flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-white font-bold text-base leading-tight">{order.clientName}</p>
+                          {isPartial && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#2a1400', color: '#fbbf24', border: '1px solid #78350f' }}>⚡ Partiel en attente</span>
+                          )}
+                          {isWA && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a1628', color: '#60a5fa' }}>📱 WA</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] mt-0.5" style={{ color: '#555' }}>{dateStr}</p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-white font-bold">{Number(order.total).toFixed(2).replace('.', ',')} €</p>
-                        <p className="text-[10px]" style={{ color: '#555' }}>HT</p>
-                        {isPartial && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#1a1200', color: '#fbbf24' }}>Partiel</span>
-                        )}
+                        <p className="text-white font-bold text-base">{Number(order.total).toFixed(2).replace('.', ',')} €</p>
+                        <p className="text-[10px]" style={{ color: '#444' }}>HT</p>
                       </div>
                     </div>
 
-                    {ds === 'done' && waUrl && (
-                      <a
-                        href={waUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold mb-2"
-                        style={{ background: '#0d2010', color: '#4ade80', border: '1px solid #166534' }}
-                      >
-                        ✓ Livré — Notifier par WhatsApp
-                      </a>
-                    )}
-                    {ds === 'done' && !waUrl && (
-                      <p className="text-xs text-center py-2 mb-2" style={{ color: '#4ade80' }}>✓ Statut mis à jour — notification envoyée</p>
-                    )}
+                    {/* Articles — tous visibles */}
+                    <div className="px-4 pb-3 space-y-1" style={{ borderTop: '1px solid #1e1e1e' }}>
+                      {parsedItems.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <span className="font-mono text-sm text-white">{item.ref}</span>
+                          <span className="text-sm font-bold tabular-nums" style={{ color: '#d4780f' }}>× {item.qty}</span>
+                        </div>
+                      ))}
+                    </div>
 
-                    {ds !== 'done' && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleDeliver(order.uuid, 'livre')}
-                          disabled={ds === 'loading'}
-                          className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
-                          style={{ background: '#0a1f0a', color: '#4ade80', border: '1px solid #166534' }}
+                    {/* Actions */}
+                    <div className="px-4 pb-4 pt-2 flex flex-col gap-2" style={{ borderTop: '1px solid #1e1e1e' }}>
+
+                      {ds === 'done' && waUrl && (
+                        <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold"
+                          style={{ background: '#061a10', color: '#4ade80', border: '1px solid #166534' }}
                         >
-                          {ds === 'loading' ? '…' : '✓ Livré'}
-                        </button>
-                        <button
-                          onClick={() => handleDeliver(order.uuid, 'livre_partiel')}
-                          disabled={ds === 'loading'}
-                          className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
-                          style={{ background: '#1a1200', color: '#fbbf24', border: '1px solid #78350f' }}
-                        >
-                          {ds === 'loading' ? '…' : '⚡ Partiel'}
-                        </button>
-                        {order.commPref === 'whatsapp' && order.clientPhone && (
-                          <a
-                            href={`https://wa.me/${order.clientPhone.replace(/\s/g, '').replace(/^0/, '33')}?text=${encodeURIComponent(`Bonjour ${order.clientName.split(' ')[0]} 👋`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-2.5 rounded-lg text-xs font-bold"
-                            style={{ background: '#0a1628', color: '#60a5fa', border: '1px solid #1e3a5f' }}
+                          ✓ Livré — Envoyer WhatsApp →
+                        </a>
+                      )}
+                      {ds === 'done' && !waUrl && (
+                        <div className="w-full py-2.5 rounded-xl text-sm font-bold text-center" style={{ background: '#061a10', color: '#4ade80', border: '1px solid #166534' }}>
+                          ✓ Marqué comme livré — email envoyé
+                        </div>
+                      )}
+
+                      {ds !== 'done' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeliver(order.uuid, 'livre')}
+                            disabled={ds === 'loading'}
+                            className="flex-1 py-3 rounded-xl text-sm font-bold disabled:opacity-50 active:scale-[0.98] transition-all"
+                            style={{ background: '#0a1f0a', color: '#4ade80', border: '1px solid #166534' }}
                           >
-                            WA
-                          </a>
-                        )}
-                      </div>
-                    )}
+                            {ds === 'loading' ? '…' : '✓ Livré'}
+                          </button>
+                          <button
+                            onClick={() => handleDeliver(order.uuid, 'livre_partiel')}
+                            disabled={ds === 'loading'}
+                            className="flex-1 py-3 rounded-xl text-sm font-bold disabled:opacity-50 active:scale-[0.98] transition-all"
+                            style={{ background: '#1a1200', color: '#fbbf24', border: '1px solid #78350f' }}
+                          >
+                            {ds === 'loading' ? '…' : '⚡ Partiel'}
+                          </button>
+                          {order.clientPhone && (
+                            <a
+                              href={`https://wa.me/${order.clientPhone.replace(/\D/g, '').replace(/^0/, '33')}?text=${encodeURIComponent(waOrderText)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-12 flex items-center justify-center rounded-xl text-base font-bold"
+                              style={{ background: '#0a1628', color: '#60a5fa', border: '1px solid #1e3a5f' }}
+                              title="WhatsApp"
+                            >
+                              WA
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
 
-              {/* Livrées récemment */}
+              {/* ── Livrées récemment ── */}
               {recentDelivered.length > 0 && (
                 <div>
                   <button
                     className="w-full flex items-center justify-between py-2"
                     onClick={() => setShowDelivered(v => !v)}
                   >
-                    <span className="text-xs font-semibold" style={{ color: '#555' }}>Livrées récemment ({recentDelivered.length})</span>
+                    <span className="text-xs font-semibold" style={{ color: '#444' }}>
+                      Livrées récemment ({recentDelivered.length})
+                    </span>
                     <svg className={`w-3.5 h-3.5 transition-transform ${showDelivered ? 'rotate-180' : ''}`} fill="none" stroke="#555" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -436,13 +531,17 @@ export default function AdminDashboardPage() {
                         try { parsedItems = JSON.parse(order.items) } catch {}
                         const dateStr = order.date ? new Date(order.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
                         return (
-                          <div key={order.uuid} className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: '#0d1a0d', border: '1px solid #1a3a1a' }}>
-                            <div>
-                              <p className="text-sm font-medium text-white">{order.clientName}</p>
-                              <p className="text-[11px]" style={{ color: '#3a6a3a' }}>{parsedItems.slice(0, 2).map(i => `${i.qty}× ${i.ref}`).join(', ')}{parsedItems.length > 2 ? ` +${parsedItems.length - 2}` : ''}</p>
-                              <p className="text-[10px]" style={{ color: '#2a4a2a' }}>{dateStr}</p>
+                          <div key={order.uuid} className="rounded-xl px-4 py-3" style={{ background: '#0d1a0d', border: '1px solid #1a3a1a' }}>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-semibold text-white">{order.clientName}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[10px]" style={{ color: '#2a4a2a' }}>{dateStr}</p>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a2a0a', color: '#4ade80' }}>✓ Livré</span>
+                              </div>
                             </div>
-                            <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: '#0a2a0a', color: '#4ade80' }}>✓</span>
+                            <p className="text-[11px]" style={{ color: '#2a5a2a' }}>
+                              {parsedItems.map(i => `${i.qty}× ${i.ref}`).join(' · ')}
+                            </p>
                           </div>
                         )
                       })}
