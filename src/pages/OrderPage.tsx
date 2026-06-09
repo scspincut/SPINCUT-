@@ -26,16 +26,6 @@ type AbbyOrder = {
   deliveryStatus?: 'livre' | 'livre_partiel'
 }
 
-type BDCGroup = {
-  orderId: string
-  bdcNumber: string
-  state: string
-  bls: OrderHistoryEntry[]
-  totalHT: number
-  date: number
-  isInvoiced: boolean
-}
-
 function fmt(n: number) { return n.toFixed(2).replace('.', ',') }
 function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 
@@ -77,9 +67,9 @@ export default function OrderPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_cart_${getClientCode() ?? 'guest'}`) ?? '{}') } catch { return {} }
   })
 
-  // Demo data for test mode — illustre tout le parcours BL
+  // Demo data
   const DEMO_PENDING: AbbyOrder[] = isTestMode() ? [
-    { id: 'demo-1', number: '', state: 'draft', label: 'Brouillon', total: 187.50,
+    { id: 'demo-1', number: '', state: 'draft', label: 'En cours', total: 187.50,
       date: Date.now() / 1000 - 86400,
       items: [{ ref: 'SC-D12-2F', designation: 'Fraise diamant Ø12 2F mélanine', qty: 3 },
               { ref: 'SC-C08-2F', designation: 'Fraise carbure Ø8 2F bois', qty: 5 }] },
@@ -89,21 +79,21 @@ export default function OrderPage() {
     { id: 'demo-2', number: 'BDC-2025-038', state: 'delivered', label: 'Livré', total: 94.00,
       date: Date.now() / 1000 - 7 * 86400,
       items: [{ ref: 'SC-C10-2F', designation: 'Fraise carbure Ø10 2F bois dur', qty: 2 }] },
-    { id: 'demo-3', number: 'BDC-2025-031', state: 'invoiced', label: 'Facturé', total: 312.00,
+    { id: 'demo-3', number: 'BDC-2025-031', state: 'invoiced', label: 'Livré', total: 312.00,
       date: Date.now() / 1000 - 21 * 86400,
       items: [{ ref: 'SC-D16-3F', designation: 'Fraise diamant Ø16 3+3F', qty: 4 },
               { ref: 'SC-R12', designation: 'Ravageuse Ø12', qty: 2 }] },
   ] : []
 
   const DEMO_HISTORY: OrderHistoryEntry[] = isTestMode() ? [
-    { date: Date.now() - 86400000, orderId: 'demo-1', isNewBdc: true, blNumber: 'BL-202606-001',
+    { date: Date.now() - 86400000, orderId: 'demo-1', isNewBdc: true,
       items: [{ ref: 'SC-D12-2F', designation: 'Fraise diamant Ø12 2F mélanine', quantity: 3, price: 37.50 },
               { ref: 'SC-C08-2F', designation: 'Fraise carbure Ø8 2F bois', quantity: 5, price: 15.00 }],
       total: 187.50 },
-    { date: Date.now() - 7 * 86400000, orderId: 'demo-2', isNewBdc: true, blNumber: 'BL-202606-002',
+    { date: Date.now() - 7 * 86400000, orderId: 'demo-2', isNewBdc: true,
       items: [{ ref: 'SC-C10-2F', designation: 'Fraise carbure Ø10 2F bois dur', quantity: 2, price: 47.00 }],
       total: 94.00 },
-    { date: Date.now() - 21 * 86400000, orderId: 'demo-3', isNewBdc: true, blNumber: 'BL-202605-001',
+    { date: Date.now() - 21 * 86400000, orderId: 'demo-3', isNewBdc: true,
       items: [{ ref: 'SC-D16-3F', designation: 'Fraise diamant Ø16 3+3F', quantity: 4, price: 63.00 },
               { ref: 'SC-R12', designation: 'Ravageuse Ø12', quantity: 2, price: 45.00 }],
       total: 342.00 },
@@ -114,9 +104,9 @@ export default function OrderPage() {
     try { return JSON.parse(localStorage.getItem(`spincut_orders_${getClientCode() ?? 'guest'}`) ?? '[]') } catch { return [] }
   })
 
-  const [pendingOrders, setPendingOrders] = useState<AbbyOrder[]>(DEMO_PENDING)
+  const [pendingOrders, setPendingOrders]     = useState<AbbyOrder[]>(DEMO_PENDING)
   const [deliveredOrders, setDeliveredOrders] = useState<AbbyOrder[]>(DEMO_DELIVERED)
-  const [showDelivered, setShowDelivered] = useState(false)
+  const [showDelivered, setShowDelivered]     = useState(false)
 
   useEffect(() => {
     if (isTestMode()) return
@@ -171,34 +161,15 @@ export default function OrderPage() {
       .filter((p): p is CatalogProduct => !!p && p.stock > 0)
   }, [orderHistory, catalog])
 
-  // Calcul BLs en cours / groupes livrés / historique sans correspondance Abby
-  const { pendingBLs, deliveredGroups, unknownBLs } = useMemo(() => {
-    const pendingIds  = new Set(pendingOrders.map(o => o.id))
+  // Séparer commandes en cours / livrées à partir de l'historique localStorage
+  const { pendingEntries, deliveredEntries } = useMemo(() => {
     const deliveredIds = new Set(deliveredOrders.map(o => o.id))
-    const knownIds    = new Set([...pendingIds, ...deliveredIds])
-
-    const pendingBLs  = orderHistory.filter(e => pendingIds.has(e.orderId))
-    const unknownBLs  = orderHistory.filter(e => !knownIds.has(e.orderId))
-
-    const deliveredHist = orderHistory.filter(e => deliveredIds.has(e.orderId))
-    const groupMap = new Map<string, { bls: OrderHistoryEntry[]; abbyOrder: AbbyOrder | undefined }>()
-    for (const bl of deliveredHist) {
-      if (!groupMap.has(bl.orderId)) {
-        groupMap.set(bl.orderId, { bls: [], abbyOrder: deliveredOrders.find(o => o.id === bl.orderId) })
-      }
-      groupMap.get(bl.orderId)!.bls.push(bl)
-    }
-    const deliveredGroups: BDCGroup[] = [...groupMap.entries()].map(([orderId, { bls, abbyOrder }]) => ({
-      orderId,
-      bdcNumber: abbyOrder?.number ?? '',
-      state: abbyOrder?.state ?? 'delivered',
-      bls: bls.sort((a, b) => b.date - a.date),
-      totalHT: bls.reduce((s, b) => s + b.total, 0),
-      date: Math.max(...bls.map(b => b.date)),
-      isInvoiced: ['invoiced', 'paid'].includes(abbyOrder?.state ?? ''),
-    })).sort((a, b) => b.date - a.date)
-
-    return { pendingBLs, deliveredGroups, unknownBLs }
+    const pendingIds   = new Set(pendingOrders.map(o => o.id))
+    // En cours = BDC encore ouvert dans Abby/GAS
+    const pendingEntries   = orderHistory.filter(e => pendingIds.has(e.orderId))
+    // Livré = BDC livré OU entrée inconnue (vieux historique = probablement livré)
+    const deliveredEntries = orderHistory.filter(e => deliveredIds.has(e.orderId) || !pendingIds.has(e.orderId))
+    return { pendingEntries, deliveredEntries }
   }, [orderHistory, pendingOrders, deliveredOrders])
 
   if (!isAuthenticated) { navigate('/'); return null }
@@ -214,8 +185,6 @@ export default function OrderPage() {
   const itemCount = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
   const hasItems  = itemCount > 0
 
-  const totalDeliveredCount = deliveredGroups.reduce((s, g) => s + g.bls.length, 0) + unknownBLs.length
-
   const sendOrder = async () => {
     if (orderStatus === 'loading') return
     setOrderStatus('loading'); setOrderError('')
@@ -229,23 +198,14 @@ export default function OrderPage() {
       await new Promise(r => setTimeout(r, 800))
       const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
       const testTotal = orderedItems.reduce((s, i) => s + i.price * i.quantity, 0)
-      const blNum = `BL-TEST-${String(Date.now()).slice(-3)}`
-      const testOrder = { items: orderedItems, total: testTotal, orderId: 'TEST-0000', isNewBdc: true, blNumber: blNum }
-      // Ajouter à orderHistory et pendingOrders pour voir dans "En cours"
-      const testEntry: OrderHistoryEntry = { date: Date.now(), orderId: 'TEST-0000', isNewBdc: true, blNumber: blNum, items: orderedItems, total: testTotal }
+      const testOrder = { items: orderedItems, total: testTotal, orderId: 'TEST-0000', isNewBdc: true }
+      const testEntry: OrderHistoryEntry = { date: Date.now(), orderId: 'TEST-0000', isNewBdc: true, items: orderedItems, total: testTotal }
       setOrderHistory(prev => [testEntry, ...prev].slice(0, 30))
-      setPendingOrders(prev => {
-        if (prev.find(o => o.id === 'TEST-0000')) return prev
-        return [...prev, {
-          id: 'TEST-0000', number: '', state: 'draft', label: 'Brouillon', total: testTotal,
-          date: Date.now() / 1000,
-          items: orderedItems.map(i => ({ ref: i.ref, designation: i.designation, qty: i.quantity })),
-        }]
-      })
-      fetch('/api/create-order', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientName: clientName ?? 'Client TEST', items, testMode: true }),
-      }).catch(() => {})
+      setPendingOrders(prev => prev.find(o => o.id === 'TEST-0000') ? prev : [...prev, {
+        id: 'TEST-0000', number: '', state: 'draft', label: 'En cours', total: testTotal,
+        date: Date.now() / 1000, items: orderedItems.map(i => ({ ref: i.ref, designation: i.designation, qty: i.quantity })),
+      }])
+      fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: clientName ?? 'Client TEST', items, testMode: true }) }).catch(() => {})
       try { sessionStorage.setItem(TEST_LAST_ORDER_KEY, JSON.stringify(testOrder)) } catch {}
       setLastOrder(testOrder)
       setOrderStatus('success')
@@ -272,8 +232,7 @@ export default function OrderPage() {
       const newHistory = [entry, ...orderHistory].slice(0, 30)
       setOrderHistory(newHistory)
       try { localStorage.setItem(historyKey, JSON.stringify(newHistory)) } catch {}
-      const orderedItems = items.map(i => ({ ref: i.ref, designation: i.designation, quantity: i.quantity, price: i.price }))
-      setLastOrder({ items: orderedItems, total: orderedItems.reduce((s, i) => s + i.price * i.quantity, 0), orderId, isNewBdc, blNumber })
+      setLastOrder({ items: entry.items, total: entry.total, orderId, isNewBdc, blNumber })
       setOrderStatus('success')
       setQuantities({})
       try { localStorage.removeItem(cartKey) } catch {}
@@ -283,10 +242,7 @@ export default function OrderPage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clientName, orderIds: [orderId] }),
         }).then(r => r.json()).then(data => {
-          if (!data.error) {
-            setPendingOrders(data.orders ?? [])
-            setDeliveredOrders(data.delivered ?? [])
-          }
+          if (!data.error) { setPendingOrders(data.orders ?? []); setDeliveredOrders(data.delivered ?? []) }
         }).catch(() => {})
       }
     } catch (e: unknown) {
@@ -316,7 +272,7 @@ export default function OrderPage() {
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-5 space-y-6">
 
-        {/* ── SECTION 1 : PANIER ── */}
+        {/* ── PANIER ── */}
         <section>
           <SectionTitle icon="cart" label="Panier" count={itemCount > 0 ? itemCount : undefined} />
 
@@ -330,15 +286,7 @@ export default function OrderPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  {lastOrder.blNumber ? (
-                    <p className="text-[10px] mt-0.5 font-mono font-semibold" style={{ color: '#4ade80' }}>
-                      {lastOrder.blNumber} — En attente de livraison
-                    </p>
-                  ) : (
-                    <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>
-                      {lastOrder.isNewBdc ? 'Bon de commande créé' : 'Ajouté au bon de commande en cours'}
-                    </p>
-                  )}
+                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>En attente de livraison — visible ci-dessous</p>
                 </div>
                 <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
               </div>
@@ -451,25 +399,22 @@ export default function OrderPage() {
           )}
         </section>
 
-        {/* ── SECTION 2 : LIVRAISONS EN COURS ── */}
+        {/* ── COMMANDES EN COURS ── */}
         <section>
-          <SectionTitle icon="clock" label="Livraisons en cours" count={pendingBLs.length || undefined} />
-          {pendingBLs.length === 0 ? (
-            <p className="text-[#444] text-sm text-center py-6">Aucune livraison en cours</p>
+          <SectionTitle icon="clock" label="Commandes en cours" count={pendingEntries.length || undefined} />
+          {pendingEntries.length === 0 ? (
+            <p className="text-[#444] text-sm text-center py-6">Aucune commande en cours</p>
           ) : (
             <div className="space-y-2">
-              {pendingBLs.map((bl, i) => <BLCard key={i} entry={bl} />)}
+              {pendingEntries.map((entry, i) => <OrderCard key={i} entry={entry} />)}
             </div>
           )}
         </section>
 
-        {/* ── SECTION 3 : LIVRAISONS LIVRÉES + FACTURES ── */}
+        {/* ── COMMANDES LIVRÉES ── */}
         <section>
-          <button
-            className="w-full flex items-center justify-between mb-3"
-            onClick={() => setShowDelivered(v => !v)}
-          >
-            <SectionTitle icon="check" label="Livraisons & factures" count={totalDeliveredCount || undefined} noMargin />
+          <button className="w-full flex items-center justify-between mb-3" onClick={() => setShowDelivered(v => !v)}>
+            <SectionTitle icon="check" label="Commandes livrées" count={deliveredEntries.length || undefined} noMargin />
             <svg className={`w-4 h-4 text-[#555] transition-transform flex-shrink-0 ${showDelivered ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
             </svg>
@@ -477,21 +422,10 @@ export default function OrderPage() {
 
           {showDelivered && (
             <div className="space-y-2">
-              {deliveredGroups.length === 0 && unknownBLs.length === 0 && (
-                <p className="text-[#444] text-sm text-center py-6">Aucune livraison terminée pour l'instant</p>
+              {deliveredEntries.length === 0 && (
+                <p className="text-[#444] text-sm text-center py-6">Aucune commande livrée pour l'instant</p>
               )}
-
-              {deliveredGroups.map(group => (
-                <BDCGroupCard key={group.orderId} group={group} />
-              ))}
-
-              {unknownBLs.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#2a2a2a] px-1 pt-2">Historique</p>
-                  {unknownBLs.map((bl, i) => <BLCard key={i} entry={bl} delivered />)}
-                </div>
-              )}
-
+              {deliveredEntries.map((entry, i) => <OrderCard key={i} entry={entry} delivered />)}
               {orderHistory.length > 0 && (
                 <button
                   onClick={() => {
@@ -534,93 +468,32 @@ function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock'
   )
 }
 
-// Carte individuelle d'un BL (livraison)
-function BLCard({ entry, delivered }: { entry: OrderHistoryEntry; delivered?: boolean }) {
-  const borderColor = delivered ? '#1a2a1a' : '#2a1a00'
-  const blColor     = delivered ? '#555' : '#d4780f'
-  const statusStyle = delivered
+function OrderCard({ entry, delivered }: { entry: OrderHistoryEntry; delivered?: boolean }) {
+  const borderColor  = delivered ? '#1a2a1a' : '#2a1a00'
+  const statusStyle  = delivered
     ? { background: '#0d1a0d', color: '#4ade80' }
     : { background: '#1a1000', color: '#d4780f' }
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
       <div className="px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-wrap">
-          {entry.blNumber && (
-            <span className="text-[10px] font-mono font-semibold" style={{ color: blColor }}>{entry.blNumber}</span>
-          )}
+        <div className="flex items-center gap-2">
           <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={statusStyle}>
-            {delivered ? 'Livré' : 'En attente de livraison'}
+            {delivered ? 'Livré' : 'En cours'}
+          </span>
+          <span className="text-[10px] text-[#444]">
+            {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
           </span>
         </div>
-        <div className="text-right flex-shrink-0">
-          <span className="text-sm font-bold text-white">{fmt(entry.total)} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
-          <p className="text-[10px] text-[#333]">{fmt(entry.total * 1.2)} € TTC</p>
+        <div className="text-right">
+          <span className="text-sm font-bold text-white">{entry.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
+          <p className="text-[10px] text-[#333]">{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
         </div>
       </div>
-      <div className="px-4 pb-2 space-y-0.5" style={{ borderTop: '1px solid #161616' }}>
+      <div className="px-4 pb-2.5 space-y-0.5" style={{ borderTop: '1px solid #161616' }}>
         {entry.items.map((it, i) => (
           <p key={i} className="text-[11px] text-[#555]">{it.quantity}× {it.designation}</p>
         ))}
       </div>
-      <p className="px-4 pb-2 text-[10px] text-[#2a2a2a]">
-        {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-      </p>
-    </div>
-  )
-}
-
-// Groupe d'un BDC mensuel avec ses BLs (dépliable)
-function BDCGroupCard({ group }: { group: BDCGroup }) {
-  const [open, setOpen] = useState(false)
-
-  const isInvoiced  = group.isInvoiced
-  const isPaid      = group.state === 'paid'
-  const statusLabel = isPaid ? 'Payé' : isInvoiced ? 'Facturé' : 'Livré'
-  const statusStyle = isInvoiced
-    ? { background: '#0d0d2a', color: '#818cf8' }
-    : { background: '#0d1a0d', color: '#4ade80' }
-  const borderColor = isInvoiced ? '#1a1a3a' : '#1a2a1a'
-
-  const monthLabel = new Date(group.date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-  const blCount    = group.bls.length
-
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
-      <button
-        className="w-full px-4 py-3 flex items-center justify-between gap-2"
-        onClick={() => setOpen(v => !v)}
-      >
-        <div className="flex items-center gap-2 flex-wrap text-left min-w-0">
-          {group.bdcNumber && (
-            <span className="text-[10px] font-mono font-semibold text-[#555] flex-shrink-0">{group.bdcNumber}</span>
-          )}
-          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold flex-shrink-0" style={statusStyle}>{statusLabel}</span>
-          <span className="text-[11px] text-[#888] capitalize truncate">{monthLabel}</span>
-          <span className="text-[10px] text-[#444] flex-shrink-0">{blCount} BL{blCount > 1 ? 's' : ''}</span>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="text-right">
-            <span className="text-sm font-bold text-white">{fmt(group.totalHT)} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
-            <p className="text-[10px] text-[#333]">{fmt(group.totalHT * 1.2)} € TTC</p>
-          </div>
-          <svg className={`w-4 h-4 text-[#555] transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-          </svg>
-        </div>
-      </button>
-
-      {open && (
-        <div className="px-3 pb-3 space-y-2" style={{ borderTop: '1px solid #1a1a1a' }}>
-          <div className="pt-2 space-y-2">
-            {group.bls.map((bl, i) => <BLCard key={i} entry={bl} delivered />)}
-          </div>
-          {isInvoiced && (
-            <div className="mt-1 px-3 py-2 rounded-lg text-[10px] text-center" style={{ background: '#0d0d2a', color: '#818cf8', border: '1px solid #1a1a3a' }}>
-              Bon de commande clôturé · Facture émise
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
