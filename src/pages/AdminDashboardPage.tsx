@@ -248,57 +248,6 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Annulation BDC + restitution stock */}
-        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #3a1a1a' }}>
-          <h2 className="text-base font-semibold text-white mb-1">Annuler un BDC et restituer le stock</h2>
-          <p className="text-xs mb-4" style={{ color: '#8a8a8a' }}>Colle l'ID du BDC depuis l'email de notification — le stock est remis et le BDC archivé dans Abby</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={cancelId}
-              onChange={e => { setCancelId(e.target.value); setCancelStatus('idle'); setCancelResult(null); setCancelError('') }}
-              placeholder="ex: 6e27007992f5fa6e537fa49e7"
-              className="flex-1 px-3 py-2.5 rounded-lg text-white text-sm outline-none font-mono"
-              style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
-              onFocus={e => (e.currentTarget.style.border = '1px solid #ef4444')}
-              onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
-              onKeyDown={e => e.key === 'Enter' && handleCancelBdc()}
-            />
-            <button
-              onClick={handleCancelBdc}
-              disabled={cancelStatus === 'loading' || !cancelId.trim()}
-              className="px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-colors disabled:opacity-50"
-              style={{ background: '#b91c1c' }}
-            >
-              {cancelStatus === 'loading' ? '…' : 'Annuler'}
-            </button>
-          </div>
-          {cancelError && (
-            <p className="text-xs mt-3 px-3 py-2 rounded-lg" style={{ background: '#2a0000', color: '#f87171' }}>{cancelError}</p>
-          )}
-          {cancelResult && cancelStatus === 'success' && (
-            <div className="mt-3 space-y-2">
-              {cancelResult.restored.length > 0 && (
-                <div className="px-3 py-2 rounded-lg" style={{ background: '#0a1f0a' }}>
-                  <p className="text-xs font-semibold mb-1" style={{ color: '#4ade80' }}>✓ Stock restitué ({cancelResult.restored.length} article{cancelResult.restored.length > 1 ? 's' : ''})</p>
-                  {cancelResult.restored.map((d, i) => (
-                    <p key={i} className="text-xs" style={{ color: '#86efac' }}>+{d.quantity}× <span className="font-mono">{d.ref}</span></p>
-                  ))}
-                </div>
-              )}
-              {cancelResult.abbyStatus === 'archived' && (
-                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>BDC archivé dans Abby</p>
-              )}
-              {cancelResult.abbyStatus === 'stock_restored_only' && (
-                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>⚠ Stock restitué — annule manuellement le BDC dans Abby</p>
-              )}
-              {cancelResult.unmatched.length > 0 && (
-                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>Réfs non trouvées : {cancelResult.unmatched.join(', ')}</p>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Import BDC Abby */}
         <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
           <h2 className="text-base font-semibold text-white mb-1">Déduire stock depuis un BDC Abby</h2>
@@ -354,10 +303,61 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        {/* Remise en stock */}
+        {/* Annulation BDC + restitution stock */}
+        <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #3a1a1a' }}>
+          <h2 className="text-base font-semibold text-white mb-1">Annuler un BDC et restituer le stock</h2>
+          <p className="text-xs mb-4" style={{ color: '#8a8a8a' }}>Colle l'ID du BDC depuis l'email de notification — le stock est remis et le BDC archivé dans Abby</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={cancelId}
+              onChange={e => { setCancelId(e.target.value); setCancelStatus('idle'); setCancelResult(null); setCancelError('') }}
+              placeholder="ex: 6e27007992f5fa6e537fa49e7"
+              className="flex-1 px-3 py-2.5 rounded-lg text-white text-sm outline-none font-mono"
+              style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+              onFocus={e => (e.currentTarget.style.border = '1px solid #ef4444')}
+              onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+              onKeyDown={e => e.key === 'Enter' && handleCancelBdc()}
+            />
+            <button
+              onClick={handleCancelBdc}
+              disabled={cancelStatus === 'loading' || !cancelId.trim()}
+              className="px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-colors disabled:opacity-50"
+              style={{ background: '#b91c1c' }}
+            >
+              {cancelStatus === 'loading' ? '…' : 'Annuler'}
+            </button>
+          </div>
+          {cancelError && (
+            <p className="text-xs mt-3 px-3 py-2 rounded-lg" style={{ background: '#2a0000', color: '#f87171' }}>{cancelError}</p>
+          )}
+          {cancelResult && cancelStatus === 'success' && (
+            <div className="mt-3 space-y-2">
+              {cancelResult.restored.length > 0 && (
+                <div className="px-3 py-2 rounded-lg" style={{ background: '#0a1f0a' }}>
+                  <p className="text-xs font-semibold mb-1" style={{ color: '#4ade80' }}>✓ Stock restitué ({cancelResult.restored.length} article{cancelResult.restored.length > 1 ? 's' : ''})</p>
+                  {cancelResult.restored.map((d, i) => (
+                    <p key={i} className="text-xs" style={{ color: '#86efac' }}>+{d.quantity}× <span className="font-mono">{d.ref}</span></p>
+                  ))}
+                </div>
+              )}
+              {cancelResult.abbyStatus === 'archived' && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>BDC archivé dans Abby</p>
+              )}
+              {cancelResult.abbyStatus === 'stock_restored_only' && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>⚠ Stock restitué — annule manuellement le BDC dans Abby</p>
+              )}
+              {cancelResult.unmatched.length > 0 && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: '#1a1200', color: '#fbbf24' }}>Réfs non trouvées : {cancelResult.unmatched.join(', ')}</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Remise en stock manuelle par article */}
         <div className="rounded-xl p-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
-          <h2 className="text-base font-semibold text-white mb-4">Remise en stock</h2>
-          <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>À utiliser quand un BDC est annulé/supprimé dans Abby</p>
+          <h2 className="text-base font-semibold text-white mb-4">Remise en stock manuelle — par article</h2>
+          <p className="text-xs mb-3" style={{ color: '#8a8a8a' }}>Pour corriger le stock d'un article précis</p>
           <div className="space-y-3">
             <div ref={restoreRef} className="relative">
               <input
