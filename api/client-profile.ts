@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: contacts } = await abby.contact.retrieveContacts({
         query: { search: clientName, limit: 5, page: 1 },
       })
-      const contact = contacts?.docs?.[0]
+      const contact = contacts?.docs?.[0] as any
 
       // 2. Get linked organization: prefer the embedded org ID on the contact,
       //    fall back to a name search
@@ -77,16 +77,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const isOrgOnly = id === orgId
       if (!isOrgOnly) {
         const { data: current } = await abby.contact.getContact({ path: { id } })
+        if (!current) throw new Error('Contact introuvable')
+        const cur = current as any
         await abby.contact.updateContact({
           path: { id },
           body: {
-            firstname: firstname ?? current.firstname,
-            lastname: lastname ?? current.lastname,
-            emails: emails ?? current.emails,
-            phone: phone ?? current.phone,
+            firstname: firstname ?? cur.firstname,
+            lastname: lastname ?? cur.lastname,
+            emails: emails ?? cur.emails,
+            phone: phone ?? cur.phone,
             billingAddress: billingAddress
               ? { ...billingAddress, country: billingAddress.country as any }
-              : (current as any).billingAddress,
+              : cur.billingAddress,
           },
         })
       }
