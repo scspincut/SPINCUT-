@@ -91,6 +91,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secret = process.env.SHEETS_SECRET
   if (!url || !secret) return res.status(500).json({ error: 'Google Sheets non configuré' })
 
+  // Diagnostic : compte les produits par onglet reçus du GAS
+  if (req.query.debug === 'count') {
+    try {
+      const r = await fetch(`${url}?secret=${encodeURIComponent(secret)}`, {
+        redirect: 'follow',
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+      })
+      const raw: unknown = await r.json()
+      if (!Array.isArray(raw)) return res.status(200).json({ error: 'GAS returned non-array', raw })
+      const counts: Record<string, number> = {}
+      for (const p of raw as Record<string, unknown>[]) {
+        const s = String((p as any).sheet ?? 'unknown')
+        counts[s] = (counts[s] ?? 0) + 1
+      }
+      return res.status(200).json({ total: (raw as unknown[]).length, bySheet: counts })
+    } catch (e) {
+      return res.status(500).json({ error: String(e) })
+    }
+  }
+
   // Diagnostic : lister les onglets disponibles dans le Google Sheet
   if (req.query.debug === 'sheets') {
     try {
