@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClientAuth, getClientCode, getAccessCodes } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
@@ -241,6 +241,13 @@ export default function BoutiquePage() {
   const [quantities, setQuantities] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem(cartKey) ?? '{}') } catch { return {} }
   })
+  const [cartToast, setCartToast] = useState<{ label: string; visible: boolean }>({ label: '', visible: false })
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showToast = useCallback((label: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setCartToast({ label, visible: true })
+    toastTimer.current = setTimeout(() => setCartToast(t => ({ ...t, visible: false })), 2000)
+  }, [])
 
   const cartCount = useMemo(() => Object.values(quantities).reduce((s, v) => s + v, 0), [quantities])
   const cartTotal = useMemo(() => catalog.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0), [catalog, quantities])
@@ -406,8 +413,13 @@ export default function BoutiquePage() {
   }, [currentPhotoGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedProduct])
 
 
-  const setQty = (key: string, delta: number, max: number) =>
-    setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
+  const setQty = (key: string, delta: number, max: number, label?: string) =>
+    setQuantities(prev => {
+      const prev_ = prev[key] || 0
+      const next = Math.min(max, Math.max(0, prev_ + delta))
+      if (delta > 0 && prev_ === 0 && next > 0 && label) showToast(label)
+      return { ...prev, [key]: next }
+    })
   const setQtyDirect = (key: string, val: string, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
@@ -526,7 +538,7 @@ export default function BoutiquePage() {
                   className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
                 />
               )}
-              <button onClick={() => setQty(key, +1, item.stock)}
+              <button onClick={() => setQty(key, +1, item.stock, item.ref)}
                 className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
               >+</button>
             </div>
@@ -1214,6 +1226,25 @@ export default function BoutiquePage() {
         )}
       </main>
 
+      {/* Toast panier */}
+      <div
+        className="fixed left-1/2 z-50 transition-all duration-300"
+        style={{
+          bottom: cartToast.visible ? '88px' : '72px',
+          transform: 'translateX(-50%)',
+          opacity: cartToast.visible ? 1 : 0,
+          pointerEvents: 'none',
+        }}
+      >
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl"
+          style={{ background: '#d4780f', color: '#fff', whiteSpace: 'nowrap' }}>
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span className="text-sm font-semibold">{cartToast.label}</span>
+        </div>
+      </div>
+
       <BottomNav cartCount={cartCount} cartTotal={cartTotal}/>
 
       {/* ── Fiche produit — modal centré ── */}
@@ -1368,7 +1399,7 @@ export default function BoutiquePage() {
                             }
                             {v.stock > 0 && v.prix > 0 && (
                               qty === 0 ? (
-                                <button onClick={() => setQty(key, 1, v.stock)}
+                                <button onClick={() => setQty(key, 1, v.stock, v.ref)}
                                   className="px-4 py-2 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
                                   style={{ background: '#d4780f' }}>
                                   + Ajouter
@@ -1378,7 +1409,7 @@ export default function BoutiquePage() {
                                   <button onClick={() => setQty(key, -1, v.stock)}
                                     className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">−</button>
                                   <span className="w-7 text-center text-[#d4780f] font-bold text-base">{qty}</span>
-                                  <button onClick={() => setQty(key, +1, v.stock)}
+                                  <button onClick={() => setQty(key, +1, v.stock, v.ref)}
                                     className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">+</button>
                                 </div>
                               )
