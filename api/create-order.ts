@@ -207,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fallback si GAS ne retourne pas encore de numéro BL
     if (!blNumber) {
       const d = new Date()
-      blNumber = `BL-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-${String(Date.now()).slice(-4)}`
+      blNumber = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}-???`
     }
 
     // 5 — Email de notification admin via Resend
