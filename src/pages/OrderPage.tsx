@@ -236,6 +236,13 @@ export default function OrderPage() {
       setOrderStatus('success')
       setQuantities({})
       try { localStorage.removeItem(cartKey) } catch {}
+      // Optimistic update : la commande apparaît immédiatement dans "En cours" sans attendre l'API
+      setPendingOrders(prev => prev.some(o => o.id === orderId) ? prev : [
+        ...prev,
+        { id: orderId, number: blNumber || '', state: 'draft', label: 'En cours',
+          total: entry.total, date: Date.now() / 1000,
+          items: entry.items.map(i => ({ ref: i.ref, designation: i.designation, qty: i.quantity })) },
+      ])
       fetch('/api/catalog').then(r => r.json()).then(d => { if (Array.isArray(d)) setCatalog(d) }).catch(() => {})
       if (clientName) {
         fetch('/api/client-dashboard', {
@@ -286,7 +293,10 @@ export default function OrderPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>En attente de livraison — visible ci-dessous</p>
+                  {lastOrder.blNumber ? (
+                    <p className="text-[11px] font-bold mt-1" style={{ color: '#4ade80' }}>Réf. {lastOrder.blNumber}</p>
+                  ) : null}
+                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>En cours ci-dessous — livraison sous 48–72h</p>
                 </div>
                 <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
               </div>
