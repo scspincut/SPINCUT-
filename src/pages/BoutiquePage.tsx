@@ -198,7 +198,7 @@ export default function BoutiquePage() {
   const [heroBg, setHeroBg] = useState(0)
   const [shopTab, setShopTab] = useState<'cnc' | 'cmt' | 'lames'>('cnc')
   const [catalog, setCatalog] = useState<CatalogProduct[]>(() => {
-    try { return JSON.parse(localStorage.getItem('spincut_catalog_v2') ?? '[]') } catch { return [] }
+    try { return JSON.parse(localStorage.getItem('spincut_catalog_v3') ?? '[]') } catch { return [] }
   })
   const [catalogLoading, setCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState('')
@@ -274,7 +274,7 @@ export default function BoutiquePage() {
       .then(data => {
         if (Array.isArray(data)) {
           setCatalog(data)
-          try { localStorage.setItem('spincut_catalog_v2', JSON.stringify(data)) } catch {}
+          try { localStorage.setItem('spincut_catalog_v3', JSON.stringify(data)) } catch {}
         } else setCatalogError(data?.error ?? 'Erreur catalogue')
         setCatalogLoading(false)
       })
@@ -1043,7 +1043,7 @@ export default function BoutiquePage() {
                     <p className="text-[#555] text-sm max-w-xs">Les produits seront disponibles très prochainement.</p>
                     <button
                       onClick={() => {
-                        try { localStorage.removeItem('spincut_catalog_v2') } catch {}
+                        try { localStorage.removeItem('spincut_catalog_v3') } catch {}
                         window.location.reload()
                       }}
                       className="mt-1 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
