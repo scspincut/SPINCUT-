@@ -28,7 +28,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 2. Récupérer le catalogue
     const catalogResp = await fetch(`${sheetsUrl}?secret=${encodeURIComponent(sheetsSecret)}`)
     if (!catalogResp.ok) return res.status(502).json({ error: 'Impossible de lire Google Sheets' })
-    const catalog: { sheet: string; row: number; ref: string }[] = await catalogResp.json()
+    const catalog: Record<string, unknown>[] = await catalogResp.json()
+
+    // Extrait la ref depuis un objet brut GAS (colonnes variables selon l'onglet)
+    function getRef(p: Record<string, unknown>): string {
+      const keys = ['ref', 'Réf fournisseur', 'Ref fournisseur', 'REF', 'Ref', 'Référence', 'ref fournisseur']
+      for (const k of keys) { const v = p[k]; if (v !== undefined && v !== null && v !== '') return String(v).trim() }
+      return ''
+    }
 
     // 3. Restituer le stock (quantités négatives = remise en stock)
     const updates: { sheet: string; row: number; qty: number }[] = []
@@ -38,10 +45,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     for (const line of lines) {
       const ref = String(line.reference ?? '').trim()
       if (!ref) continue
-      const product = catalog.find(p => p.ref === ref)
+      const product = catalog.find(p => getRef(p) === ref)
       if (!product) { unmatched.push(ref || String(line.designation ?? '?')); continue }
       const qty = Number(line.quantity ?? 1)
-      updates.push({ sheet: product.sheet, row: product.row, qty: -qty }) // négatif = remise en stock
+      updates.push({ sheet: String(product.sheet), row: Number(product.row), qty: -qty }) // négatif = remise en stock
       restored.push({ ref, designation: String(line.designation ?? ''), quantity: qty })
     }
 
