@@ -425,13 +425,16 @@ export default function BoutiquePage() {
   }, [currentPhotoGroup, bsProds, bsFilterØ, bsFilterI, bsFilterS, selectedProduct])
 
 
-  const setQty = (key: string, delta: number, max: number, label?: string) =>
+  const setQty = (key: string, delta: number, max: number, label?: string) => {
     setQuantities(prev => {
       const prev_ = prev[key] || 0
       const next = Math.min(max, Math.max(0, prev_ + delta))
-      if (delta > 0 && prev_ === 0 && next > 0 && label) showToast(label)
+      if (delta > 0 && prev_ === 0 && next > 0 && label) {
+        setTimeout(() => showToast(label), 0)
+      }
       return { ...prev, [key]: next }
     })
+  }
   const setQtyDirect = (key: string, val: string, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
