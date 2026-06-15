@@ -175,6 +175,21 @@ export default function OrderPage() {
   if (!isAuthenticated) { navigate('/'); return null }
   localStorage.setItem('spincut_last_section', '/commande')
 
+  const commPref = (() => { try { return localStorage.getItem(`spincut_comm_pref_${clientCode ?? 'guest'}`) ?? 'email' } catch { return 'email' } })()
+
+  const printConfirmation = () => {
+    if (!lastOrder) return
+    const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const lignesHtml = lastOrder.items.map(i =>
+      `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.quantity}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;font-family:monospace">${i.ref}</td><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.designation}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(i.quantity * i.price)} €</td></tr>`
+    ).join('')
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${lastOrder.blNumber || lastOrder.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#d4780f;margin-bottom:2px}.sub{font-size:10px;color:#aaa;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#444;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#d4780f;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #222;padding-top:12px;font-size:15px}.ttc td{color:#888;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${lastOrder.blNumber || lastOrder.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${today}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(lastOrder.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(lastOrder.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(lastOrder.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(html)
+    win.document.close()
+  }
+
   const setQty = (key: string, delta: number, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, (prev[key] || 0) + delta)) }))
   const setQtyDirect = (key: string, val: string, max: number) =>
@@ -285,32 +300,65 @@ export default function OrderPage() {
 
           {orderStatus === 'success' && lastOrder && (
             <div className="rounded-2xl overflow-hidden mb-3" style={{ background: '#061510', border: '1px solid #1a4a2a' }}>
-              <div className="px-4 py-3 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#0d2a1a' }}>
-                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+              {/* Confirmation header */}
+              <div className="px-5 pt-5 pb-4 text-center" style={{ background: '#031008' }}>
+                <div className="w-11 h-11 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: '#0d3a1a' }}>
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
                   </svg>
                 </div>
-                <div className="flex-1">
-                  <p className="text-green-400 font-bold text-sm">Commande envoyée !</p>
-                  {lastOrder.blNumber ? (
-                    <p className="text-[11px] font-bold mt-1" style={{ color: '#4ade80' }}>Réf. {lastOrder.blNumber}</p>
-                  ) : null}
-                  <p className="text-[10px] mt-0.5" style={{ color: '#2a8a2a' }}>En cours ci-dessous — livraison sous 48–72h</p>
-                </div>
-                <button onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }} className="text-xl leading-none flex-shrink-0" style={{ color: '#2a5a2a' }}>×</button>
+                <p className="text-green-400 font-bold text-base">Commande confirmée ✓</p>
+                {lastOrder.blNumber && (
+                  <p className="font-mono font-bold text-2xl mt-2" style={{ color: '#d4780f' }}>{lastOrder.blNumber}</p>
+                )}
+                <p className="text-[10px] mt-1" style={{ color: '#2a5a2a' }}>Numéro à communiquer à votre comptabilité</p>
               </div>
-              <div className="px-4 py-3 space-y-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
+
+              {/* Récap articles */}
+              <div className="px-4 pt-3 pb-2 space-y-1.5">
                 {lastOrder.items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="flex-1 mr-2 truncate" style={{ color: '#5a9a5a' }}>{item.quantity}× {item.designation}</span>
-                    <span style={{ color: '#3a6a3a' }}>{fmt(item.quantity * item.price)} €</span>
+                  <div key={i} className="flex items-baseline justify-between gap-2 text-xs">
+                    <span className="flex-1 truncate" style={{ color: '#5a9a5a' }}>{item.quantity}× {item.designation}</span>
+                    <span className="font-mono flex-shrink-0" style={{ color: '#3a6a3a' }}>{fmt(item.quantity * item.price)} €</span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between text-sm font-bold pt-1.5" style={{ borderTop: '1px solid #0d2a1a' }}>
+                <div className="flex items-center justify-between pt-2 mt-1 text-sm font-bold" style={{ borderTop: '1px solid #0d2a1a' }}>
                   <span className="text-green-400">Total HT</span>
                   <span className="text-green-400">{fmt(lastOrder.total)} €</span>
                 </div>
+                <div className="flex items-center justify-between text-xs" style={{ color: '#2a5a2a' }}>
+                  <span>TTC (TVA 20 %)</span>
+                  <span>{fmt(lastOrder.total * 1.2)} €</span>
+                </div>
+              </div>
+
+              {/* Notification status */}
+              <div className="px-4 py-2.5 text-xs" style={{ borderTop: '1px solid #0d2a1a', color: '#2a6a3a' }}>
+                {commPref === 'whatsapp'
+                  ? '📱 Commande reçue — vous serez contacté par WhatsApp dès qu\'elle est prête'
+                  : '✉️ Email de confirmation envoyé à votre adresse'}
+              </div>
+
+              {/* Actions */}
+              <div className="px-4 pb-4 pt-2 flex gap-2" style={{ borderTop: '1px solid #0d2a1a' }}>
+                <button
+                  onClick={printConfirmation}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                  style={{ background: '#0d2a1a', color: '#4ade80', border: '1px solid #1a4a2a' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                  </svg>
+                  Imprimer / PDF
+                </button>
+                <button
+                  onClick={() => { setOrderStatus('idle'); setLastOrder(null); try { sessionStorage.removeItem(TEST_LAST_ORDER_KEY) } catch {} }}
+                  className="w-11 flex items-center justify-center rounded-xl text-lg"
+                  style={{ background: '#0d1a0d', color: '#2a5a2a', border: '1px solid #0d2a1a' }}
+                >
+                  ×
+                </button>
               </div>
             </div>
           )}
