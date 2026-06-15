@@ -92,8 +92,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!url || !secret) return res.status(500).json({ error: 'Google Sheets non configuré' })
 
   try {
-    const response = await fetch(`${url}?secret=${encodeURIComponent(secret)}`)
-    if (!response.ok) return res.status(502).json({ error: 'Erreur Google Sheets' })
+    const response = await fetch(`${url}?secret=${encodeURIComponent(secret)}`, {
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SPINCUT/1.0)', 'Accept': 'application/json' },
+    })
+    if (!response.ok) return res.status(502).json({ error: `Erreur Google Sheets ${response.status}` })
 
     const raw: unknown = await response.json()
     if (!Array.isArray(raw)) {
