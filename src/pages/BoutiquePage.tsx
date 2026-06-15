@@ -307,9 +307,21 @@ export default function BoutiquePage() {
   }, [clientName])
 
   const activeTabCatalog = useMemo(() => {
-    if (shopTab === 'cnc')   return catalog.filter(p => ['STOCK A0','STOCK A2'].includes(p.sheet))
-    if (shopTab === 'cmt')   return catalog.filter(p => p.sheet === 'STOCK A1')
-    return catalog.filter(p => p.sheet === 'STOCK A3')
+    const isStock = (s: string) => typeof s === 'string' && s.toUpperCase().startsWith('STOCK')
+    if (shopTab === 'cnc') {
+      const exact = catalog.filter(p => ['STOCK A0','STOCK A2'].includes(p.sheet))
+      // Fallback : si pas de match exact, tous les onglets STOCK (sauf A1 et A3 explicites)
+      if (exact.length > 0) return exact
+      return catalog.filter(p => isStock(p.sheet) && p.sheet !== 'STOCK A1' && p.sheet !== 'STOCK A3')
+    }
+    if (shopTab === 'cmt') {
+      const exact = catalog.filter(p => p.sheet === 'STOCK A1')
+      if (exact.length > 0) return exact
+      return []
+    }
+    const exact = catalog.filter(p => p.sheet === 'STOCK A3')
+    if (exact.length > 0) return exact
+    return []
   }, [shopTab, catalog])
 
   const tabs = useMemo(() => {

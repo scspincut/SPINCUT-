@@ -91,6 +91,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secret = process.env.SHEETS_SECRET
   if (!url || !secret) return res.status(500).json({ error: 'Google Sheets non configuré' })
 
+  // Diagnostic : lister les onglets disponibles dans le Google Sheet
+  if (req.query.debug === 'sheets') {
+    try {
+      const r = await fetch(`${url}?secret=${encodeURIComponent(secret)}&action=sheets`, {
+        redirect: 'follow',
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+      })
+      const data = await r.json()
+      return res.status(200).json(data)
+    } catch (e) {
+      return res.status(500).json({ error: String(e) })
+    }
+  }
+
   try {
     const response = await fetch(`${url}?secret=${encodeURIComponent(secret)}`, {
       redirect: 'follow',
@@ -150,10 +164,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     res.setHeader('Cache-Control', 'no-store')
-    // Uniquement feuilles A0 et A2
+    // Retourner tous les produits qui ont un nom de feuille valide (commence par STOCK)
     const visible = [...deduped.values()].filter(p =>
-      p.sheet === 'STOCK A0' || p.sheet === 'STOCK A2' ||
-      p.sheet === 'STOCK A1' || p.sheet === 'STOCK A3'
+      typeof p.sheet === 'string' && p.sheet.toUpperCase().startsWith('STOCK')
     )
     return res.status(200).json(visible)
   } catch {
