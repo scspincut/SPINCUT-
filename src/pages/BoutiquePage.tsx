@@ -587,10 +587,7 @@ export default function BoutiquePage() {
         </div>
         {!homeView && !favsView && (
           <>
-            <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto relative">
-              {catalog.length === 0 && !catalogLoading && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-red-500 font-bold">0 produit</span>
-              )}
+            <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
               {SHOP_TABS.map(t => (
                 <button key={t.id}
                   onClick={() => { setShopTab(t.id as typeof shopTab); setActiveCategory(null); resetFilters(); clearSearch() }}
@@ -1044,7 +1041,6 @@ export default function BoutiquePage() {
                   <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     <p className="text-white font-bold text-lg">Catalogue en cours de construction</p>
                     <p className="text-[#555] text-sm max-w-xs">Les produits seront disponibles très prochainement.</p>
-                    <p className="text-[#333] text-[10px]">Produits reçus : {catalog.length} (onglet : {activeTabCatalog.length})</p>
                     <button
                       onClick={() => {
                         try { localStorage.removeItem('spincut_catalog_v2') } catch {}
