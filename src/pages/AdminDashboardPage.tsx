@@ -46,6 +46,7 @@ export default function AdminDashboardPage() {
   const [deliverWaUrls, setDeliverWaUrls] = useState<Record<string, string | null>>({})
   const [showDelivered, setShowDelivered] = useState(false)
   const [showPicking, setShowPicking] = useState(false)
+  const [clientFilter, setClientFilter] = useState('')
 
   const fetchAdminOrders = async () => {
     setOrdersLoading(true); setOrdersError('')
@@ -322,30 +323,41 @@ export default function AdminDashboardPage() {
         {activeTab === 'commandes' && (() => {
           const pending = adminOrders
             .filter(o => o.status === 'en_cours' || o.status === 'livre_partiel')
-            .sort((a, b) => a.date - b.date) // FIFO — plus ancienne en premier
+            .sort((a, b) => a.date - b.date)
 
           const recentDelivered = adminOrders.filter(o => o.status === 'livre').slice(0, 15)
 
-          // Stats globales
+          // Clients uniques pour le filtre rapide
+          const uniqueClients = [...new Set(pending.map(o => o.clientName).filter(Boolean))].sort()
+
+          // Commandes filtrées par client
+          const filtered = clientFilter
+            ? pending.filter(o => o.clientName?.toLowerCase().includes(clientFilter.toLowerCase()))
+            : pending
+
+          // Stats globales (sur toutes les commandes en attente)
           const totalItems = pending.reduce((s, o) => {
             try { return s + (JSON.parse(o.items) as { qty: number }[]).reduce((ss, i) => ss + i.qty, 0) } catch { return s }
           }, 0)
           const totalHT = pending.reduce((s, o) => s + Number(o.total), 0)
 
-          // Liste de picking : consolidation par ref
+          // Picking consolidé sur les commandes affichées (filtrées ou toutes)
           const pickingMap: Record<string, number> = {}
-          pending.forEach(o => {
+          filtered.forEach(o => {
             try {
               const items: { ref: string; qty: number }[] = JSON.parse(o.items)
               items.forEach(i => { pickingMap[i.ref] = (pickingMap[i.ref] ?? 0) + i.qty })
             } catch {}
           })
           const pickingList = Object.entries(pickingMap).sort((a, b) => b[1] - a[1])
+          const filteredItems = filtered.reduce((s, o) => {
+            try { return s + (JSON.parse(o.items) as { qty: number }[]).reduce((ss, i) => ss + i.qty, 0) } catch { return s }
+          }, 0)
 
           return (
             <div className="flex flex-col gap-4">
 
-              {/* ── Header stats + actions ── */}
+              {/* ── Barre stats + actions ── */}
               <div className="rounded-xl px-4 py-3 flex items-center justify-between gap-3" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
                 <div className="flex items-center gap-4 flex-wrap">
                   {pending.length > 0 ? (
@@ -368,7 +380,7 @@ export default function AdminDashboardPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {pending.length > 0 && (
+                  {filtered.length > 0 && (
                     <button
                       onClick={() => setShowPicking(v => !v)}
                       className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors"
@@ -390,52 +402,96 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
+              {/* ── Filtre par client ── */}
+              {uniqueClients.length > 1 && (
+                <div className="rounded-xl px-4 py-3 flex flex-col gap-3" style={{ background: '#111', border: '1px solid #222' }}>
+                  <input
+                    type="text"
+                    value={clientFilter}
+                    onChange={e => setClientFilter(e.target.value)}
+                    placeholder="Rechercher un client…"
+                    className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                    style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                    onFocus={e => (e.currentTarget.style.border = '1px solid #d4780f')}
+                    onBlur={e => (e.currentTarget.style.border = '1px solid #2a2a2a')}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setClientFilter('')}
+                      className="text-xs px-3 py-1 rounded-full font-semibold transition-colors"
+                      style={!clientFilter
+                        ? { background: '#d4780f', color: '#fff' }
+                        : { background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                    >
+                      Tous ({pending.length})
+                    </button>
+                    {uniqueClients.map(name => {
+                      const count = pending.filter(o => o.clientName === name).length
+                      const active = clientFilter === name
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => setClientFilter(active ? '' : name)}
+                          className="text-xs px-3 py-1 rounded-full font-semibold transition-colors"
+                          style={active
+                            ? { background: '#d4780f', color: '#fff' }
+                            : { background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+                        >
+                          {name} {count > 1 ? `(${count})` : ''}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* ── Mode picking ── */}
               {showPicking && pickingList.length > 0 && (
                 <div className="rounded-xl p-4" style={{ background: '#0d0a00', border: '1px solid #3a2a00' }}>
                   <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#d4780f' }}>
-                    Liste de picking — {totalItems} articles à préparer
+                    {clientFilter ? `Picking — ${clientFilter}` : 'Liste de picking complète'} — {filteredItems} article{filteredItems > 1 ? 's' : ''}
                   </p>
                   <div className="space-y-1.5">
                     {pickingList.map(([ref, qty]) => (
-                      <div key={ref} className="flex items-center justify-between">
+                      <div key={ref} className="flex items-center justify-between py-0.5">
                         <span className="font-mono text-sm text-white">{ref}</span>
-                        <span className="text-sm font-bold tabular-nums" style={{ color: '#d4780f' }}>× {qty}</span>
+                        <span className="text-sm font-bold tabular-nums px-2.5 py-0.5 rounded-lg" style={{ background: '#1a0e00', color: '#d4780f' }}>× {qty}</span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] mt-3 pt-3" style={{ color: '#3a2a00', borderTop: '1px solid #2a1a00' }}>
-                    Couvre toutes les commandes en attente
-                  </p>
+                  {clientFilter && (
+                    <p className="text-[10px] mt-3 pt-3" style={{ color: '#3a2a00', borderTop: '1px solid #2a1a00' }}>
+                      Filtré sur : {clientFilter}
+                    </p>
+                  )}
                 </div>
               )}
 
               {/* ── Cartes commandes ── */}
-              {pending.map(order => {
+              {filtered.length === 0 && pending.length > 0 && (
+                <p className="text-sm text-center py-4" style={{ color: '#555' }}>Aucun résultat pour « {clientFilter} »</p>
+              )}
+
+              {filtered.map(order => {
                 const ds = deliverStatus[order.uuid] ?? 'idle'
                 const waUrl = deliverWaUrls[order.uuid]
                 let parsedItems: { ref: string; qty: number }[] = []
                 try { parsedItems = JSON.parse(order.items) } catch {}
                 const dateStr = order.date ? new Date(order.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'
-                const isPartial = order.status === 'livre_partiel'
                 const isWA = order.commPref === 'whatsapp'
                 const firstName = order.clientName?.split(' ')[0] ?? order.clientName
-
                 const waOrderText = `Bonjour ${firstName} 👋\n\nVotre commande SPINCUT est prête.\n\n${parsedItems.map(i => `• ${i.qty}× ${i.ref}`).join('\n')}\n\nÀ très vite !\nSPINCUT`
 
                 return (
-                  <div key={order.uuid} className="rounded-xl overflow-hidden" style={{ background: '#161616', border: `1px solid ${isPartial ? '#3a2800' : '#2a2a2a'}` }}>
+                  <div key={order.uuid} className="rounded-xl overflow-hidden" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
 
                     {/* En-tête commande */}
-                    <div className="px-4 py-3 flex items-start justify-between gap-3">
+                    <div className="px-4 py-3 flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-white font-bold text-base leading-tight">{order.clientName}</p>
-                          {isPartial && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#2a1400', color: '#fbbf24', border: '1px solid #78350f' }}>⚡ Partiel en attente</span>
-                          )}
                           {isWA && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a1628', color: '#60a5fa' }}>📱 WA</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a1628', color: '#60a5fa' }}>WA</span>
                           )}
                         </div>
                         <p className="text-[11px] mt-0.5" style={{ color: '#555' }}>{dateStr}</p>
@@ -446,10 +502,10 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
 
-                    {/* Articles — tous visibles */}
+                    {/* Articles */}
                     <div className="px-4 pb-3 space-y-1" style={{ borderTop: '1px solid #1e1e1e' }}>
                       {parsedItems.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between">
+                        <div key={i} className="flex items-center justify-between py-0.5">
                           <span className="font-mono text-sm text-white">{item.ref}</span>
                           <span className="text-sm font-bold tabular-nums" style={{ color: '#d4780f' }}>× {item.qty}</span>
                         </div>
@@ -457,24 +513,20 @@ export default function AdminDashboardPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="px-4 pb-4 pt-2 flex flex-col gap-2" style={{ borderTop: '1px solid #1e1e1e' }}>
-
-                      {ds === 'done' && waUrl && (
+                    <div className="px-4 pb-4 pt-2 flex gap-2" style={{ borderTop: '1px solid #1e1e1e' }}>
+                      {ds === 'done' && waUrl ? (
                         <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold"
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold"
                           style={{ background: '#061a10', color: '#4ade80', border: '1px solid #166534' }}
                         >
                           ✓ Livré — Envoyer WhatsApp →
                         </a>
-                      )}
-                      {ds === 'done' && !waUrl && (
-                        <div className="w-full py-2.5 rounded-xl text-sm font-bold text-center" style={{ background: '#061a10', color: '#4ade80', border: '1px solid #166534' }}>
-                          ✓ Marqué comme livré — email envoyé
+                      ) : ds === 'done' ? (
+                        <div className="flex-1 py-2.5 rounded-xl text-sm font-bold text-center" style={{ background: '#061a10', color: '#4ade80', border: '1px solid #166534' }}>
+                          ✓ Livré — email envoyé
                         </div>
-                      )}
-
-                      {ds !== 'done' && (
-                        <div className="flex gap-2">
+                      ) : (
+                        <>
                           <button
                             onClick={() => handleDeliver(order.uuid, 'livre')}
                             disabled={ds === 'loading'}
@@ -483,27 +535,22 @@ export default function AdminDashboardPage() {
                           >
                             {ds === 'loading' ? '…' : '✓ Livré'}
                           </button>
-                          <button
-                            onClick={() => handleDeliver(order.uuid, 'livre_partiel')}
-                            disabled={ds === 'loading'}
-                            className="flex-1 py-3 rounded-xl text-sm font-bold disabled:opacity-50 active:scale-[0.98] transition-all"
-                            style={{ background: '#1a1200', color: '#fbbf24', border: '1px solid #78350f' }}
-                          >
-                            {ds === 'loading' ? '…' : '⚡ Partiel'}
-                          </button>
                           {order.clientPhone && (
                             <a
                               href={`https://wa.me/${order.clientPhone.replace(/\D/g, '').replace(/^0/, '33')}?text=${encodeURIComponent(waOrderText)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-12 flex items-center justify-center rounded-xl text-base font-bold"
+                              className="w-12 flex items-center justify-center rounded-xl text-sm font-bold"
                               style={{ background: '#0a1628', color: '#60a5fa', border: '1px solid #1e3a5f' }}
-                              title="WhatsApp"
+                              title={`WhatsApp ${order.clientName}`}
                             >
                               WA
                             </a>
                           )}
-                        </div>
+                          {ds === 'error' && (
+                            <span className="self-center text-xs" style={{ color: '#ef4444' }}>Erreur</span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
