@@ -104,27 +104,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: `Accès Google Sheets refusé: ${errMsg}` })
     }
 
-    const products = (raw as SheetRow[]).map((p: SheetRow) => {
-      const designation = makeDesignation(p)
-      const pm = isPMProduct(p)
-      return {
-        sheet: p.sheet,
-        row: p.row,
-        ref: p.ref,
-        famille: p.famille,
-        diametre: p.diametre,
-        lc: p.lc,
-        lt: p.lt,
-        dents: p.dents,
-        angle: p.angle,
-        queue: p.queue,
-        sens: p.sens,
-        prix: p.prix,
-        stock: p.stock,
-        pm,
-        category: categorize(p),
-        designation,
+    // Normalise les noms de champs : le GAS peut retourner "ID Famille", "Stock", etc.
+    // selon les en-têtes réels du Sheet — on accepte toutes les variantes connues.
+    function pick(p: Record<string, unknown>, ...keys: string[]): string {
+      for (const k of keys) { const v = p[k]; if (v !== undefined && v !== null && v !== '') return String(v) }
+      return '/'
+    }
+    function pickNum(p: Record<string, unknown>, ...keys: string[]): number {
+      for (const k of keys) { const v = p[k]; if (v !== undefined && v !== null && v !== '') { const n = Number(v); if (!isNaN(n)) return n } }
+      return 0
+    }
+
+    const products = (raw as Record<string, unknown>[]).map(p => {
+      const normalized: SheetRow = {
+        sheet:      pick(p, 'sheet'),
+        row:        Number(p.row ?? 0),
+        famille:    pick(p, 'famille', 'ID Famille', 'Famille', 'Family', 'id famille'),
+        ref:        pick(p, 'ref', 'Ref fournisseur', 'REF', 'Ref', 'Référence', 'Reference', 'ref fournisseur'),
+        designation:pick(p, 'designation', 'Désignation', 'Designation', 'Nom', 'désignation'),
+        diametre:   pick(p, 'diametre', 'Diametre', 'Diamètre', 'DIAMETRE', 'Diam', 'diam'),
+        lc:         pick(p, 'lc', 'LC', 'Lc', 'longueur coupe', 'Longueur coupe'),
+        lt:         pick(p, 'lt', 'LT', 'Lt', 'longueur totale', 'Longueur totale'),
+        dents:      pick(p, 'dents', 'Dents', 'DENTS', 'Z', 'Flûtes', 'dents'),
+        angle:      pick(p, 'angle', 'Angle', 'ANGLE'),
+        queue:      pick(p, 'queue', 'Queue', 'QUEUE', 'shank', 'Shank'),
+        sens:       pick(p, 'sens', 'SENS', 'Sens', 'sens', 'Direction'),
+        prix:       pickNum(p, 'prix', 'Prix arrondie', 'Prix vente TTC', 'Prix achat final', 'Prix achat MOY', 'PRIX', 'price'),
+        stock:      pickNum(p, 'stock', 'Stock', 'STOCK', 'Qty', 'Quantité', 'QTY'),
       }
+      const designation = makeDesignation(normalized)
+      const pm = isPMProduct(normalized)
+      return { ...normalized, pm, category: categorize(normalized), designation }
     })
 
     // Dédoublonnage : fusionne uniquement si même ref ET même ligne (produit en double entre A0 et A2)
