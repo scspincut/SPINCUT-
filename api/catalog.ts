@@ -25,6 +25,7 @@ function isPMProduct(p: SheetRow): boolean {
 function categorize(p: SheetRow): string {
   const f = p.famille.trim()
   const desig = (p.designation || '').toUpperCase()
+  const sens = (p.sens || '').trim().toUpperCase()
 
   if (isPMProduct(p)) return 'polimiroir'
   if (f.includes('GRAV')) return 'gravure'
@@ -33,7 +34,7 @@ function categorize(p: SheetRow): string {
   if (f.startsWith('F-PERC')) return 'percage'
   if (f === 'COLLET' || f.includes('DUST') || f.includes('EXTRACTION')) return 'accessoires'
   if (f.includes('ALU') || p.ref.toUpperCase().includes('ALU')) return 'alu'
-  if (p.sens === 'UP AND DOWN') return 'compression'
+  if ((sens.includes('UP') && sens.includes('DOWN')) || sens.includes('COMPRESSION') || desig.includes('COMPRESSION')) return 'compression'
 
   // Fraises CMT — détection par désignation
   if (desig.includes('RAINUR') || desig.includes('RAINER')) return 'rainurer'
@@ -188,6 +189,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const visible = [...deduped.values()].filter(p =>
       typeof p.sheet === 'string' && p.sheet.toUpperCase().startsWith('STOCK')
     )
+
+    if (req.query.debug === 'category') {
+      const counts: Record<string, number> = {}
+      for (const p of visible) counts[p.category] = (counts[p.category] ?? 0) + 1
+      const sensValues = [...new Set(visible.map(p => p.sens))].filter(s => s && s !== '/')
+      return res.status(200).json({ total: visible.length, byCategory: counts, distinctSens: sensValues })
+    }
+
     return res.status(200).json(visible)
   } catch {
     return res.status(500).json({ error: 'Erreur catalogue' })
