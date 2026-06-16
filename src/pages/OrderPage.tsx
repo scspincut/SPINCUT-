@@ -53,6 +53,7 @@ export default function OrderPage() {
     return 'idle'
   })
   const [orderError, setOrderError] = useState('')
+  const [reorderMsg, setReorderMsg] = useState('')
   const [lastOrder, setLastOrder] = useState<{
     items: { ref: string; designation: string; quantity: number; price: number }[]
     total: number; orderId: string; isNewBdc: boolean; blNumber?: string
@@ -195,6 +196,31 @@ export default function OrderPage() {
   const setQtyDirect = (key: string, val: string, max: number) =>
     setQuantities(prev => ({ ...prev, [key]: Math.min(max, Math.max(0, parseInt(val) || 0)) }))
 
+  const reorder = (entry: OrderHistoryEntry) => {
+    let added = 0
+    let skipped = 0
+    setQuantities(prev => {
+      const next = { ...prev }
+      entry.items.forEach(item => {
+        const p = catalog.find(c => c.ref === item.ref)
+        if (!p || p.stock <= 0) { skipped++; return }
+        const key = uid(p)
+        const qty = Math.min(p.stock, (next[key] || 0) + item.quantity)
+        if (qty > (next[key] || 0)) added++
+        next[key] = qty
+      })
+      return next
+    })
+    const msg = skipped > 0
+      ? `${added} article${added > 1 ? 's' : ''} ajouté${added > 1 ? 's' : ''} au panier — ${skipped} indisponible${skipped > 1 ? 's' : ''}`
+      : `${added} article${added > 1 ? 's' : ''} ajouté${added > 1 ? 's' : ''} au panier`
+    setTimeout(() => {
+      setReorderMsg(msg)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setTimeout(() => setReorderMsg(''), 3500)
+    }, 0)
+  }
+
   const cartItems = catalog.filter(p => (quantities[uid(p)] || 0) > 0)
   const total     = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0) * p.prix, 0)
   const itemCount = cartItems.reduce((s, p) => s + (quantities[uid(p)] || 0), 0)
@@ -291,6 +317,12 @@ export default function OrderPage() {
         </header>
       </div>
       {isTestMode() && <TestModeBanner />}
+
+      {reorderMsg && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg" style={{ background: '#0d2a1a', color: '#4ade80', border: '1px solid #1a4a2a' }}>
+          {reorderMsg}
+        </div>
+      )}
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-5 space-y-6">
 
@@ -483,7 +515,7 @@ export default function OrderPage() {
               {deliveredEntries.length === 0 && (
                 <p className="text-[#444] text-sm text-center py-6">Aucune commande livrée pour l'instant</p>
               )}
-              {deliveredEntries.map((entry, i) => <OrderCard key={i} entry={entry} delivered />)}
+              {deliveredEntries.map((entry, i) => <OrderCard key={i} entry={entry} delivered onReorder={reorder} />)}
               {orderHistory.length > 0 && (
                 <button
                   onClick={() => {
@@ -526,7 +558,7 @@ function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock'
   )
 }
 
-function OrderCard({ entry, delivered }: { entry: OrderHistoryEntry; delivered?: boolean }) {
+function OrderCard({ entry, delivered, onReorder }: { entry: OrderHistoryEntry; delivered?: boolean; onReorder?: (entry: OrderHistoryEntry) => void }) {
   const borderColor  = delivered ? '#1a2a1a' : '#2a1a00'
   const statusStyle  = delivered
     ? { background: '#0d1a0d', color: '#4ade80' }
@@ -552,6 +584,20 @@ function OrderCard({ entry, delivered }: { entry: OrderHistoryEntry; delivered?:
           <p key={i} className="text-[11px] text-[#555]">{it.quantity}× {it.designation}</p>
         ))}
       </div>
+      {onReorder && (
+        <div className="px-4 pb-3 pt-1" style={{ borderTop: '1px solid #161616' }}>
+          <button
+            onClick={() => onReorder(entry)}
+            className="w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
+            style={{ background: '#1a1000', color: '#d4780f', border: '1px solid #2a1a00' }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Recommander
+          </button>
+        </div>
+      )}
     </div>
   )
 }
