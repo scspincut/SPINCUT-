@@ -107,17 +107,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let orderId: string | null = null
     let isNewBdc = false
 
-    // 2 — Si un BDC ouvert est fourni, essayer de l'enrichir
-    if (existingBdcId) {
+    // 2 — Chercher un BDC brouillon existant pour ce client
+    // D'abord depuis localStorage (envoyé par le frontend), sinon depuis GAS
+    let candidateBdcId = existingBdcId || null
+    if (!candidateBdcId && sheetsUrl && sheetsSecret) {
+      try {
+        step = 'recherche BDC existant dans GAS'
+        const gasResp = await fetch(
+          `${sheetsUrl}?secret=${encodeURIComponent(sheetsSecret)}&action=orders&clientName=${encodeURIComponent(clientName)}`
+        )
+        if (gasResp.ok) {
+          const gasOrders = await gasResp.json()
+          if (Array.isArray(gasOrders)) {
+            const enCours = gasOrders.find((o: any) => o.status === 'en_cours' && o.uuid)
+            if (enCours) candidateBdcId = enCours.uuid
+          }
+        }
+      } catch {}
+    }
+
+    if (candidateBdcId) {
       try {
         step = 'récupération BDC existant'
         const { data: existingBdc } = await abby.billing.getBillingById({
-          path: { documentId: existingBdcId },
+          path: { documentId: candidateBdcId },
         })
         const bdc = existingBdc as any
-        const OPEN_STATES = new Set(['draft', 'finalized', 'sent', 'signed'])
-        const isOpen = bdc && OPEN_STATES.has(bdc.state)
-        if (isOpen) {
+        if (bdc && bdc.state === 'draft') {
           step = 'mise à jour lignes BDC existant'
           const existingLines = (bdc.lines ?? []).map((l: any) => ({
             designation: l.designation,
@@ -129,10 +145,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             vatCode: (l.vatCode ?? 'FR_2000') as 'FR_2000',
           }))
           await (abby.billing.updateLines as any)({
-            path: { billingId: existingBdcId },
+            path: { billingId: candidateBdcId },
             body: { lines: [...existingLines, ...newLines] },
           })
-          orderId = existingBdcId
+          orderId = candidateBdcId
         }
       } catch {
         // BDC introuvable ou expiré — on crée un nouveau
