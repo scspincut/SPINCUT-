@@ -150,15 +150,14 @@ export default function OrderPage() {
 
   const habitualItems = useMemo(() => {
     if (orderHistory.length === 0 || catalog.length === 0) return []
-    const counts: Record<string, { ref: string; designation: string; price: number; total: number }> = {}
-    orderHistory.forEach(entry => entry.items.forEach(item => {
-      if (!counts[item.ref]) counts[item.ref] = { ref: item.ref, designation: item.designation, price: item.price, total: 0 }
-      counts[item.ref].total += item.quantity
+    const recent = orderHistory.slice(0, 3)
+    const seen = new Set<string>()
+    const refs: string[] = []
+    recent.forEach(entry => entry.items.forEach(item => {
+      if (!seen.has(item.ref)) { seen.add(item.ref); refs.push(item.ref) }
     }))
-    return Object.values(counts)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 6)
-      .map(h => catalog.find(p => p.ref === h.ref))
+    return refs
+      .map(ref => catalog.find(p => p.ref === ref))
       .filter((p): p is CatalogProduct => !!p && p.stock > 0)
   }, [orderHistory, catalog])
 
@@ -185,6 +184,18 @@ export default function OrderPage() {
       `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.quantity}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;font-family:monospace">${i.ref}</td><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.designation}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(i.quantity * i.price)} €</td></tr>`
     ).join('')
     const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${lastOrder.blNumber || lastOrder.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#d4780f;margin-bottom:2px}.sub{font-size:10px;color:#aaa;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#444;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#d4780f;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #222;padding-top:12px;font-size:15px}.ttc td{color:#888;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${lastOrder.blNumber || lastOrder.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${today}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(lastOrder.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(lastOrder.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(lastOrder.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(html)
+    win.document.close()
+  }
+
+  const printEntry = (entry: OrderHistoryEntry) => {
+    const dateStr = new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const lignesHtml = entry.items.map(i =>
+      `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.quantity}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;font-family:monospace">${i.ref}</td><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.designation}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(i.quantity * i.price)} €</td></tr>`
+    ).join('')
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${entry.blNumber || entry.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#d4780f;margin-bottom:2px}.sub{font-size:10px;color:#aaa;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#444;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#d4780f;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #222;padding-top:12px;font-size:15px}.ttc td{color:#888;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${entry.blNumber || entry.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${dateStr}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(entry.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(entry.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(entry.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
     const win = window.open('', '_blank')
     if (!win) return
     win.document.write(html)
@@ -496,7 +507,7 @@ export default function OrderPage() {
             <p className="text-[#444] text-sm text-center py-6">Aucune commande en cours</p>
           ) : (
             <div className="space-y-2">
-              {pendingEntries.map((entry, i) => <OrderCard key={i} entry={entry} />)}
+              {pendingEntries.map((entry, i) => <OrderCard key={i} entry={entry} onPrint={printEntry} />)}
             </div>
           )}
         </section>
@@ -515,7 +526,7 @@ export default function OrderPage() {
               {deliveredEntries.length === 0 && (
                 <p className="text-[#444] text-sm text-center py-6">Aucune commande livrée pour l'instant</p>
               )}
-              {deliveredEntries.map((entry, i) => <OrderCard key={i} entry={entry} delivered onReorder={reorder} />)}
+              {deliveredEntries.map((entry, i) => <OrderCard key={i} entry={entry} delivered onReorder={reorder} onPrint={printEntry} />)}
               {orderHistory.length > 0 && (
                 <button
                   onClick={() => {
@@ -558,7 +569,7 @@ function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock'
   )
 }
 
-function OrderCard({ entry, delivered, onReorder }: { entry: OrderHistoryEntry; delivered?: boolean; onReorder?: (entry: OrderHistoryEntry) => void }) {
+function OrderCard({ entry, delivered, onReorder, onPrint }: { entry: OrderHistoryEntry; delivered?: boolean; onReorder?: (entry: OrderHistoryEntry) => void; onPrint?: (entry: OrderHistoryEntry) => void }) {
   const borderColor  = delivered ? '#1a2a1a' : '#2a1a00'
   const statusStyle  = delivered
     ? { background: '#0d1a0d', color: '#4ade80' }
@@ -574,14 +585,26 @@ function OrderCard({ entry, delivered, onReorder }: { entry: OrderHistoryEntry; 
             {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
           </span>
         </div>
-        <div className="text-right">
-          <span className="text-sm font-bold text-white">{entry.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
-          <p className="text-[10px] text-[#333]">{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+        <div className="flex items-center gap-2">
+          {onPrint && (
+            <button onClick={() => onPrint(entry)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }} title="Bon de commande">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="#888" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+              </svg>
+            </button>
+          )}
+          <div className="text-right">
+            <span className="text-sm font-bold text-white">{entry.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
+            <p className="text-[10px] text-[#333]">{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+          </div>
         </div>
       </div>
-      <div className="px-4 pb-2.5 space-y-0.5" style={{ borderTop: '1px solid #161616' }}>
+      <div className="px-4 pb-2.5 space-y-1" style={{ borderTop: '1px solid #161616' }}>
         {entry.items.map((it, i) => (
-          <p key={i} className="text-[11px] text-[#555]">{it.quantity}× {it.designation}</p>
+          <div key={i} className="flex items-baseline justify-between gap-2">
+            <span className="text-[11px] text-[#555] truncate flex-1">{it.quantity}× <span className="font-mono text-[#777]">{it.ref}</span> {it.designation}</span>
+            <span className="text-[11px] font-mono flex-shrink-0" style={{ color: '#d4780f' }}>{(it.quantity * it.price).toFixed(2).replace('.', ',')} €</span>
+          </div>
         ))}
       </div>
       {onReorder && (
