@@ -297,6 +297,29 @@ export default function AdminDashboardPage() {
           <h1 className="text-2xl font-bold text-white">Administration SPINCUT</h1>
         </div>
 
+        {/* QR Code téléchargement */}
+        <div className="rounded-xl p-5 flex items-center gap-5" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
+          <img src="/qr-spincut-print.svg" alt="QR spincut.fr" className="w-24 h-24 rounded-lg" style={{ background: '#fff', padding: '4px' }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-semibold text-sm">QR Code — spincut.fr</p>
+            <p className="text-xs mt-0.5" style={{ color: '#888' }}>Vectoriel SVG — qualité parfaite à toute taille d'impression</p>
+            <div className="flex gap-2 mt-3">
+              <a href="/qr-spincut-print.svg" download="QR-SPINCUT.svg"
+                className="text-xs px-4 py-2 rounded-lg font-bold"
+                style={{ background: '#d4780f', color: '#fff' }}
+              >
+                Télécharger SVG
+              </a>
+              <a href="/qr-spincut.svg" download="QR-SPINCUT-brut.svg"
+                className="text-xs px-4 py-2 rounded-lg font-semibold"
+                style={{ background: '#1e1e1e', color: '#8a8a8a', border: '1px solid #2a2a2a' }}
+              >
+                Version brute
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Onglets */}
         <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid #2a2a2a' }}>
           {(['codes', 'stock', 'commandes'] as const).map(tab => {
