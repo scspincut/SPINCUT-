@@ -14,7 +14,7 @@ const CATEGORY_META: Record<string, { label: string; order: number }> = {
   classique:   { label: 'Fraise Classique',        order: 1 },
   polimiroir:  { label: 'Fraise Polimiroir',        order: 2 },
   compression: { label: 'Fraise Compression',       order: 3 },
-  diamant:     { label: 'Diamant (PCD)',             order: 4 },
+  diamant:     { label: 'Fraise Diamant (PCD)',       order: 4 },
   ravageuse:   { label: 'Ravageuse',                order: 5 },
   alu:         { label: 'Aluminium',                order: 6 },
   gravure:     { label: 'Fraise Gravure',           order: 7 },
