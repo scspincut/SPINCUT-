@@ -154,7 +154,7 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'FL08.01020':      '/images/cmt/cmt-16.png',
   '938.7.100.22.12': '/images/cmt/cmt-17.png',
   'DC300.02830':     '/images/cmt/cmt-18.png',
-  '122.255.2532':    '/images/cmt/cmt-19.png',
+  '122.255.2532':    '/images/cmt/cmt-37.png',  // Ø250 Z160 Fraise scie métal Léman
   'LC2102403M':      '/images/cmt/cmt-20.png',  // Forézienne ATB bois
   'LC2104804M':      '/images/cmt/cmt-20.png',  // Forézienne ATB bois (shared)
   'LC2166004M':      '/images/cmt/cmt-21.png',  // Forézienne TF NEG alu
@@ -171,7 +171,6 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'F03FS07295':      '/images/cmt/cmt-33.png',  // LU4D 0200 Coupe fine panneaux (lame seule)
   // Léman — scie à format
   '964.260.3024':    '/images/cmt/cmt-36.png',  // Ø260 Z24 ALT débit bois
-  '122.255.2532':    '/images/cmt/cmt-37.png',  // Ø250 Z160 Fraise scie métal Léman
 }
 
 // Second photo keyed by primary photo URL (shared by the whole group)
