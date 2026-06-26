@@ -27,9 +27,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // POST → marquer comme livré et notifier le client
   if (req.method === 'POST') {
-    const { orderId, status } = req.body as { orderId: string; status: 'livre' | 'livre_partiel' }
-    if (!orderId || !['livre', 'livre_partiel'].includes(status)) {
-      return res.status(400).json({ error: 'orderId et status (livre|livre_partiel) requis' })
+    const { orderId, status } = req.body as { orderId: string; status: 'livre' | 'livre_partiel' | 'archived' }
+    if (!orderId || !['livre', 'livre_partiel', 'archived'].includes(status)) {
+      return res.status(400).json({ error: 'orderId et status (livre|livre_partiel|archived) requis' })
+    }
+
+    // Archivage simple — pas de notification client
+    if (status === 'archived') {
+      try {
+        await fetch(sheetsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: sheetsSecret, action: 'updateStatus', uuid: orderId, status: 'archived' }),
+        })
+        return res.status(200).json({ ok: true })
+      } catch (err) {
+        return res.status(500).json({ error: err instanceof Error ? err.message : 'Erreur inconnue' })
+      }
     }
 
     const resendKey = process.env.RESEND_API_KEY

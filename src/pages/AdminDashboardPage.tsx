@@ -607,6 +607,20 @@ export default function AdminDashboardPage() {
                               <div className="flex items-center gap-2">
                                 <p className="text-[10px]" style={{ color: '#2a4a2a' }}>{dateStr}</p>
                                 <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a2a0a', color: '#4ade80' }}>✓ Livré</span>
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm(`Supprimer la commande de ${order.clientName} ?`)) return
+                                    await fetch('/api/orders', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ orderId: order.uuid, status: 'archived' }),
+                                    }).catch(() => {})
+                                    setAdminOrders(prev => prev.filter(o => o.uuid !== order.uuid))
+                                  }}
+                                  className="text-[10px] w-5 h-5 rounded flex items-center justify-center"
+                                  style={{ background: '#1a2a1a', color: '#2a5a2a', border: '1px solid #1a3a1a' }}
+                                  title="Supprimer"
+                                >×</button>
                               </div>
                             </div>
                             <p className="text-[11px]" style={{ color: '#2a5a2a' }}>
