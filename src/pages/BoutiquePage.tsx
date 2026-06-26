@@ -150,7 +150,7 @@ const CMT_PHOTO_MAP: Record<string, string> = {
   '92408110':   '/images/cmt/cmt-34.png',  // CMT 924.081.10
 }
 
-const LAMES_PHOTO_MAP: Record<string, string> = {
+const _LAMES_PHOTO_RAW: Record<string, string> = {
   'FL08.01020':      '/images/cmt/cmt-16.png',
   '938.7.100.22.12': '/images/cmt/cmt-17.png',
   'DC300.02830':     '/images/cmt/cmt-18.png',
@@ -171,6 +171,12 @@ const LAMES_PHOTO_MAP: Record<string, string> = {
   'F03FS07295':      '/images/cmt/cmt-33.png',  // LU4D 0200 Coupe fine panneaux (lame seule)
   // Léman — scie à format
   '964.260.3024':    '/images/cmt/cmt-36.png',  // Ø260 Z24 ALT débit bois
+}
+const LAMES_PHOTO_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(_LAMES_PHOTO_RAW).map(([k, v]) => [k.trim(), v])
+)
+function lamesPhoto(ref: string): string | null {
+  return LAMES_PHOTO_MAP[ref] ?? LAMES_PHOTO_MAP[ref.trim()] ?? LAMES_PHOTO_MAP[ref.replace(/\s/g, '')] ?? null
 }
 
 // Second photo keyed by primary photo URL (shared by the whole group)
@@ -373,18 +379,18 @@ export default function BoutiquePage() {
     if (shopTab !== 'lames') return []
     const map = new Map<string, CatalogProduct[]>()
     for (const p of activeTabCatalog) {
-      const key = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      const key = lamesPhoto(p.ref) ?? `_solo_${p.ref}`
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(p)
     }
     return [...map.entries()].map(([key, products]) => ({
-      key, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products,
+      key, photoUrl: lamesPhoto(products[0].ref) ?? null, products,
     }))
   }, [activeTabCatalog, shopTab])
 
   const currentLamesGroup = useMemo(() => {
     if (!selectedProduct || shopTab !== 'lames') return null
-    const key = LAMES_PHOTO_MAP[selectedProduct.ref] ?? `_solo_${selectedProduct.ref}`
+    const key = lamesPhoto(selectedProduct.ref) ?? `_solo_${selectedProduct.ref}`
     return lamesGroups.find(g => g.key === key) ?? null
   }, [selectedProduct, shopTab, lamesGroups])
 
@@ -479,13 +485,13 @@ export default function BoutiquePage() {
     const matchedRefs = new Set(catalog.filter(p => p.sheet === 'STOCK A3' && match(p)).map(p => p.ref))
     const map = new Map<string, CatalogProduct[]>()
     for (const p of catalog.filter(p => p.sheet === 'STOCK A3')) {
-      const key = LAMES_PHOTO_MAP[p.ref] ?? `_solo_${p.ref}`
+      const key = lamesPhoto(p.ref) ?? `_solo_${p.ref}`
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(p)
     }
     const lamesRes = [...map.entries()]
       .filter(([, prods]) => prods.some(p => matchedRefs.has(p.ref)))
-      .map(([key, products]) => ({ key, photoUrl: LAMES_PHOTO_MAP[products[0].ref] ?? null, products }))
+      .map(([key, products]) => ({ key, photoUrl: lamesPhoto(products[0].ref) ?? null, products }))
     return { cncGroups: [], cmtRes: [], lamesRes, total: lamesRes.reduce((s, g) => s + g.products.length, 0) }
   }, [searchQuery, shopTab, catalog])
 
