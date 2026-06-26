@@ -74,13 +74,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       } catch {}
 
-      // 2. Mettre à jour le statut dans GAS
-      const updateResp = await fetch(sheetsUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: sheetsSecret, action: 'updateStatus', uuid: orderId, status }),
-      })
-      if (!updateResp.ok) throw new Error('Impossible de mettre à jour le statut')
+      // 2. Mettre à jour le statut dans GAS (non bloquant si échec)
+      try {
+        await fetch(sheetsUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret: sheetsSecret, action: 'updateStatus', uuid: orderId, status }),
+        })
+      } catch {}
 
       // 3. Notification au client
       let waUrl: string | null = null
