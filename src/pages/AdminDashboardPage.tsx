@@ -637,9 +637,20 @@ export default function AdminDashboardPage() {
                                 >×</button>
                               </div>
                             </div>
-                            <p className="text-[11px]" style={{ color: '#2a5a2a' }}>
-                              {parsedItems.map(i => `${i.qty}× ${i.ref}`).join(' · ')}
-                            </p>
+                            <div className="space-y-1 mt-1">
+                              {parsedItems.map((item, i) => {
+                                const product = catalog.find(p => p.ref === item.ref)
+                                return (
+                                  <div key={i} className="flex items-baseline justify-between gap-2">
+                                    <span className="text-[11px] truncate flex-1" style={{ color: '#2a5a2a' }}>
+                                      <span className="font-mono font-semibold" style={{ color: '#3a7a3a' }}>{item.ref}</span>
+                                      {product?.designation ? <span className="ml-1.5">{product.designation}</span> : null}
+                                    </span>
+                                    <span className="text-[11px] font-bold flex-shrink-0" style={{ color: '#4ade80' }}>× {item.qty}</span>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
                         )
                       })}
