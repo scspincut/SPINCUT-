@@ -29,6 +29,7 @@ interface AdminOrder {
   uuid: string; clientName: string; clientCode: string; date: number
   items: string; total: number; status: string; updatedAt: number
   clientEmail: string; clientPhone: string; commPref: string
+  blNumber?: string
 }
 
 export default function AdminDashboardPage() {
@@ -517,7 +518,14 @@ export default function AdminDashboardPage() {
                             <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a1628', color: '#60a5fa' }}>WA</span>
                           )}
                         </div>
-                        <p className="text-[11px] mt-0.5" style={{ color: '#555' }}>{dateStr}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-[11px]" style={{ color: '#555' }}>{dateStr}</p>
+                          {order.blNumber && (
+                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ background: '#1a0e00', color: '#d4780f' }}>
+                              {order.blNumber}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-white font-bold text-base">{Number(order.total).toFixed(2).replace('.', ',')} €</p>
@@ -619,6 +627,11 @@ export default function AdminDashboardPage() {
                             <div className="flex items-center justify-between mb-1">
                               <p className="text-sm font-semibold text-white">{order.clientName}</p>
                               <div className="flex items-center gap-2">
+                                {order.blNumber && (
+                                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ background: '#0d1a0d', color: '#3a7a3a' }}>
+                                    {order.blNumber}
+                                  </span>
+                                )}
                                 <p className="text-[10px]" style={{ color: '#2a4a2a' }}>{dateStr}</p>
                                 <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{ background: '#0a2a0a', color: '#4ade80' }}>✓ Livré</span>
                                 <button
