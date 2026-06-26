@@ -570,6 +570,20 @@ export default function AdminDashboardPage() {
                               WA
                             </a>
                           )}
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Supprimer la commande de ${order.clientName} ?`)) return
+                              await fetch('/api/orders', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ orderId: order.uuid, status: 'archived' }),
+                              }).catch(() => {})
+                              setAdminOrders(prev => prev.filter(o => o.uuid !== order.uuid))
+                            }}
+                            className="w-10 flex items-center justify-center rounded-xl text-sm"
+                            style={{ background: '#1a0a0a', color: '#f87171', border: '1px solid #7f1d1d' }}
+                            title="Supprimer"
+                          >×</button>
                           {ds === 'error' && (
                             <span className="self-center text-xs" style={{ color: '#ef4444' }}>Erreur</span>
                           )}
