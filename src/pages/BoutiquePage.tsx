@@ -528,7 +528,10 @@ export default function BoutiquePage() {
             </button>
           </div>
           <div className="flex items-center gap-1.5">
-            <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>{item.designation}</p>
+            <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>
+              {CATEGORY_META[item.category]?.label && <span className="text-[#d4780f]">{CATEGORY_META[item.category].label} </span>}
+              {item.designation}
+            </p>
             <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="#333" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
             </svg>
