@@ -562,7 +562,7 @@ export default function BoutiquePage() {
                   className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
                 />
               )}
-              <button onClick={() => setQty(key, +1, item.stock, item.ref)}
+              <button onClick={() => setQty(key, +1, item.stock, 'Ajouté au panier')}
                 className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
               >+</button>
             </div>
@@ -1427,7 +1427,7 @@ export default function BoutiquePage() {
                             }
                             {v.stock > 0 && v.prix > 0 && (
                               qty === 0 ? (
-                                <button onClick={() => setQty(key, 1, v.stock, v.ref)}
+                                <button onClick={() => setQty(key, 1, v.stock, 'Ajouté au panier')}
                                   className="px-4 py-2 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
                                   style={{ background: '#d4780f' }}>
                                   + Ajouter
@@ -1437,7 +1437,7 @@ export default function BoutiquePage() {
                                   <button onClick={() => setQty(key, -1, v.stock)}
                                     className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">−</button>
                                   <span className="w-7 text-center text-[#d4780f] font-bold text-base">{qty}</span>
-                                  <button onClick={() => setQty(key, +1, v.stock, v.ref)}
+                                  <button onClick={() => setQty(key, +1, v.stock, 'Ajouté au panier')}
                                     className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">+</button>
                                 </div>
                               )
