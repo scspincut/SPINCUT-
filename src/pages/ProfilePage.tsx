@@ -170,12 +170,12 @@ export default function ProfilePage() {
   if (!isAuthenticated) { navigate('/'); return null }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-spincut-bg text-white flex flex-col">
 
-      <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
+      <header className="sticky top-0 z-30 bg-spincut-bg border-b border-spincut-border">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
           <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
-          <button onClick={() => { logout(); navigate('/') }} className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors">
+          <button onClick={() => { logout(); navigate('/') }} className="absolute right-4 flex items-center gap-1 text-spincut-subtle hover:text-white text-xs transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
             </svg>
@@ -185,29 +185,27 @@ export default function ProfilePage() {
       </header>
       {isTestMode() && <TestModeBanner />}
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-6 space-y-4">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-6 space-y-6">
 
         {/* Identity card */}
-        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-5">
+        <div className="rounded-2xl bg-spincut-card border border-spincut-border p-5">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#2a1400', border: '2px solid rgba(212,120,15,0.2)' }}>
-              <svg className="w-7 h-7 text-[#d4780f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-              </svg>
+            <div className="w-16 h-16 rounded-full bg-spincut-gold flex items-center justify-center flex-shrink-0 text-black font-black text-2xl">
+              {(clientName ?? 'S').trim().charAt(0).toUpperCase() || 'S'}
             </div>
-            <div>
-              <p className="text-white font-bold text-lg">{clientName ?? 'Client SPINCUT'}</p>
-              <p className="text-[#555] text-sm font-mono mt-0.5">Code : {clientCode ?? '—'}</p>
+            <div className="min-w-0">
+              <p className="text-xl font-bold text-white truncate">{clientName ?? 'Client SPINCUT'}</p>
+              <p className="text-spincut-muted text-sm font-mono mt-0.5">Code : {clientCode ?? '—'}</p>
             </div>
           </div>
         </div>
 
         {/* Mes informations */}
-        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] overflow-hidden">
+        <div className="rounded-2xl bg-spincut-card border border-spincut-border overflow-hidden">
           <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-            <p className="text-white font-bold text-sm">Mes informations</p>
+            <p className="text-white font-bold text-base">Mes informations</p>
             {!editing && !profileLoading && profile && (
-              <button onClick={startEdit} className="text-xs text-[#d4780f] border border-[#d4780f]/30 px-2.5 py-1 rounded-lg hover:bg-[#d4780f]/10 transition-colors">
+              <button onClick={startEdit} className="text-xs font-semibold text-spincut-gold border border-spincut-gold rounded-xl px-3 py-1.5 hover:bg-spincut-gold/10 transition-all duration-200">
                 Modifier
               </button>
             )}
@@ -215,13 +213,13 @@ export default function ProfilePage() {
 
           {!clientName && !profileLoading && !profile && (
             <div className="px-4 pb-4 space-y-2">
-              <p className="text-xs" style={{ color: '#888' }}>Saisissez votre nom tel qu'il apparaît dans votre compte Abby pour charger vos informations.</p>
+              <p className="text-xs" style={{ color: '#9999AA' }}>Saisissez votre nom tel qu'il apparaît dans votre compte Abby pour charger vos informations.</p>
               <div className="flex gap-2">
                 <input
                   value={manualName}
                   onChange={e => { setManualName(e.target.value); setManualNameError('') }}
                   placeholder="Votre nom complet"
-                  className="flex-1 bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#d4780f] placeholder-[#444]"
+                  className="flex-1 bg-spincut-bg border border-spincut-border text-white rounded-xl px-4 h-12 text-sm outline-none focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold placeholder-spincut-subtle transition-all duration-200"
                 />
                 <button
                   onClick={() => {
@@ -232,8 +230,7 @@ export default function ProfilePage() {
                       window.location.reload()
                     }
                   }}
-                  className="px-4 py-2.5 rounded-lg text-sm font-bold text-white"
-                  style={{ background: '#d4780f' }}
+                  className="px-6 h-12 rounded-xl text-sm font-bold text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light"
                 >OK</button>
               </div>
               {manualNameError && <p className="text-xs text-red-400">{manualNameError}</p>}
@@ -241,7 +238,7 @@ export default function ProfilePage() {
           )}
 
           {profileLoading && (
-            <div className="px-4 pb-5 flex items-center gap-2 text-[#444] text-sm">
+            <div className="px-4 pb-5 flex items-center gap-2 text-spincut-subtle text-sm">
               <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
               Chargement…
             </div>
@@ -269,10 +266,10 @@ export default function ProfilePage() {
               <InfoRow label="Téléphone" value={profile.phone || '—'} />
               {profile.billingAddress && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Adresse</p>
+                  <p className="text-spincut-gold text-xs uppercase tracking-widest mb-1">Adresse</p>
                   <p className="text-white text-sm">{profile.billingAddress.address || '—'}</p>
-                  {profile.billingAddress.complement && <p className="text-[#888] text-xs">{profile.billingAddress.complement}</p>}
-                  <p className="text-[#888] text-xs mt-0.5">{[profile.billingAddress.zipCode, profile.billingAddress.city].filter(Boolean).join(' ')}</p>
+                  {profile.billingAddress.complement && <p className="text-spincut-muted text-xs">{profile.billingAddress.complement}</p>}
+                  <p className="text-spincut-muted text-xs mt-0.5">{[profile.billingAddress.zipCode, profile.billingAddress.city].filter(Boolean).join(' ')}</p>
                 </div>
               )}
               {!profile.billingAddress && <InfoRow label="Adresse" value="—" />}
@@ -292,7 +289,7 @@ export default function ProfilePage() {
               <EditField label="Email" value={editEmail} onChange={setEditEmail} type="email" placeholder="exemple@email.com" />
               <EditField label="Téléphone" value={editPhone} onChange={setEditPhone} type="tel" placeholder="06 XX XX XX XX" />
               <div>
-                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: '#555' }}>Adresse</p>
+                <p className="text-spincut-gold text-xs uppercase tracking-widest mb-2">Adresse</p>
                 <div className="space-y-2">
                   <EditField label="Rue / N°" value={editAddr} onChange={setEditAddr} placeholder="12 rue de la Forêt" />
                   <EditField label="Complément" value={editComplement} onChange={setEditComplement} placeholder="Bâtiment, étage… (optionnel)" />
@@ -303,10 +300,10 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={cancelEdit} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-[#555] bg-[#1e1e1e] border border-[#2a2a2a] hover:text-white transition-colors">
+                <button onClick={cancelEdit} className="flex-1 h-13 rounded-xl text-sm font-semibold text-white bg-spincut-card border border-spincut-border hover:border-spincut-gold transition-all duration-200">
                   Annuler
                 </button>
-                <button onClick={saveProfile} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all active:scale-95 disabled:opacity-60" style={{ background: '#d4780f' }}>
+                <button onClick={saveProfile} disabled={saving} className="flex-1 h-13 rounded-xl text-sm font-bold text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light transition-all duration-200 active:scale-95 disabled:opacity-60">
                   {saving ? 'Enregistrement…' : 'Enregistrer'}
                 </button>
               </div>
@@ -315,55 +312,52 @@ export default function ProfilePage() {
         </div>
 
         {/* Ma machine */}
-        <div className="rounded-2xl bg-[#161616] border border-[#2a2a2a] p-4 space-y-3">
+        <div className="rounded-2xl bg-spincut-card border border-spincut-border p-5 space-y-3">
           <div>
-            <p className="text-white font-bold text-sm">Ma machine</p>
-            <p className="text-xs mt-0.5" style={{ color: '#555' }}>Pré-remplit automatiquement le calculateur.</p>
+            <p className="text-white font-bold text-base">Ma machine</p>
+            <p className="text-xs mt-0.5" style={{ color: '#555566' }}>Pré-remplit automatiquement le calculateur.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Vitesse broche max</p>
+              <p className="text-spincut-gold text-xs uppercase tracking-widest mb-1">Vitesse broche max</p>
               <div className="relative">
                 <input
                   type="number"
                   value={machineNMax}
                   onChange={e => { setMachineNMax(e.target.value); saveMachine(e.target.value, machineVfMax, machineAtc) }}
                   placeholder="24000"
-                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                  className="w-full rounded-xl px-4 h-12 text-sm text-white outline-none placeholder-spincut-subtle bg-spincut-bg border border-spincut-border focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold transition-all duration-200"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555' }}>tr/min</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555566' }}>tr/min</span>
               </div>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Vitesse avance max</p>
+              <p className="text-spincut-gold text-xs uppercase tracking-widest mb-1">Vitesse avance max</p>
               <div className="relative">
                 <input
                   type="number"
                   value={machineVfMax}
                   onChange={e => { setMachineVfMax(e.target.value); saveMachine(machineNMax, e.target.value, machineAtc) }}
                   placeholder="6000"
-                  className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-                  style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                  className="w-full rounded-xl px-4 h-12 text-sm text-white outline-none placeholder-spincut-subtle bg-spincut-bg border border-spincut-border focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold transition-all duration-200"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555' }}>mm/min</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555566' }}>mm/min</span>
               </div>
             </div>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#555' }}>Postes magasin</p>
+            <p className="text-spincut-gold text-xs uppercase tracking-widest mb-1">Postes magasin</p>
             <div className="relative">
               <input
                 type="number"
                 value={machineAtc}
                 onChange={e => { setMachineAtc(e.target.value); saveMachine(machineNMax, machineVfMax, e.target.value) }}
                 placeholder="12"
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-                style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                className="w-full rounded-xl px-4 h-12 text-sm text-white outline-none placeholder-spincut-subtle bg-spincut-bg border border-spincut-border focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold transition-all duration-200"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555' }}>postes ATC</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]" style={{ color: '#555566' }}>postes ATC</span>
             </div>
-            <p className="text-[10px] mt-1.5" style={{ color: '#444' }}>Permet de suivre les outils montés dans Mon Stock</p>
+            <p className="text-[10px] mt-1.5" style={{ color: '#555566' }}>Permet de suivre les outils montés dans Mon Stock</p>
           </div>
           {(machineNMax || machineVfMax || machineAtc) && (
             <p className="text-[10px] text-center" style={{ color: '#2a8a2a' }}>✓ Enregistré — le calculateur utilise ces valeurs</p>
@@ -371,30 +365,20 @@ export default function ProfilePage() {
         </div>
 
         {/* Canal de communication préféré */}
-        <div className="rounded-xl bg-[#161616] border border-[#2a2a2a] p-4">
-          <p className="text-[10px] uppercase tracking-wider mb-3" style={{ color: '#555' }}>Canal de communication préféré</p>
-          <p className="text-xs mb-3" style={{ color: '#666' }}>Comment souhaitez-vous être contacté par SPINCUT ?</p>
+        <div className="rounded-2xl bg-spincut-card border border-spincut-border p-5">
+          <p className="text-spincut-gold text-xs uppercase tracking-widest mb-3 font-semibold" style={{ color: '#555566' }}>Canal de communication préféré</p>
+          <p className="text-xs mb-3" style={{ color: '#555566' }}>Comment souhaitez-vous être contacté par SPINCUT ?</p>
           <div className="flex gap-2">
             <button
               onClick={() => saveCommPref('whatsapp')}
-              className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
-              style={{
-                background: commPref === 'whatsapp' ? '#1a5e1a' : '#1a1a1a',
-                border: commPref === 'whatsapp' ? '1.5px solid #2a8a2a' : '1.5px solid #2a2a2a',
-                color: commPref === 'whatsapp' ? '#4ade80' : '#555',
-              }}
+              className={`flex-1 h-13 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 ${commPref === 'whatsapp' ? 'bg-green-600 text-white border border-green-600' : 'bg-spincut-card text-spincut-muted border border-spincut-border'}`}
             >
               <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               WhatsApp
             </button>
             <button
               onClick={() => saveCommPref('email')}
-              className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
-              style={{
-                background: commPref === 'email' ? '#1a1a3a' : '#1a1a1a',
-                border: commPref === 'email' ? '1.5px solid #2a2a8a' : '1.5px solid #2a2a2a',
-                color: commPref === 'email' ? '#60a5fa' : '#555',
-              }}
+              className={`flex-1 h-13 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 bg-spincut-card text-white border ${commPref === 'email' ? 'border-spincut-gold' : 'border-spincut-border'}`}
             >
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                 <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
@@ -421,16 +405,16 @@ export default function ProfilePage() {
         >
           <div
             className="w-full max-w-sm rounded-t-2xl p-5 space-y-3"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
             onClick={e => e.stopPropagation()}
           >
-            <p className="text-center text-xs tracking-widest uppercase mb-4" style={{ color: '#888' }}>
+            <p className="text-center text-xs tracking-widest uppercase mb-4" style={{ color: '#9999AA' }}>
               Envoyer un email à SPINCUT
             </p>
             <a
               href={`mailto:scspincut@gmail.com?subject=${encodeURIComponent('Message client SPINCUT')}`}
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
               <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: '#1C8EF9' }}>
@@ -438,14 +422,14 @@ export default function ProfilePage() {
               </span>
               <span>
                 <span className="block font-semibold">Apple Mail</span>
-                <span className="block text-xs" style={{ color: '#888' }}>Application Mail par défaut</span>
+                <span className="block text-xs" style={{ color: '#9999AA' }}>Application Mail par défaut</span>
               </span>
             </a>
             <a
               href={`https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com&su=${encodeURIComponent('Message client SPINCUT')}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
               <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'white' }}>
@@ -459,14 +443,14 @@ export default function ProfilePage() {
               </span>
               <span>
                 <span className="block font-semibold">Gmail</span>
-                <span className="block text-xs" style={{ color: '#888' }}>Ouvre Gmail dans le navigateur</span>
+                <span className="block text-xs" style={{ color: '#9999AA' }}>Ouvre Gmail dans le navigateur</span>
               </span>
             </a>
             <a
               href={`https://outlook.live.com/mail/0/deeplink/compose?to=scspincut@gmail.com&subject=${encodeURIComponent('Message client SPINCUT')}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
               <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'white' }}>
@@ -478,29 +462,29 @@ export default function ProfilePage() {
               </span>
               <span>
                 <span className="block font-semibold">Outlook</span>
-                <span className="block text-xs" style={{ color: '#888' }}>Ouvre Outlook dans le navigateur</span>
+                <span className="block text-xs" style={{ color: '#9999AA' }}>Ouvre Outlook dans le navigateur</span>
               </span>
             </a>
             <a
               href="mailto:scspincut@gmail.com"
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
-              <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: '#2a2a2a', border: '1px solid #3a3a3a' }}>
-                <svg width="22" height="22" fill="none" stroke="#aaa" strokeWidth="1.8" viewBox="0 0 24 24">
+              <span className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: '#2A2A3A', border: '1px solid #2A2A3A' }}>
+                <svg width="22" height="22" fill="none" stroke="#9999AA" strokeWidth="1.8" viewBox="0 0 24 24">
                   <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
                 </svg>
               </span>
               <span>
-                <span className="block font-semibold" style={{ color: '#ccc' }}>Autre application</span>
-                <span className="block text-xs" style={{ color: '#888' }}>Ouvre l'app mail par défaut du téléphone</span>
+                <span className="block font-semibold" style={{ color: '#9999AA' }}>Autre application</span>
+                <span className="block text-xs" style={{ color: '#9999AA' }}>Ouvre l'app mail par défaut du téléphone</span>
               </span>
             </a>
             <button
               onClick={() => setShowMailMenu(false)}
               className="w-full py-3 rounded-xl text-sm"
-              style={{ color: '#666' }}
+              style={{ color: '#555566' }}
             >
               Annuler
             </button>
@@ -516,8 +500,8 @@ export default function ProfilePage() {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: '#555' }}>{label}</p>
-      <p className="text-white text-sm">{value}</p>
+      <p className="text-spincut-gold text-xs uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-white text-base">{value}</p>
     </div>
   )
 }
@@ -527,10 +511,10 @@ function EditField({ label, value, onChange, type = 'text', placeholder }: {
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>{label}</p>
+      <p className="text-spincut-gold text-xs uppercase tracking-widest mb-1">{label}</p>
       <input
         type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#d4780f] placeholder-[#444]"
+        className="w-full bg-spincut-bg border border-spincut-border text-white rounded-xl px-4 h-12 text-sm outline-none focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold placeholder-spincut-subtle transition-all duration-200"
       />
     </div>
   )
