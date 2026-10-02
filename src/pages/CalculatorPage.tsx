@@ -114,9 +114,9 @@ function getRecommendations(products: CatalogProduct[], material: string, lcMin:
   return recs
 }
 
-const SEL = "w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4780f] appearance-none cursor-pointer";
-const INP = "w-full bg-[#1e1e1e] border border-[#2a2a2a] text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#d4780f] placeholder-[#555]";
-const LBL = "block text-sm text-[#aaa] mb-1.5";
+const SEL = "w-full bg-spincut-bg border border-spincut-border text-white rounded-xl h-12 px-4 text-sm focus:outline-none focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold transition-all duration-200 appearance-none cursor-pointer";
+const INP = "w-full bg-spincut-bg border border-spincut-border text-white rounded-xl h-12 px-4 text-sm focus:outline-none focus:border-spincut-gold focus:ring-1 focus:ring-spincut-gold transition-all duration-200 placeholder-spincut-subtle";
+const LBL = "block text-spincut-muted text-xs uppercase tracking-wide mb-1";
 
 function SelectField({ label, value, onChange, children, hint }: {
   label: string; value: string; onChange: (v: string) => void;
@@ -124,13 +124,13 @@ function SelectField({ label, value, onChange, children, hint }: {
 }) {
   return (
     <div>
-      <label className={LBL}>{label}{hint && <span className="text-[#d4780f] text-xs ml-1">({hint})</span>}</label>
+      <label className={LBL}>{label}{hint && <span className="text-spincut-gold text-xs ml-1">({hint})</span>}</label>
       <div className="relative">
         <select value={value} onChange={e => onChange(e.target.value)} className={SEL}>
           {children}
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-          <svg className="w-4 h-4 text-[#555]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-spincut-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -147,7 +147,7 @@ function NumberField({ label, value, onChange, placeholder, hint }: {
     <div>
       <label className={LBL}>
         {label}
-        {hint && <span className="text-[#555] text-xs ml-1">({hint})</span>}
+        {hint && <span className="text-spincut-subtle text-xs ml-1">({hint})</span>}
       </label>
       <input
         type="number"
@@ -165,22 +165,22 @@ function ResultCard({ label, value, unit, sub, badge }: {
   label: string; value: string; unit: string; sub?: string; badge?: string;
 }) {
   return (
-    <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-      <p className="text-[#888] text-xs mb-1">{label}</p>
-      <p className="text-[#d4780f] font-bold text-2xl">{value}</p>
-      <p className="text-[#666] text-xs mt-0.5">{unit}</p>
+    <div className="bg-spincut-card rounded-xl p-4 border border-spincut-border">
+      <p className="text-spincut-muted text-xs mb-1">{label}</p>
+      <p className="text-spincut-gold font-bold text-2xl">{value}</p>
+      <p className="text-spincut-subtle text-xs mt-0.5">{unit}</p>
       {badge && <span className="inline-block mt-1 bg-[#3a1e00] text-[#f59e0b] text-xs px-2 py-0.5 rounded-full">{badge}</span>}
-      {sub && !badge && <p className="text-[#555] text-xs mt-1">{sub}</p>}
+      {sub && !badge && <p className="text-spincut-subtle text-xs mt-1">{sub}</p>}
     </div>
   );
 }
 
 function BigResultCard({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
-    <div className="bg-[#1a1a1a] rounded-xl p-5 border border-[#2a2a2a] text-center flex-1">
-      <p className="text-[#888] text-sm mb-2">{label}</p>
-      <p className="text-[#d4780f] font-bold text-4xl">{value}</p>
-      <p className="text-[#666] text-sm mt-1">{unit}</p>
+    <div className="bg-spincut-card rounded-xl p-5 border border-spincut-border text-center flex-1">
+      <p className="text-spincut-muted text-sm mb-2">{label}</p>
+      <p className="text-spincut-gold font-bold text-4xl">{value}</p>
+      <p className="text-spincut-subtle text-sm mt-1">{unit}</p>
     </div>
   );
 }
@@ -364,21 +364,21 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-spincut-bg text-white">
       {/* Header */}
-      <header className="border-b border-[#1e1e1e] px-4 py-3 sticky top-0 bg-black z-10">
+      <header className="border-b border-spincut-border px-4 py-3 sticky top-0 bg-spincut-bg z-10">
         <div className="max-w-4xl mx-auto relative flex items-center justify-center">
           <div className="flex items-center gap-2">
             <img src="/logo-banniere.png" alt="SPINCUT Outils CNC" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
             {isAdmin && (
-              <span className="bg-[#3a1e00] text-[#d4780f] text-xs font-bold px-2 py-0.5 rounded-full border border-[#d4780f]/30">
+              <span className="bg-[#3a1e00] text-spincut-gold text-xs font-bold px-2 py-0.5 rounded-full border border-spincut-gold/30">
                 Admin
               </span>
             )}
           </div>
           <button
             onClick={() => { logout(); navigate('/'); }}
-            className="absolute right-0 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
+            className="absolute right-0 flex items-center gap-1 text-spincut-subtle hover:text-white text-xs transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -390,13 +390,13 @@ export default function CalculatorPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div className="pt-1 pb-2 text-center">
-          <h1 className="text-lg font-bold text-white">Calculateur CNC Pro</h1>
-          <p className="text-[#555] text-xs mt-0.5">Paramètres optimisés pour votre outillage SPINCUT</p>
+          <h1 className="text-2xl font-bold text-white text-center">Calculateur CNC Pro</h1>
+          <p className="text-spincut-muted text-sm text-center mb-6">Paramètres optimisés pour votre outillage SPINCUT</p>
         </div>
 
         {/* Parameters */}
-        <div className="bg-[#161616] rounded-2xl p-5 border border-[#1e1e1e] space-y-4">
-          <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">🔧 Paramètres</h2>
+        <div className="bg-spincut-card rounded-2xl border border-spincut-border p-6 space-y-4">
+          <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold flex items-center gap-2">🔧 Paramètres</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <SelectField label="Type d'outil" value={toolType ?? ''} onChange={handleToolChange}>
@@ -420,8 +420,8 @@ export default function CalculatorPage() {
                         <button key={n} onClick={() => setNotation(n)}
                           className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
                             notation === n
-                              ? 'bg-[#d4780f] border-[#d4780f] text-white'
-                              : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
+                              ? 'bg-spincut-gold border-spincut-gold text-black'
+                              : 'bg-spincut-card border-spincut-border text-spincut-muted hover:border-spincut-gold'
                           }`}
                         >{n}</button>
                       ))
@@ -429,8 +429,8 @@ export default function CalculatorPage() {
                         <button key={z} onClick={() => setZTeeth(z)}
                           className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
                             zTeeth === z
-                              ? 'bg-[#d4780f] border-[#d4780f] text-white'
-                              : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa] hover:border-[#d4780f]'
+                              ? 'bg-spincut-gold border-spincut-gold text-black'
+                              : 'bg-spincut-card border-spincut-border text-spincut-muted hover:border-spincut-gold'
                           }`}
                         >Z{z}</button>
                       ))
@@ -456,7 +456,7 @@ export default function CalculatorPage() {
           </div>
 
           {/* Machine limits */}
-          <div className="pt-2 border-t border-[#1e1e1e] space-y-4">
+          <div className="pt-2 border-t border-spincut-border space-y-4">
             <NumberField
               label={
                 operation === 'rainure' ? 'Profondeur de rainure (mm)' :
@@ -489,8 +489,8 @@ export default function CalculatorPage() {
 
         {/* Placeholder quand pas encore rempli */}
         {!isReady && (
-          <div className="bg-[#161616] rounded-2xl p-6 border border-[#1e1e1e] text-center">
-            <p className="text-[#444] text-sm">Sélectionnez vos paramètres pour voir les résultats</p>
+          <div className="bg-spincut-card rounded-2xl p-6 border border-spincut-border text-center">
+            <p className="text-spincut-subtle text-sm">Sélectionnez vos paramètres pour voir les résultats</p>
           </div>
         )}
 
@@ -523,14 +523,14 @@ export default function CalculatorPage() {
 
         {/* Results */}
         {result && !result.forbidden && (
-          <div className="bg-[#161616] rounded-2xl p-5 border border-[#1e1e1e] space-y-4">
-            <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">🏎️ Résultats</h2>
+          <div className="bg-spincut-card rounded-2xl border-l-4 border-spincut-gold p-6 space-y-4">
+            <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold flex items-center gap-2">🏎️ Résultats</h2>
 
             <div className="flex gap-3">
               <BigResultCard label="Vitesse broche (n)" value={result.n.toLocaleString('fr-FR')} unit="tr/min" />
               <BigResultCard label="Avance XY (Vf)" value={result.vf.toLocaleString('fr-FR')} unit="mm/min" />
             </div>
-            <p className="text-center text-[#444] text-xs -mt-1">↑ Ces 2 valeurs sont à entrer dans votre machine</p>
+            <p className="text-center text-spincut-subtle text-xs -mt-1">↑ Ces 2 valeurs sont à entrer dans votre machine</p>
 
             <div className="grid grid-cols-3 gap-3">
               <ResultCard label="Vitesse de coupe (Vc)" value={String(result.vc)} unit="m/min" sub={`plage : ${result.vcMin}–${result.vcMax}`} />
@@ -545,10 +545,10 @@ export default function CalculatorPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <ResultCard label="Largeur de coupe (ae)" value={result.ae.toFixed(2)} unit="mm" sub={result.aeLabel} />
-              <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-                <p className="text-[#888] text-xs mb-1">Vitesse descente Z</p>
-                <p className="text-[#d4780f] font-bold text-2xl">{result.vfZ.toLocaleString('fr-FR')}</p>
-                <p className="text-[#666] text-xs mt-0.5">mm/min</p>
+              <div className="bg-spincut-card rounded-xl p-4 border border-spincut-border">
+                <p className="text-spincut-muted text-xs mb-1">Vitesse descente Z</p>
+                <p className="text-spincut-gold font-bold text-2xl">{result.vfZ.toLocaleString('fr-FR')}</p>
+                <p className="text-spincut-subtle text-xs mt-0.5">mm/min</p>
                 <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
                   result.modeEntree.includes('OBLIGATOIRE') ? 'bg-[#2a0000] text-red-400'
                   : result.modeEntree.includes('directe')   ? 'bg-[#0a1f0a] text-green-400'
@@ -558,12 +558,12 @@ export default function CalculatorPage() {
             </div>
 
             {result.nPasses !== null && (
-              <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-                <p className="text-[#888] text-xs mb-2">Calcul passes Z</p>
+              <div className="bg-spincut-card rounded-xl p-4 border border-spincut-border">
+                <p className="text-spincut-muted text-xs mb-2">Calcul passes Z</p>
                 <div className="flex gap-6 flex-wrap">
-                  <div><span className="text-[#d4780f] font-bold text-xl">{result.nPasses}</span><span className="text-[#666] text-sm ml-1">passes</span></div>
-                  <div><span className="text-[#d4780f] font-bold text-xl">{result.apReel.toFixed(2)}</span><span className="text-[#666] text-sm ml-1">mm / passe</span></div>
-                  <div><span className="text-[#d4780f] font-bold text-xl">{result.vfZ.toLocaleString('fr-FR')}</span><span className="text-[#666] text-sm ml-1">mm/min descente</span></div>
+                  <div><span className="text-spincut-gold font-bold text-xl">{result.nPasses}</span><span className="text-spincut-subtle text-sm ml-1">passes</span></div>
+                  <div><span className="text-spincut-gold font-bold text-xl">{result.apReel.toFixed(2)}</span><span className="text-spincut-subtle text-sm ml-1">mm / passe</span></div>
+                  <div><span className="text-spincut-gold font-bold text-xl">{result.vfZ.toLocaleString('fr-FR')}</span><span className="text-spincut-subtle text-sm ml-1">mm/min descente</span></div>
                   <span className={`text-xs px-2 py-0.5 rounded-full self-center ${
                     result.modeEntree.includes('OBLIGATOIRE') ? 'bg-[#2a0000] text-red-400'
                     : result.modeEntree.includes('directe')   ? 'bg-[#0a1f0a] text-green-400'
@@ -579,7 +579,7 @@ export default function CalculatorPage() {
               className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-all ${
                 savedThisCalc
                   ? 'bg-[#0a2010] border-green-800 text-green-400 cursor-default'
-                  : 'bg-[#1e1e1e] border-[#d4780f]/40 text-[#d4780f] hover:bg-[#d4780f]/10 active:scale-95'
+                  : 'bg-spincut-card border-spincut-gold/40 text-spincut-gold hover:bg-spincut-gold/10 active:scale-95'
               }`}
             >
               {savedThisCalc ? '✓ Sauvegardé' : '♥ Sauvegarder ce calcul'}
@@ -589,10 +589,10 @@ export default function CalculatorPage() {
 
         {/* Fraises recommandées */}
         {recommendations.length > 0 && (
-          <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+          <div className="bg-spincut-card rounded-xl border border-spincut-border overflow-hidden">
             <div className="px-5 pt-5 pb-3">
-              <h2 className="text-[#d4780f] font-semibold text-base">⭐ Fraises SPINCUT recommandées</h2>
-              <p className="text-[#555] text-xs mt-1">
+              <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold">⭐ Fraises SPINCUT recommandées</h2>
+              <p className="text-spincut-subtle text-xs mt-1">
                 {recommendations.length} outil{recommendations.length > 1 ? 's' : ''} pour {safeMat ? MATERIAL_LABELS[safeMat] : ''}
                 {thickness && !isNaN(parseFloat(thickness))
                   ? ` · LC ≥ ${thickness} mm`
@@ -602,11 +602,11 @@ export default function CalculatorPage() {
             {recoDiameters.length > 1 && (
               <div className="flex gap-2 px-5 pb-3 flex-wrap">
                 <button onClick={() => setFilterRecoDiam(null)}
-                  className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterRecoDiam === null ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                  className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterRecoDiam === null ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-subtle'}`}
                 >Tous</button>
                 {recoDiameters.map(d => (
                   <button key={d} onClick={() => setFilterRecoDiam(p => p === d ? null : d)}
-                    className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterRecoDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                    className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterRecoDiam === d ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-subtle'}`}
                   >Ø{d}</button>
                 ))}
               </div>
@@ -616,34 +616,34 @@ export default function CalculatorPage() {
                 {filteredRecos.map(p => (
                   <div
                     key={`${p.ref}__${p.row}`}
-                    className="w-44 flex-shrink-0 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2"
+                    className="w-44 flex-shrink-0 bg-spincut-card rounded-xl border border-spincut-border p-3 flex flex-col gap-2"
                   >
                     <div className="flex items-start justify-between gap-1">
                       <div className="flex flex-wrap gap-1 items-start flex-1 min-w-0">
                         {p.diametre && p.diametre !== '/' && (
-                          <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#d4780f] px-1.5 py-0.5 rounded">Ø{p.diametre}</span>
+                          <span className="text-[10px] font-mono bg-spincut-border text-spincut-gold px-1.5 py-0.5 rounded">Ø{p.diametre}</span>
                         )}
                         {p.dents && p.dents !== '/' && (
-                          <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">Z{p.dents}</span>
+                          <span className="text-[10px] font-mono bg-spincut-border text-spincut-muted px-1.5 py-0.5 rounded">Z{p.dents}</span>
                         )}
                         {p.lc && p.lc !== '/' && (
-                          <span className="text-[10px] font-mono bg-[#2a2a2a] text-[#aaa] px-1.5 py-0.5 rounded">LC{p.lc}</span>
+                          <span className="text-[10px] font-mono bg-spincut-border text-spincut-muted px-1.5 py-0.5 rounded">LC{p.lc}</span>
                         )}
                         {p.pm && (
                           <span className="text-[10px] font-bold bg-[#0d2a0d] text-green-400 px-1.5 py-0.5 rounded">PM</span>
                         )}
                       </div>
-                      <button onClick={() => toggleFav(`${p.ref}__${p.row}`)} className="p-0.5 -mt-0.5 -mr-0.5 flex-shrink-0" style={{ color: favorites.has(`${p.ref}__${p.row}`) ? '#e03c3c' : '#444' }}>
+                      <button onClick={() => toggleFav(`${p.ref}__${p.row}`)} className="p-0.5 -mt-0.5 -mr-0.5 flex-shrink-0" style={{ color: favorites.has(`${p.ref}__${p.row}`) ? '#e03c3c' : '#555566' }}>
                         <svg width="14" height="14" fill={favorites.has(`${p.ref}__${p.row}`) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                       </button>
                     </div>
                     <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
                     {p.category && CATEGORY_LABELS[p.category] && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full w-fit" style={{ background: '#2a1400', color: '#d4780f' }}>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full w-fit" style={{ background: '#2a1400', color: '#D4940A' }}>
                         {CATEGORY_LABELS[p.category]}
                       </span>
                     )}
-                    <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
+                    <p className="text-spincut-subtle text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
                     <div>
                       {p.stock === 0
                         ? <p className="text-[10px] font-semibold text-red-400">Rupture de stock</p>
@@ -651,10 +651,10 @@ export default function CalculatorPage() {
                           ? <p className="text-[10px] text-orange-400">Stock faible ({p.stock})</p>
                           : <p className="text-[10px] text-green-400">En stock ({p.stock})</p>
                       }
-                      <p className="text-[#d4780f] font-bold text-sm mt-0.5">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
+                      <p className="text-spincut-gold font-bold text-sm mt-0.5">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
                     </div>
                     {p.stock === 0 ? (
-                      <div className="w-full py-2 rounded-lg text-xs font-bold text-center text-[#444] bg-[#1a1a1a] border border-[#2a2a2a]">
+                      <div className="w-full py-2 rounded-lg text-xs font-bold text-center text-spincut-subtle bg-spincut-card border border-spincut-border">
                         Rupture
                       </div>
                     ) : (() => {
@@ -664,18 +664,18 @@ export default function CalculatorPage() {
                         <button
                           onClick={() => setQty(id, 1, p.stock)}
                           className="w-full py-2 rounded-lg text-xs font-bold text-center transition-colors"
-                          style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}
+                          style={{ background: '#2a1400', color: '#D4940A', border: '1px solid #D4940A33' }}
                         >
                           + Ajouter
                         </button>
                       ) : (
                         <div className="flex items-center justify-between gap-1">
                           <button onClick={() => setQty(id, -1, p.stock)}
-                            className="flex-1 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-base text-white"
+                            className="flex-1 h-8 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-base text-black"
                           >−</button>
-                          <span className="w-7 text-center text-[#d4780f] font-bold text-sm">{qty}</span>
+                          <span className="w-7 text-center text-spincut-gold font-bold text-sm">{qty}</span>
                           <button onClick={() => setQty(id, +1, p.stock)}
-                            className="flex-1 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-base text-white hover:bg-[#b86400] transition-colors active:scale-95"
+                            className="flex-1 h-8 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-base text-black hover:bg-spincut-gold-light transition-colors active:scale-95"
                           >+</button>
                         </div>
                       )
@@ -689,19 +689,19 @@ export default function CalculatorPage() {
 
         {/* Saved calcs */}
         {history.length > 0 && (
-          <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
+          <div className="bg-spincut-card rounded-xl border border-spincut-border overflow-hidden">
             <button
               onClick={() => setShowHistory(s => !s)}
-              className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
+              className="w-full p-5 flex items-center justify-between hover:bg-spincut-surface transition-all duration-200"
             >
-              <h2 className="text-[#d4780f] font-semibold text-base flex items-center gap-2">
+              <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold flex items-center gap-2">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                 Calculs sauvegardés
-                <span className="bg-[#d4780f]/20 text-[#d4780f] text-xs px-2 py-0.5 rounded-full font-normal">
+                <span className="bg-spincut-gold/20 text-spincut-gold text-xs px-2 py-0.5 rounded-full font-normal">
                   {history.length}/10
                 </span>
               </h2>
-              <svg className={`w-5 h-5 text-[#555] transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-5 h-5 text-spincut-subtle transition-transform ${showHistory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -727,8 +727,8 @@ export default function CalculatorPage() {
                         key={entry.id}
                         className="rounded-xl border flex items-center gap-2"
                         style={{
-                          background: isDragging ? '#2a1800' : '#1a1a1a',
-                          borderColor: isTarget ? '#d4780f' : isDragging ? '#d4780f44' : '#2a2a2a',
+                          background: isDragging ? '#2a1800' : '#1A1A24',
+                          borderColor: isTarget ? '#D4940A' : isDragging ? '#D4940A44' : '#2A2A3A',
                           opacity: isDragging ? 0.55 : 1,
                           transition: dragIdx === null ? 'border-color 0.15s' : 'none',
                         }}
@@ -736,7 +736,7 @@ export default function CalculatorPage() {
                         {/* Drag handle — pointer capture */}
                         <div
                           className="pl-3 py-3.5 flex-shrink-0 select-none"
-                          style={{ color: '#3a3a3a', cursor: dragIdx !== null ? 'grabbing' : 'grab', touchAction: 'none' }}
+                          style={{ color: '#2A2A3A', cursor: dragIdx !== null ? 'grabbing' : 'grab', touchAction: 'none' }}
                           onPointerDown={e => {
                             e.preventDefault()
                             ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
@@ -773,9 +773,9 @@ export default function CalculatorPage() {
                           <p className="text-white text-sm font-medium truncate">
                             {TOOL_TYPE_LABELS[entry.params.toolType]} Ø{entry.params.diameter} · {MATERIAL_LABELS[entry.params.material]}
                           </p>
-                          <p className="text-[#666] text-xs mt-0.5">
+                          <p className="text-spincut-subtle text-xs mt-0.5">
                             {OPERATION_LABELS[entry.params.operation]} ·&nbsp;
-                            <span className="text-[#d4780f]">n {entry.result.n.toLocaleString('fr-FR')} tr/min</span>
+                            <span className="text-spincut-gold">n {entry.result.n.toLocaleString('fr-FR')} tr/min</span>
                             &nbsp;· Vf {entry.result.vf.toLocaleString('fr-FR')} mm/min
                           </p>
                         </div>
@@ -784,7 +784,7 @@ export default function CalculatorPage() {
                         <button
                           onClick={() => setHistory(deleteFromHistory(entry.id, clientCode))}
                           className="pr-3 py-3.5 flex-shrink-0 active:scale-90 transition-transform"
-                          style={{ color: '#3a3a3a' }}
+                          style={{ color: '#2A2A3A' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -800,39 +800,39 @@ export default function CalculatorPage() {
         )}
 
         {/* Conseils */}
-        <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
-          <button onClick={() => setShowConseils(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
-            <h2 className="text-[#d4780f] font-semibold text-base">💡 Conseils</h2>
-            <svg className={`w-5 h-5 text-[#555] transition-transform ${showConseils ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-spincut-card rounded-xl border border-spincut-border overflow-hidden">
+          <button onClick={() => setShowConseils(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-spincut-surface transition-all duration-200">
+            <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold">💡 Conseils</h2>
+            <svg className={`w-5 h-5 text-spincut-subtle transition-transform ${showConseils ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           {showConseils && toolType && safeMat && (
             <div className="px-5 pb-5 space-y-4">
               <div>
-                <p className="text-[#d4780f] font-medium text-sm mb-2">{TOOL_TYPE_LABELS[toolType]}</p>
+                <p className="text-spincut-gold font-medium text-sm mb-2">{TOOL_TYPE_LABELS[toolType]}</p>
                 <ul className="space-y-1">{CONSEILS_OUTIL[toolType].map((c, i) => (
-                  <li key={i} className="text-[#aaa] text-sm flex items-start gap-2"><span className="text-[#d4780f] mt-0.5">·</span>{c}</li>
+                  <li key={i} className="text-spincut-muted text-sm flex items-start gap-2"><span className="text-spincut-gold mt-0.5">·</span>{c}</li>
                 ))}</ul>
               </div>
               <div>
-                <p className="text-[#d4780f] font-medium text-sm mb-2">{MATERIAL_LABELS[safeMat]}</p>
+                <p className="text-spincut-gold font-medium text-sm mb-2">{MATERIAL_LABELS[safeMat]}</p>
                 <ul className="space-y-1">{CONSEILS_MATIERE[safeMat].map((c, i) => (
-                  <li key={i} className="text-[#aaa] text-sm flex items-start gap-2"><span className="text-[#d4780f] mt-0.5">·</span>{c}</li>
+                  <li key={i} className="text-spincut-muted text-sm flex items-start gap-2"><span className="text-spincut-gold mt-0.5">·</span>{c}</li>
                 ))}</ul>
               </div>
             </div>
           )}
           {showConseils && (!toolType || !safeMat) && (
-            <p className="px-5 pb-5 text-[#444] text-sm">Sélectionnez un type d'outil et un matériau pour voir les conseils.</p>
+            <p className="px-5 pb-5 text-spincut-subtle text-sm">Sélectionnez un type d'outil et un matériau pour voir les conseils.</p>
           )}
         </div>
 
         {/* Guide Matières & Outils */}
-        <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
-          <button onClick={() => setShowGuide(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
-            <h2 className="text-[#d4780f] font-semibold text-base">📋 Guide Matières &amp; Outils</h2>
-            <svg className={`w-5 h-5 text-[#555] transition-transform ${showGuide ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-spincut-card rounded-xl border border-spincut-border overflow-hidden">
+          <button onClick={() => setShowGuide(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-spincut-surface transition-all duration-200">
+            <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold">📋 Guide Matières &amp; Outils</h2>
+            <svg className={`w-5 h-5 text-spincut-subtle transition-transform ${showGuide ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -842,11 +842,11 @@ export default function CalculatorPage() {
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setGuideTab('matiere')}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${guideTab === 'matiere' ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa]'}`}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${guideTab === 'matiere' ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-muted'}`}
                 >Par Matière → Fraise</button>
                 <button
                   onClick={() => setGuideTab('fraise')}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${guideTab === 'fraise' ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1e1e1e] border-[#2a2a2a] text-[#aaa]'}`}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${guideTab === 'fraise' ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-muted'}`}
                 >Par Fraise → Matières</button>
               </div>
 
@@ -860,10 +860,10 @@ export default function CalculatorPage() {
                   <div className="space-y-4">
                     {cats.map(cat => (
                       <div key={cat}>
-                        <p className="text-[#d4780f] text-xs font-bold uppercase tracking-wider mb-2">{cat}</p>
+                        <p className="text-spincut-gold text-xs font-bold uppercase tracking-wider mb-2">{cat}</p>
                         <div className="space-y-1.5">
                           {MATERIAL_GUIDE.filter(m => m.cat === cat).map(m => (
-                            <div key={m.nom} className="bg-[#1a1a1a] rounded-lg p-3 border border-[#252525]">
+                            <div key={m.nom} className="bg-spincut-card rounded-lg p-3 border border-[#252525]">
                               <div className="flex items-start justify-between gap-2 mb-1.5">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="text-white text-sm font-medium leading-snug">{m.nom}</span>
@@ -873,18 +873,18 @@ export default function CalculatorPage() {
                                 </div>
                                 <div className="flex gap-1 flex-shrink-0 flex-wrap justify-end">
                                   {m.premier.map(t => (
-                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#d4780f22] text-[#d4780f] border border-[#d4780f44]">
+                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-[#D4940A22] text-spincut-gold border border-[#D4940A44]">
                                       {t === 'carbure_monobloc' ? `Carbure ${m.z}` : TOOL_SHORT[t]}
                                     </span>
                                   ))}
                                   {m.aussi.map(t => (
-                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-[#2a2a2a] text-[#777] border border-[#333]">
+                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-spincut-border text-spincut-muted border border-spincut-border">
                                       {TOOL_SHORT[t]}
                                     </span>
                                   ))}
                                 </div>
                               </div>
-                              <p className="text-[#666] text-[11px] leading-relaxed">{m.astuce}</p>
+                              <p className="text-spincut-subtle text-[11px] leading-relaxed">{m.astuce}</p>
                               {m.eviter && (
                                 <p className="text-red-500/70 text-[10px] mt-1">⚠ Éviter : {m.eviter}</p>
                               )}
@@ -900,10 +900,10 @@ export default function CalculatorPage() {
               {guideTab === 'fraise' && (
                 <div className="space-y-3">
                   {(Object.keys(TOOL_GUIDE) as (keyof typeof TOOL_GUIDE)[]).map(tool => (
-                    <div key={tool} className="bg-[#1a1a1a] rounded-lg p-3 border border-[#252525]">
-                      <p className="text-[#d4780f] font-semibold text-sm mb-1.5">{TOOL_TYPE_LABELS[tool]}</p>
-                      <p className="text-[#aaa] text-xs mb-1"><span className="text-green-400/80 font-medium">✓ Optimales :</span> {TOOL_GUIDE[tool].matieres_optimales}</p>
-                      <p className="text-[#aaa] text-xs mb-1.5"><span className="text-[#d4780f]/80 font-medium">☛ Conseil :</span> {TOOL_GUIDE[tool].conseil}</p>
+                    <div key={tool} className="bg-spincut-card rounded-lg p-3 border border-[#252525]">
+                      <p className="text-spincut-gold font-semibold text-sm mb-1.5">{TOOL_TYPE_LABELS[tool]}</p>
+                      <p className="text-spincut-muted text-xs mb-1"><span className="text-green-400/80 font-medium">✓ Optimales :</span> {TOOL_GUIDE[tool].matieres_optimales}</p>
+                      <p className="text-spincut-muted text-xs mb-1.5"><span className="text-spincut-gold/80 font-medium">☛ Conseil :</span> {TOOL_GUIDE[tool].conseil}</p>
                       {TOOL_GUIDE[tool].eviter && (
                         <p className="text-red-500/70 text-[10px]">⚠ Éviter : {TOOL_GUIDE[tool].eviter}</p>
                       )}
@@ -916,10 +916,10 @@ export default function CalculatorPage() {
         </div>
 
         {/* Glossaire */}
-        <div className="bg-[#161616] rounded-2xl border border-[#1e1e1e] overflow-hidden">
-          <button onClick={() => setShowGlossaire(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
-            <h2 className="text-[#d4780f] font-semibold text-base">📖 C'est quoi tous ces termes ?</h2>
-            <svg className={`w-5 h-5 text-[#555] transition-transform ${showGlossaire ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-spincut-card rounded-xl border border-spincut-border overflow-hidden">
+          <button onClick={() => setShowGlossaire(s => !s)} className="w-full p-5 flex items-center justify-between hover:bg-spincut-surface transition-all duration-200">
+            <h2 className="text-spincut-gold text-xs uppercase tracking-widest font-semibold">📖 C'est quoi tous ces termes ?</h2>
+            <svg className={`w-5 h-5 text-spincut-subtle transition-transform ${showGlossaire ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -928,13 +928,13 @@ export default function CalculatorPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[#2a2a2a]">
-                      <th className="text-left text-[#d4780f] font-semibold py-2 pr-6 w-16">Terme</th>
-                      <th className="text-left text-[#888] font-medium py-2 pr-6">Nom complet</th>
-                      <th className="text-left text-[#888] font-medium py-2">En clair</th>
+                    <tr className="border-b border-spincut-border">
+                      <th className="text-left text-spincut-gold font-semibold py-2 pr-6 w-16">Terme</th>
+                      <th className="text-left text-spincut-muted font-medium py-2 pr-6">Nom complet</th>
+                      <th className="text-left text-spincut-muted font-medium py-2">En clair</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#1a1a1a]">
+                  <tbody className="divide-y divide-spincut-border">
                     {[
                       { term: 'n', full: 'Vitesse de rotation (tr/min)', plain: 'Combien de tours par minute tourne la fraise' },
                       { term: 'Vf', full: 'Vitesse d\'avance (mm/min)', plain: 'À quelle vitesse la machine se déplace sur la pièce' },
@@ -950,8 +950,8 @@ export default function CalculatorPage() {
                         <td className="py-3 pr-6">
                           <span className="font-mono font-bold text-white text-base">{term}</span>
                         </td>
-                        <td className="py-3 pr-6 text-[#aaa]">{full}</td>
-                        <td className="py-3 text-[#666]">{plain}</td>
+                        <td className="py-3 pr-6 text-spincut-muted">{full}</td>
+                        <td className="py-3 text-spincut-subtle">{plain}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -961,7 +961,7 @@ export default function CalculatorPage() {
           )}
         </div>
 
-        <p className="text-center text-[#333] text-xs pb-24">
+        <p className="text-center text-spincut-border text-xs pb-24">
           © SPINCUT — Ces valeurs sont des recommandations standards. Un test avant production est conseillé.
         </p>
       </div>
@@ -975,52 +975,52 @@ export default function CalculatorPage() {
         >
           <div
             className="w-full max-w-sm rounded-t-2xl p-5 space-y-3"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
             onClick={e => e.stopPropagation()}
           >
-            <p className="text-center text-[#888] text-xs tracking-widest uppercase mb-4">Envoyer un mail à SPINCUT</p>
+            <p className="text-center text-spincut-muted text-xs tracking-widest uppercase mb-4">Envoyer un mail à SPINCUT</p>
 
             <a href="mailto:scspincut@gmail.com?subject=Question%20SPINCUT"
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
               <AppleMailIcon />
               <span>
                 <span className="block font-semibold">Apple Mail</span>
-                <span className="block text-[#888] text-xs">Application Mail par défaut</span>
+                <span className="block text-spincut-muted text-xs">Application Mail par défaut</span>
               </span>
             </a>
 
             <a href="https://mail.google.com/mail/?view=cm&fs=1&to=scspincut@gmail.com&su=Question%20SPINCUT"
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
               <GmailIcon />
               <span>
                 <span className="block font-semibold">Gmail</span>
-                <span className="block text-[#888] text-xs">Ouvre Gmail dans le navigateur</span>
+                <span className="block text-spincut-muted text-xs">Ouvre Gmail dans le navigateur</span>
               </span>
             </a>
 
             <a href="https://outlook.live.com/mail/0/deeplink/compose?to=scspincut@gmail.com&subject=Question%20SPINCUT"
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-sm font-medium text-white"
-              style={{ background: '#2a2a2a' }}
+              style={{ background: '#2A2A3A' }}
               onClick={() => setShowMailMenu(false)}
             >
               <OutlookIcon />
               <span>
                 <span className="block font-semibold">Outlook</span>
-                <span className="block text-[#888] text-xs">Ouvre Outlook dans le navigateur</span>
+                <span className="block text-spincut-muted text-xs">Ouvre Outlook dans le navigateur</span>
               </span>
             </a>
 
             <button
               onClick={() => setShowMailMenu(false)}
-              className="w-full py-3 rounded-xl text-sm text-[#666]"
+              className="w-full py-3 rounded-xl text-sm text-spincut-subtle"
             >
               Annuler
             </button>
@@ -1029,14 +1029,14 @@ export default function CalculatorPage() {
       )}
 
       {/* Barre de contact fixe en bas */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-black/95 backdrop-blur border-t border-[#1e1e1e] px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-spincut-bg/95 backdrop-blur border-t border-spincut-border px-4 py-3">
         <div className="max-w-4xl mx-auto flex gap-2">
 
           {/* Commander */}
           <Link
             to="/commande"
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-colors"
-            style={{ background: '#2a1400', borderColor: '#d4780f', color: '#d4780f' }}
+            style={{ background: '#2a1400', borderColor: '#D4940A', color: '#D4940A' }}
           >
             🛒 Commander
           </Link>
@@ -1059,7 +1059,7 @@ export default function CalculatorPage() {
           <button
             onClick={() => setShowMailMenu(true)}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-colors"
-            style={{ background: '#1e1200', borderColor: '#d4780f44', color: '#d4780f' }}
+            style={{ background: '#1e1200', borderColor: '#D4940A44', color: '#D4940A' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="4" width="20" height="16" rx="2"/>

@@ -27,7 +27,7 @@ const TOOL_TYPES = [
 ]
 
 const TYPE_META: Record<string, { color: string; bg: string; border: string; abbr: string }> = {
-  'Carbure monobloc': { color: '#d4780f', bg: '#1a0900', border: '#d4780f33', abbr: 'MC' },
+  'Carbure monobloc': { color: '#D4940A', bg: '#1a0900', border: '#D4940A33', abbr: 'MC' },
   'Diamant':          { color: '#38bdf8', bg: '#001a28', border: '#38bdf833', abbr: 'PCD' },
   'Compression':      { color: '#a78bfa', bg: '#130d22', border: '#a78bfa33', abbr: 'COMP' },
   'Ravageuse':        { color: '#fbbf24', bg: '#1a1200', border: '#fbbf2433', abbr: 'RAV' },
@@ -152,13 +152,13 @@ export default function StockPage() {
   }
 
 return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-spincut-bg text-white flex flex-col">
 
-      <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
+      <header className="sticky top-0 z-30 bg-spincut-bg border-b border-spincut-border">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
           <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
           <button onClick={() => { logout(); navigate('/') }}
-            className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
+            className="absolute right-4 flex items-center gap-1 text-spincut-subtle hover:text-white text-xs transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -171,21 +171,23 @@ return (
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-4 pb-36 pt-4 space-y-4">
 
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] uppercase tracking-wider" style={{ color: '#555' }}>
-            {tools.length === 0 ? 'Aucun outil' : atcCapacity > 0
-              ? `${tools.filter(t => t.position !== null).length} sur machine · ${tools.filter(t => t.position === null).length} en stock`
-              : `${tools.length} outil${tools.length > 1 ? 's' : ''}`}
-          </p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-white">Mon stock</h1>
+            <p className="text-spincut-muted text-xs mt-0.5">
+              {tools.length === 0 ? 'Aucun outil' : atcCapacity > 0
+                ? `${tools.filter(t => t.position !== null).length} sur machine · ${tools.filter(t => t.position === null).length} en stock`
+                : `${tools.length} outil${tools.length > 1 ? 's' : ''}`}
+            </p>
+          </div>
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white active:scale-95 transition-all"
-            style={{ background: '#d4780f' }}
+            className="flex items-center gap-1.5 bg-spincut-gold text-black rounded-full px-4 py-2 text-sm font-bold active:scale-95 transition-all duration-200 hover:bg-spincut-gold-light"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/>
             </svg>
-            Ajouter un outil
+            Ajouter
           </button>
         </div>
 
@@ -193,11 +195,11 @@ return (
         {atcCapacity > 0 && (() => {
           const mounted = tools.filter(t => t.position !== null)
           return (
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#111', border: '1px solid #1e1e1e' }}>
+            <div className="bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden">
               <div className="px-4 pt-4 pb-3 flex items-center justify-between">
                 <div>
                   <p className="text-white font-bold text-sm">Magasin ATC</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>
+                  <p className="text-[10px] mt-0.5" style={{ color: '#555566' }}>
                     {mounted.length}/{atcCapacity} postes occupés
                   </p>
                 </div>
@@ -221,7 +223,7 @@ return (
                     <div
                       key={pos}
                       className="aspect-square rounded-lg flex items-center justify-center"
-                      style={{ background: '#0d0d0d', border: '1.5px solid #1a1a1a' }}
+                      style={{ background: '#0A0A0F', border: '1.5px solid #2A2A3A' }}
                     >
                       <span className="text-[9px] font-bold" style={{ color: '#252525' }}>{pos}</span>
                     </div>
@@ -234,43 +236,48 @@ return (
 
         {/* ── En stock ── */}
         {tools.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
-              <svg className="w-8 h-8 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-bold">Votre stock est vide</p>
-              <p className="text-[#555] text-sm mt-1">Appuyez sur « Ajouter un outil » pour commencer</p>
-            </div>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="mb-4">
+              <rect x="22" y="44" width="76" height="52" rx="8" stroke="#2A2A3A" strokeWidth="2"/>
+              <path d="M22 60h76" stroke="#2A2A3A" strokeWidth="2"/>
+              <path d="M50 74h20" stroke="#D4940A" strokeWidth="3" strokeLinecap="round"/>
+              <path d="M60 14v22M50 26l10 10 10-10" stroke="#555566" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <p className="text-white text-lg font-semibold">Votre stock est vide</p>
+            <p className="text-spincut-muted text-sm mt-1">Ajoutez vos premiers outils pour suivre vos quantités</p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="mt-4 h-13 px-6 rounded-xl bg-gradient-to-r from-spincut-gold to-spincut-gold-light text-black font-bold text-sm active:scale-95 transition-all duration-200"
+            >
+              Ajouter un outil
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
             {(() => {
               const inStock = atcCapacity > 0 ? tools.filter(t => t.position === null) : tools
               if (atcCapacity > 0 && inStock.length === 0) return (
-                <p className="text-[#333] text-xs text-center py-4">Tous les outils sont montés sur la machine</p>
+                <p className="text-spincut-subtle text-xs text-center py-4">Tous les outils sont montés sur la machine</p>
               )
               return inStock.map(tool => {
               const atAlert = tool.seuil !== null && tool.qty <= tool.seuil
               const isEmpty = tool.qty === 0
               const alertOpen = expandedAlertId === tool.id
-              const borderColor = isEmpty ? '#4a1010' : atAlert ? '#b45309' : '#1e1e1e'
+              const borderColor = isEmpty ? '#4a1010' : atAlert ? '#b45309' : '#2A2A3A'
               const qtyColor   = isEmpty ? '#f87171' : atAlert ? '#fbbf24' : '#4ade80'
               const hasAlert   = tool.seuil !== null || tool.orderQty !== null
               return (
-                <div key={tool.id} className="rounded-2xl overflow-hidden transition-all" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
+                <div key={tool.id} className="bg-spincut-card rounded-xl overflow-hidden transition-all duration-200" style={{ border: `1px solid ${borderColor}` }}>
 
                   {/* ── Header ─────────────────────────────────────── */}
                   <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{tool.type}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#D4940A1A', color: '#D4940A' }}>{tool.type}</span>
                         <span className="text-white font-bold text-sm">Ø{tool.diametre} mm</span>
-                        <span className="text-xs" style={{ color: '#555' }}>Z={tool.dents} · LC={tool.lc} mm · LT={tool.lt} mm</span>
+                        <span className="text-xs" style={{ color: '#555566' }}>Z={tool.dents} · LC={tool.lc} mm · LT={tool.lt} mm</span>
                       </div>
-                      {tool.notes && <p className="text-xs mt-1 italic" style={{ color: '#444' }}>{tool.notes}</p>}
+                      {tool.notes && <p className="text-xs mt-1 italic" style={{ color: '#555566' }}>{tool.notes}</p>}
                     </div>
 
                     {/* Actions: monter + cloche + corbeille */}
@@ -279,10 +286,10 @@ return (
                         <button
                           onClick={() => setMountingToolId(tool.id)}
                           className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-                          style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                          style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
                           title="Monter sur machine"
                         >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="#555" strokeWidth="2" viewBox="0 0 24 24">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="#555566" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
                           </svg>
                         </button>
@@ -290,19 +297,19 @@ return (
                       <button
                         onClick={() => setExpandedAlertId(alertOpen ? null : tool.id)}
                         className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-                        style={{ background: alertOpen || hasAlert ? '#2a1a00' : '#1a1a1a', border: `1px solid ${alertOpen || hasAlert ? '#d4780f44' : '#2a2a2a'}` }}
+                        style={{ background: alertOpen || hasAlert ? '#2a1a00' : '#1A1A24', border: `1px solid ${alertOpen || hasAlert ? '#D4940A44' : '#2A2A3A'}` }}
                         title="Configurer alerte"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke={alertOpen || hasAlert ? '#d4780f' : '#555'} strokeWidth="2" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke={alertOpen || hasAlert ? '#D4940A' : '#555566'} strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
                       </button>
                       <button
                         onClick={() => remove(tool.id)}
                         className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-                        style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                        style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
                       >
-                        <svg className="w-3.5 h-3.5 text-[#444] hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 text-spincut-subtle hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                       </button>
@@ -310,28 +317,28 @@ return (
                   </div>
 
                   {/* ── Quantité ─────────────────────────────────────── */}
-                  <div className="px-4 py-3 border-t border-[#1a1a1a] flex items-center justify-between">
-                    <span className="text-xs font-medium" style={{ color: '#555' }}>Quantité en stock</span>
+                  <div className="px-4 py-3 border-t border-spincut-border flex items-center justify-between">
+                    <span className="text-xs font-medium" style={{ color: '#555566' }}>Quantité en stock</span>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => updateQty(tool.id, -1)}
                         className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg text-white active:scale-90 transition-transform"
-                        style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                        style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
                       >−</button>
                       <span className="w-12 text-center font-black text-2xl tabular-nums" style={{ color: qtyColor }}>{tool.qty}</span>
                       <button
                         onClick={() => updateQty(tool.id, +1)}
                         className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg text-white active:scale-90 transition-transform"
-                        style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+                        style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
                       >+</button>
                     </div>
                   </div>
 
                   {/* ── Config alerte (collapsible) ───────────────────── */}
                   {alertOpen && (
-                    <div className="px-4 py-4 border-t border-[#1e1e1e] grid grid-cols-2 gap-4" style={{ background: '#0e0e0e' }}>
+                    <div className="px-4 py-4 border-t border-spincut-border grid grid-cols-2 gap-4" style={{ background: '#111118' }}>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#555' }}>Alerter si stock ≤</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#555566' }}>Alerter si stock ≤</p>
                         <div className="flex items-center gap-2">
                           <input
                             type="number" min={0}
@@ -339,13 +346,13 @@ return (
                             onChange={e => setSeuil(tool.id, e.target.value)}
                             placeholder="—"
                             className="w-16 text-center font-black text-xl rounded-xl py-2 outline-none"
-                            style={{ background: '#161616', color: '#d4780f', border: '1px solid #2a2a2a' }}
+                            style={{ background: '#1A1A24', color: '#D4940A', border: '1px solid #2A2A3A' }}
                           />
-                          <span className="text-xs" style={{ color: '#555' }}>unité(s)</span>
+                          <span className="text-xs" style={{ color: '#555566' }}>unité(s)</span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#555' }}>Quantité à livrer</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: '#555566' }}>Quantité à livrer</p>
                         <div className="flex items-center gap-2">
                           <input
                             type="number" min={1}
@@ -353,9 +360,9 @@ return (
                             onChange={e => setOrderQty(tool.id, e.target.value)}
                             placeholder="—"
                             className="w-16 text-center font-black text-xl rounded-xl py-2 outline-none"
-                            style={{ background: '#161616', color: '#4ade80', border: '1px solid #2a2a2a' }}
+                            style={{ background: '#1A1A24', color: '#4ade80', border: '1px solid #2A2A3A' }}
                           />
-                          <span className="text-xs" style={{ color: '#555' }}>unité(s)</span>
+                          <span className="text-xs" style={{ color: '#555566' }}>unité(s)</span>
                         </div>
                       </div>
                     </div>
@@ -367,7 +374,7 @@ return (
                       <span className="text-base flex-shrink-0">⚠️</span>
                       <div>
                         <p className="text-xs font-bold" style={{ color: '#fbbf24' }}>Seuil atteint</p>
-                        <p className="text-[11px]" style={{ color: '#888' }}>
+                        <p className="text-[11px]" style={{ color: '#9999AA' }}>
                           Notification envoyée{tool.orderQty ? ` — ${tool.orderQty} unité${tool.orderQty > 1 ? 's' : ''} à livrer` : ''}
                         </p>
                       </div>
@@ -390,12 +397,12 @@ return (
         >
           <div
             className="w-full max-w-sm rounded-t-2xl p-5 space-y-4"
-            style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+            style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
             onClick={e => e.stopPropagation()}
           >
             <div>
               <p className="text-white font-bold text-sm">Choisir un poste magasin</p>
-              <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>
+              <p className="text-[10px] mt-0.5" style={{ color: '#555566' }}>
                 {tools.filter(t => t.position !== null).length}/{atcCapacity} postes occupés
               </p>
             </div>
@@ -408,13 +415,13 @@ return (
                     onClick={() => { mountTool(mountingToolId, pos); setMountingToolId(null) }}
                     className="aspect-square rounded-xl flex flex-col items-center justify-center transition-all active:scale-95"
                     style={{
-                      background: occupied ? '#1a0e00' : '#1e1e1e',
-                      border: `1.5px solid ${occupied ? '#3a2000' : '#2a2a2a'}`,
+                      background: occupied ? '#1a0e00' : '#1A1A24',
+                      border: `1.5px solid ${occupied ? '#3a2000' : '#2A2A3A'}`,
                     }}
                   >
-                    <span className="text-xs font-black" style={{ color: occupied ? '#d4780f' : '#aaa' }}>{pos}</span>
+                    <span className="text-xs font-black" style={{ color: occupied ? '#D4940A' : '#9999AA' }}>{pos}</span>
                     {occupied && (
-                      <span className="text-[8px] mt-0.5 text-center leading-tight px-1 truncate w-full" style={{ color: '#d4780f' }}>
+                      <span className="text-[8px] mt-0.5 text-center leading-tight px-1 truncate w-full" style={{ color: '#D4940A' }}>
                         Ø{occupied.diametre}
                       </span>
                     )}
@@ -422,7 +429,7 @@ return (
                 )
               })}
             </div>
-            <button onClick={() => setMountingToolId(null)} className="w-full py-3 rounded-xl text-sm" style={{ color: '#555' }}>
+            <button onClick={() => setMountingToolId(null)} className="w-full py-3 rounded-xl text-sm" style={{ color: '#555566' }}>
               Annuler
             </button>
           </div>
@@ -438,16 +445,16 @@ return (
         >
           <div
             className="w-full max-w-md rounded-2xl p-5 space-y-3"
-            style={{ background: '#161616', border: '1px solid #2a2a2a' }}
+            style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-1">
               <p className="text-white font-bold text-sm">Ajouter un outil</p>
-              <button onClick={closeForm} className="text-[#555] hover:text-white text-2xl leading-none">×</button>
+              <button onClick={closeForm} className="text-spincut-subtle hover:text-white text-2xl leading-none">×</button>
             </div>
 
             <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Type d'outil</p>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555566' }}>Type d'outil</p>
               <div className="grid grid-cols-2 gap-1.5 mb-1.5">
                 {TOOL_TYPES.map(t => {
                   const m = TYPE_META[t]
@@ -458,9 +465,9 @@ return (
                       onClick={() => setForm(f => ({ ...f, type: t, customType: false }))}
                       className="rounded-xl px-2 py-2 text-xs font-bold text-left transition-all"
                       style={{
-                        background: active ? m.bg : '#0d0d0d',
-                        border: `1px solid ${active ? m.color : '#2a2a2a'}`,
-                        color: active ? m.color : '#555',
+                        background: active ? m.bg : '#0A0A0F',
+                        border: `1px solid ${active ? m.color : '#2A2A3A'}`,
+                        color: active ? m.color : '#555566',
                       }}
                     >
                       {t}
@@ -475,13 +482,13 @@ return (
                     value={TOOL_TYPES.includes(form.type) ? '' : form.type}
                     onChange={e => setField('type', e.target.value)}
                     placeholder="Ex: HSS, Gravure, Traceur…"
-                    className="flex-1 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder-[#444]"
-                    style={{ background: '#0d0d0d', border: '1px solid #d4780f' }}
+                    className="flex-1 rounded-xl px-3 py-2 text-sm text-white outline-none placeholder-spincut-subtle"
+                    style={{ background: '#0A0A0F', border: '1px solid #D4940A' }}
                   />
                   <button
                     onClick={() => setForm(f => ({ ...f, customType: false }))}
                     className="px-3 rounded-xl text-xs"
-                    style={{ background: '#1a1a1a', color: '#555', border: '1px solid #2a2a2a' }}
+                    style={{ background: '#1A1A24', color: '#555566', border: '1px solid #2A2A3A' }}
                   >
                     ✕
                   </button>
@@ -490,7 +497,7 @@ return (
                 <button
                   onClick={() => setForm(f => ({ ...f, customType: true, type: TOOL_TYPES.includes(f.type) ? '' : f.type }))}
                   className="text-xs px-2 py-1 rounded-lg"
-                  style={{ color: '#555', background: '#0d0d0d', border: '1px solid #2a2a2a' }}
+                  style={{ color: '#555566', background: '#0A0A0F', border: '1px solid #2A2A3A' }}
                 >
                   + Autre type…
                 </button>
@@ -508,14 +515,14 @@ return (
             </div>
 
             <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>Notes (optionnel)</p>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555566' }}>Notes (optionnel)</p>
               <textarea
                 value={form.notes}
                 onChange={e => setField('notes', e.target.value)}
                 placeholder="Marque, fournisseur, utilisation spécifique…"
                 rows={2}
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444] resize-none"
-                style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-spincut-subtle resize-none"
+                style={{ background: '#0A0A0F', border: '1px solid #2A2A3A' }}
               />
             </div>
 
@@ -523,8 +530,7 @@ return (
 
             <button
               onClick={handleAdd}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
-              style={{ background: '#d4780f' }}
+              className="w-full h-13 rounded-xl text-sm font-bold text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light active:scale-95 transition-all duration-200"
             >
               Ajouter au stock
             </button>
@@ -538,21 +544,21 @@ return (
           className="fixed inset-0 z-[70] flex items-center justify-center px-4"
           style={{ background: 'rgba(0,0,0,0.9)' }}
         >
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: '#161616', border: '1px solid #3a2a00' }}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: '#1A1A24', border: '1px solid #3a2a00' }}>
             <div className="px-5 pt-5 pb-3">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xl">⚠️</span>
                 <p className="text-[#fbbf24] font-bold text-base">Seuil critique atteint !</p>
               </div>
               <p className="text-white font-semibold text-sm">{alertTool.type} Ø{alertTool.diametre}mm · Z={alertTool.dents}</p>
-              <p className="text-[#555] text-xs mt-0.5">LC={alertTool.lc}mm · LT={alertTool.lt}mm</p>
+              <p className="text-spincut-subtle text-xs mt-0.5">LC={alertTool.lc}mm · LT={alertTool.lt}mm</p>
               <div className="mt-4 flex items-center gap-3">
                 <div className="flex-1 rounded-xl p-3 text-center" style={{ background: '#1a1000', border: '1px solid #3a2a00' }}>
-                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#888' }}>Reste</p>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#9999AA' }}>Reste</p>
                   <p className="text-2xl font-black" style={{ color: '#fbbf24' }}>{alertTool.qty}</p>
                 </div>
                 <div className="flex-1 rounded-xl p-3 text-center" style={{ background: '#0d1a0d', border: '1px solid #1a4a1a' }}>
-                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#888' }}>À livrer</p>
+                  <p className="text-[10px] uppercase tracking-wider" style={{ color: '#9999AA' }}>À livrer</p>
                   <p className="text-2xl font-black" style={{ color: '#4ade80' }}>{alertTool.orderQty ?? '?'}</p>
                 </div>
               </div>
@@ -567,7 +573,7 @@ return (
               <button
                 onClick={() => setAlertTool(null)}
                 className="w-full py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
-                style={{ background: '#1e1e1e' }}
+                style={{ background: '#1A1A24' }}
               >
                 OK
               </button>
@@ -586,12 +592,12 @@ function NumberField({ label, value, onChange, placeholder }: {
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>{label}</p>
+      <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555566' }}>{label}</p>
       <input
         type="number" inputMode="decimal" value={value}
         onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-        style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
+        className="w-full rounded-xl px-4 h-12 text-sm text-white outline-none placeholder-spincut-subtle focus:!border-spincut-gold transition-all duration-200"
+        style={{ background: '#0A0A0F', border: '1px solid #2A2A3A' }}
       />
     </div>
   )
@@ -602,12 +608,12 @@ function TextField({ label, value, onChange, placeholder }: {
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555' }}>{label}</p>
+      <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#555566' }}>{label}</p>
       <input
         type="text" value={value}
         onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none placeholder-[#444]"
-        style={{ background: '#0d0d0d', border: '1px solid #2a2a2a' }}
+        className="w-full rounded-xl px-4 h-12 text-sm text-white outline-none placeholder-spincut-subtle focus:!border-spincut-gold transition-all duration-200"
+        style={{ background: '#0A0A0F', border: '1px solid #2A2A3A' }}
       />
     </div>
   )

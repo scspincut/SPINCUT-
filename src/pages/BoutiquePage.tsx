@@ -90,7 +90,7 @@ function uid(p: CatalogProduct) { return `${p.ref}__${p.row}` }
 function StockBadge({ stock }: { stock: number }) {
   if (stock === 0) return <span className="flex items-center gap-1 text-[10px] font-semibold text-red-400"><span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />Rupture</span>
   if (stock <= 5) return <span className="flex items-center gap-1 text-[10px] font-semibold text-orange-400"><span className="w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" />Stock faible ({stock})</span>
-  return <span className="flex items-center gap-1 text-[10px] text-[#555]"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />En stock ({stock})</span>
+  return <span className="flex items-center gap-1 text-[10px] text-spincut-subtle"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />En stock ({stock})</span>
 }
 
 // ── Schéma technique automatique ──────────────────────────────────────────────
@@ -99,10 +99,10 @@ function CategoryImage({ category, shopTab, className = '', style }: { category:
   const [err, setErr] = useState(false)
   const src = shopTab === 'lames' ? CATEGORY_IMAGES['lame'] : (CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES['classique'])
   return (
-    <div className={`relative overflow-hidden ${className}`} style={{ background: '#0d0d0d', ...style }}>
+    <div className={`relative overflow-hidden ${className}`} style={{ background: '#0A0A0F', ...style }}>
       {/* Placeholder visible quand photo manquante */}
-      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
-        <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-spincut-card to-spincut-bg">
+        <span className="text-spincut-gold/20 font-black text-6xl select-none">S</span>
       </div>
       {!err && (
         <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover"
@@ -512,7 +512,7 @@ export default function BoutiquePage() {
     const outOfStock = item.stock === 0
     return (
       <div key={key}
-        className={`px-4 py-3.5 flex items-center gap-3 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-black'} ${outOfStock ? 'opacity-40' : ''}`}
+        className={`px-4 py-3.5 flex items-center gap-3 transition-colors ${selected ? 'bg-[#130e00]' : 'bg-spincut-bg'} ${outOfStock ? 'opacity-40' : ''}`}
       >
         {/* Gauche — tapper pour ouvrir la fiche */}
         <button
@@ -520,13 +520,13 @@ export default function BoutiquePage() {
           onClick={() => setSelectedProduct(item)}
         >
           <div className="flex items-center gap-1.5 flex-wrap mb-1">
-            <span className="font-mono text-[10px] text-[#444] bg-[#1a1a1a] px-1.5 py-0.5 rounded">{item.ref}</span>
+            <span className="font-mono text-[10px] text-spincut-subtle bg-spincut-card px-1.5 py-0.5 rounded">{item.ref}</span>
             <StockBadge stock={item.stock}/>
             {item.pm && <span className="text-[9px] font-bold bg-[#0d2a0d] text-green-400 px-1 py-0.5 rounded border border-green-800/40">PM</span>}
             <button
               onClick={e => { e.stopPropagation(); toggleFav(key) }}
               className="ml-0.5"
-              style={{ color: favorites.has(key) ? '#e03c3c' : '#333' }}
+              style={{ color: favorites.has(key) ? '#e03c3c' : '#2A2A3A' }}
             >
               <svg width="12" height="12" fill={favorites.has(key) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
@@ -534,36 +534,36 @@ export default function BoutiquePage() {
             </button>
           </div>
           <div className="flex items-center gap-1.5">
-            <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-[#ccc]'}`}>
-              {CATEGORY_META[item.category]?.label && <span className="text-[#d4780f]">{CATEGORY_META[item.category].label} </span>}
+            <p className={`text-sm font-medium leading-snug ${selected ? 'text-white' : 'text-spincut-muted'}`}>
+              {CATEGORY_META[item.category]?.label && <span className="text-spincut-gold">{CATEGORY_META[item.category].label} </span>}
               {item.designation}
             </p>
-            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="#333" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="#2A2A3A" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
             </svg>
           </div>
-          {selected && <p className="text-[#d4780f] text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
+          {selected && <p className="text-spincut-gold text-xs mt-0.5 font-medium">{fmt(qty * item.prix)} € HT</p>}
         </button>
 
         {/* Droite — prix + quantité */}
         <div className="flex-shrink-0 flex flex-col items-end gap-2">
           {item.prix > 0
-            ? <span className={`font-bold text-base ${selected ? 'text-[#d4780f]' : 'text-[#d4780f]/70'}`}>{fmt(item.prix)}€</span>
-            : <span className="text-[#444] text-xs">Sur devis</span>
+            ? <span className={`font-bold text-base ${selected ? 'text-spincut-gold' : 'text-spincut-gold/70'}`}>{fmt(item.prix)}€</span>
+            : <span className="text-spincut-subtle text-xs">Sur devis</span>
           }
           {!outOfStock && item.prix > 0 && (
             <div className="flex items-center gap-1.5">
               <button onClick={() => setQty(key, -1, item.stock)}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-[#d4780f] text-white' : 'bg-[#1a1a1a] border border-[#2a2a2a] text-[#555]'}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-colors ${qty > 0 ? 'bg-spincut-gold text-black' : 'bg-spincut-card border border-spincut-border text-spincut-subtle'}`}
               >−</button>
               {qty > 0 && (
                 <input type="number" min={0} max={item.stock} value={qty}
                   onChange={e => setQtyDirect(key, e.target.value, item.stock)}
-                  className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
+                  className="w-9 text-center bg-transparent text-spincut-gold font-bold text-sm outline-none"
                 />
               )}
               <button onClick={() => setQty(key, +1, item.stock, 'Ajouté au panier')}
-                className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white hover:bg-[#b86400] transition-colors active:scale-95"
+                className="w-8 h-8 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-lg text-black hover:bg-spincut-gold-light transition-colors active:scale-95"
               >+</button>
             </div>
           )}
@@ -573,13 +573,13 @@ export default function BoutiquePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-spincut-bg text-white flex flex-col">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-30 bg-black border-b border-[#1a1a1a]">
+      <header className="sticky top-0 z-30 bg-spincut-bg border-b border-spincut-border">
         <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
           {!homeView && (
-            <button onClick={goHome} className="absolute left-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors">
+            <button onClick={goHome} className="absolute left-4 flex items-center gap-1 text-spincut-subtle hover:text-white text-xs transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
@@ -589,7 +589,7 @@ export default function BoutiquePage() {
           <img src="/logo-banniere.png" alt="SPINCUT Outils CNC" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
           <button
             onClick={() => { logout(); navigate('/') }}
-            className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
+            className="absolute right-4 flex items-center gap-1 text-spincut-subtle hover:text-white text-xs transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -599,22 +599,22 @@ export default function BoutiquePage() {
         </div>
         {!homeView && !favsView && (
           <>
-            <div className="flex border-b border-[#1a1a1a] max-w-2xl mx-auto">
+            <div className="flex border-b border-spincut-border max-w-2xl mx-auto">
               {SHOP_TABS.map(t => (
                 <button key={t.id}
                   onClick={() => { setShopTab(t.id as typeof shopTab); setActiveCategory(null); resetFilters(); clearSearch() }}
-                  className="flex-1 py-3 flex items-center justify-center transition-colors"
-                  style={{ borderBottom: shopTab === t.id && !searchQuery ? '2px solid #d4780f' : '2px solid transparent' }}
+                  className="flex-1 py-3 flex items-center justify-center transition-all duration-200"
+                  style={{ borderBottom: shopTab === t.id && !searchQuery ? '2px solid #D4940A' : '2px solid transparent' }}
                 >
-                  <span className="text-[11px] font-bold leading-tight text-center"
-                    style={{ color: shopTab === t.id && !searchQuery ? '#d4780f' : '#888' }}>{t.label}</span>
+                  <span className="text-xs font-bold leading-tight text-center"
+                    style={{ color: shopTab === t.id && !searchQuery ? '#D4940A' : '#9999AA' }}>{t.label}</span>
                 </button>
               ))}
             </div>
-            <div className="px-4 py-2 max-w-2xl mx-auto">
+            <div className="px-4 py-3 max-w-2xl mx-auto">
               <div className="relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  style={{ color: searchFocused || searchQuery ? '#d4780f' : '#444' }}>
+                  style={{ color: searchFocused || searchQuery ? '#D4940A' : '#555566' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
                 </svg>
                 <input
@@ -623,15 +623,15 @@ export default function BoutiquePage() {
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   placeholder="Rechercher — réf, diamètre, type…"
-                  className="w-full pl-9 pr-9 py-2 rounded-xl text-sm text-white outline-none placeholder-[#444] transition-colors"
+                  className="w-full pl-10 pr-9 h-12 rounded-xl text-sm text-white outline-none placeholder-spincut-subtle transition-all duration-200"
                   style={{
-                    background: '#0d0d0d',
-                    border: `1px solid ${searchFocused || searchQuery ? '#d4780f55' : '#1e1e1e'}`,
+                    background: '#0A0A0F',
+                    border: `1px solid ${searchFocused || searchQuery ? '#D4940A' : '#2A2A3A'}`,
                   }}
                 />
                 {searchQuery && (
                   <button onClick={clearSearch}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-white transition-colors">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-spincut-subtle hover:text-white transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -653,11 +653,11 @@ export default function BoutiquePage() {
                 <div key={i} className="absolute inset-0 transition-opacity duration-1000"
                   style={{ opacity: i === heroBg ? 1 : 0, backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }}/>
               ))}
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 78%, #000 100%)' }}/>
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 78%, #0A0A0F 100%)' }}/>
               <div className="absolute bottom-3 right-4 flex gap-1">
                 {HERO_PHOTOS.map((_, i) => (
                   <button key={i} onClick={() => setHeroBg(i)}
-                    style={{ width: i === heroBg ? '14px' : '5px', height: '5px', borderRadius: '3px', background: i === heroBg ? '#d4780f' : 'rgba(255,255,255,0.3)', border: 'none', padding: 0, transition: 'all 0.2s', cursor: 'pointer' }}/>
+                    style={{ width: i === heroBg ? '14px' : '5px', height: '5px', borderRadius: '3px', background: i === heroBg ? '#D4940A' : 'rgba(255,255,255,0.3)', border: 'none', padding: 0, transition: 'all 0.2s', cursor: 'pointer' }}/>
                 ))}
               </div>
             </div>
@@ -665,9 +665,9 @@ export default function BoutiquePage() {
             <div className="px-4 space-y-3 pt-5 pb-6">
               <div className="flex gap-2 pt-1">
                 {[{ icon: '⚡', label: 'Expédié sous 24h' }, { icon: '✓', label: 'Qualité garantie' }, { icon: '⏱', label: 'Réponse < 1h' }].map(b => (
-                  <div key={b.label} className="flex-1 rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 text-center" style={{ background: '#0d0d0d', border: '1px solid #1e1e1e' }}>
+                  <div key={b.label} className="flex-1 rounded-xl px-2 py-2.5 flex flex-col items-center gap-1 text-center" style={{ background: '#0A0A0F', border: '1px solid #2A2A3A' }}>
                     <span className="text-base leading-none">{b.icon}</span>
-                    <span className="text-[9px] font-semibold leading-tight" style={{ color: '#555' }}>{b.label}</span>
+                    <span className="text-[9px] font-semibold leading-tight" style={{ color: '#555566' }}>{b.label}</span>
                   </div>
                 ))}
               </div>
@@ -677,32 +677,32 @@ export default function BoutiquePage() {
                 <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #2a1a00', background: '#0a0600' }}>
                   <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #1a1000' }}>
                     <div className="flex items-center gap-2">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="#d4780f" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="#D4940A" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                       </svg>
-                      <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#d4780f' }}>Commandes en cours</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#D4940A' }}>Commandes en cours</p>
                     </div>
-                    <button onClick={() => navigate('/commande')} className="text-[10px] text-[#555] hover:text-white transition-colors">Voir →</button>
+                    <button onClick={() => navigate('/commande')} className="text-[10px] text-spincut-subtle hover:text-white transition-colors">Voir →</button>
                   </div>
                   {dashOrders.map((order, i) => (
-                    <div key={order.id} className="px-4 py-3" style={{ borderBottom: i < dashOrders.length - 1 ? '1px solid #111' : 'none' }}>
+                    <div key={order.id} className="px-4 py-3" style={{ borderBottom: i < dashOrders.length - 1 ? '1px solid #111118' : 'none' }}>
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono" style={{ color: '#555' }}>{order.number || `#${order.id.slice(-6)}`}</span>
+                          <span className="text-[10px] font-mono" style={{ color: '#555566' }}>{order.number || `#${order.id.slice(-6)}`}</span>
                           <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={{
                             background: order.state === 'signed' ? '#0d1a0d' : '#1a1000',
-                            color: order.state === 'signed' ? '#4ade80' : '#d4780f',
+                            color: order.state === 'signed' ? '#4ade80' : '#D4940A',
                           }}>{order.label}</span>
                         </div>
-                        <span className="text-sm font-bold text-white">{fmt(order.total)} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
+                        <span className="text-sm font-bold text-white">{fmt(order.total)} <span className="text-[10px] font-normal text-spincut-subtle">€ HT</span></span>
                       </div>
                       {order.items.length > 0 && (
-                        <p className="text-[11px]" style={{ color: '#555' }}>
+                        <p className="text-[11px]" style={{ color: '#555566' }}>
                           {order.items.slice(0, 2).map(it => it.designation || it.ref).join(' · ')}{order.items.length > 2 ? ' …' : ''}
                         </p>
                       )}
                       {order.date > 0 && (
-                        <p className="text-[10px] mt-0.5" style={{ color: '#333' }}>{new Date(order.date).toLocaleDateString('fr-FR')}</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: '#2A2A3A' }}>{new Date(order.date).toLocaleDateString('fr-FR')}</p>
                       )}
                     </div>
                   ))}
@@ -722,28 +722,28 @@ export default function BoutiquePage() {
                   {dashInvoices.map((inv, i) => (
                     <div key={inv.id} className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: i < dashInvoices.length - 1 ? '1px solid #110505' : 'none' }}>
                       <div>
-                        <span className="text-[11px] font-mono" style={{ color: '#888' }}>{inv.number || `#${inv.id.slice(-6)}`}</span>
+                        <span className="text-[11px] font-mono" style={{ color: '#9999AA' }}>{inv.number || `#${inv.id.slice(-6)}`}</span>
                         {inv.dueAt && inv.dueAt > 0 && (
                           <p className="text-[10px] text-red-400 mt-0.5">Échéance : {new Date(inv.dueAt).toLocaleDateString('fr-FR')}</p>
                         )}
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-bold text-white">{fmt(inv.amount)}</span>
-                        <span className="text-[10px] font-normal text-[#555]"> € TTC</span>
+                        <span className="text-[10px] font-normal text-spincut-subtle"> € TTC</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              <p className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: '#444' }}>Boutique</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest pt-1" style={{ color: '#555566' }}>Boutique</p>
 
-              <button onClick={() => enterTab('cnc')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1a0800 0%, #030100 100%)', border: '1px solid #d4780f44' }}>
+              <button onClick={() => enterTab('cnc')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1a0800 0%, #030100 100%)', border: '1px solid #D4940A44' }}>
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-black text-xl leading-tight">Fraises CNC</p>
                   </div>
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #d4780f, #3a1e0044)', borderRadius: '2px', flexShrink: 0 }}/>
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #D4940A, #3a1e0044)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
               </button>
 
@@ -756,12 +756,12 @@ export default function BoutiquePage() {
                 </div>
               </button>
 
-              <button onClick={() => enterTab('lames')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1a1a1a 0%, #080808 100%)', border: '1px solid #3a3a3a' }}>
+              <button onClick={() => enterTab('lames')} className="w-full rounded-2xl relative overflow-hidden active:scale-[0.98] transition-all text-left" style={{ height: '130px', background: 'linear-gradient(135deg, #1A1A24 0%, #0A0A0F 100%)', border: '1px solid #2A2A3A' }}>
                 <div className="absolute inset-0 flex items-center px-5">
                   <div className="flex-1 min-w-0">
                     <p className="font-black text-xl leading-tight" style={{ color: '#d0d0d0' }}>Lames Circulaires Carbure</p>
                   </div>
-                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #aaaaaa, #3a3a3a)', borderRadius: '2px', flexShrink: 0 }}/>
+                  <div style={{ width: '4px', height: '60px', background: 'linear-gradient(to bottom, #9999AA, #2A2A3A)', borderRadius: '2px', flexShrink: 0 }}/>
                 </div>
               </button>
 
@@ -794,11 +794,11 @@ export default function BoutiquePage() {
         {!homeView && favsView && (
           <>
             <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-              <button onClick={goHome} className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors">
+              <button onClick={goHome} className="flex items-center gap-1 text-xs text-spincut-subtle hover:text-white transition-colors">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Boutique
               </button>
-              <span className="text-[#333] text-xs">·</span>
+              <span className="text-spincut-border text-xs">·</span>
               <span className="flex items-center gap-1 text-xs" style={{ color: '#e03c3c' }}>
                 <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                 Mes outils favoris
@@ -806,21 +806,21 @@ export default function BoutiquePage() {
             </div>
             {favoriteItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
-                <svg className="w-12 h-12 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-12 h-12 text-spincut-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
-                <p className="text-[#444] text-sm">Aucun outil en favori</p>
-                <p className="text-[#333] text-xs">Appuyez sur ♥ sur un produit pour l'ajouter</p>
+                <p className="text-spincut-subtle text-sm">Aucun outil en favori</p>
+                <p className="text-spincut-border text-xs">Appuyez sur ♥ sur un produit pour l'ajouter</p>
                 <button
                   onClick={() => { setFavsView(false); setHomeView(false) }}
                   className="mt-2 py-2.5 px-6 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
-                  style={{ background: '#d4780f' }}
+                  style={{ background: '#D4940A' }}
                 >
                   Voir la boutique
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-[#161616]">
+              <div className="divide-y divide-spincut-border">
                 {favoriteItems.map(item => renderProductRow(item))}
               </div>
             )}
@@ -831,19 +831,19 @@ export default function BoutiquePage() {
         {!homeView && !favsView && searchResults && (
           <div className="pb-8">
             <div className="px-4 pt-4 pb-3 flex items-center gap-2">
-              <p className="text-[#555] text-xs flex-1">
-                <span className="text-white font-semibold">{searchResults.total}</span> résultat{searchResults.total !== 1 ? 's' : ''} pour «&nbsp;<span style={{ color: '#d4780f' }}>{searchQuery}</span>&nbsp;»
+              <p className="text-spincut-subtle text-xs flex-1">
+                <span className="text-white font-semibold">{searchResults.total}</span> résultat{searchResults.total !== 1 ? 's' : ''} pour «&nbsp;<span style={{ color: '#D4940A' }}>{searchQuery}</span>&nbsp;»
               </p>
-              <button onClick={clearSearch} className="text-xs text-[#555] hover:text-white transition-colors">Effacer</button>
+              <button onClick={clearSearch} className="text-xs text-spincut-subtle hover:text-white transition-colors">Effacer</button>
             </div>
 
             {searchResults.total === 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
-                <svg className="w-10 h-10 text-[#2a2a2a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-spincut-border" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
                 </svg>
-                <p className="text-[#444] text-sm">Aucun résultat pour «&nbsp;{searchQuery}&nbsp;»</p>
-                <p className="text-[#333] text-xs">Essayez une référence, un diamètre ou un type</p>
+                <p className="text-spincut-subtle text-sm">Aucun résultat pour «&nbsp;{searchQuery}&nbsp;»</p>
+                <p className="text-spincut-border text-xs">Essayez une référence, un diamètre ou un type</p>
               </div>
             )}
 
@@ -851,17 +851,17 @@ export default function BoutiquePage() {
             {searchResults.cncGroups.length > 0 && (
               <div className="mb-2">
                 <div className="px-4 py-2 flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#444' }}>Fraises CNC</span>
-                  <div className="flex-1 h-px" style={{ background: '#1e1e1e' }}/>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#555566' }}>Fraises CNC</span>
+                  <div className="flex-1 h-px" style={{ background: '#1A1A24' }}/>
                 </div>
                 {searchResults.cncGroups.map(group => (
                   <div key={group.catId}>
                     <div className="px-4 py-1.5 flex items-center gap-2">
                       <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                        style={{ background: '#1a0a00', color: '#d4780f' }}>{group.label}</span>
-                      <span className="text-[10px]" style={{ color: '#333' }}>{group.products.length}</span>
+                        style={{ background: '#1a0a00', color: '#D4940A' }}>{group.label}</span>
+                      <span className="text-[10px]" style={{ color: '#2A2A3A' }}>{group.products.length}</span>
                     </div>
-                    <div className="divide-y divide-[#161616]">
+                    <div className="divide-y divide-spincut-border">
                       {group.products.map(p => renderProductRow(p))}
                     </div>
                   </div>
@@ -873,8 +873,8 @@ export default function BoutiquePage() {
             {searchResults.cmtRes.length > 0 && (
               <div className="mb-2">
                 <div className="px-4 py-2 flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#444' }}>Fraises Défonceuse CMT</span>
-                  <div className="flex-1 h-px" style={{ background: '#1e1e1e' }}/>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#555566' }}>Fraises Défonceuse CMT</span>
+                  <div className="flex-1 h-px" style={{ background: '#1A1A24' }}/>
                 </div>
                 <div className="px-4 grid grid-cols-2 gap-3">
                   {searchResults.cmtRes.map(group => {
@@ -887,19 +887,19 @@ export default function BoutiquePage() {
                       : group.photoUrl
                     return (
                       <div key={group.key} className="rounded-2xl overflow-hidden flex flex-col"
-                        style={{ background: '#111', border: '1px solid #1e1e1e' }}>
-                        <div className="relative aspect-square bg-[#0a0a0a]" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
+                        style={{ background: '#111118', border: '1px solid #2A2A3A' }}>
+                        <div className="relative aspect-square bg-spincut-bg" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
                           {photoSrc
                             ? <img src={photoSrc} alt="" className="w-full h-full object-contain p-3"/>
-                            : <div className="w-full h-full flex items-center justify-center text-[#2a2a2a] text-3xl font-black">CMT</div>}
+                            : <div className="w-full h-full flex items-center justify-center text-spincut-border text-3xl font-black">CMT</div>}
                           {!anyInStock && (
                             <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
-                              <span className="text-[10px] font-bold text-red-400 bg-black/80 px-2 py-1 rounded-lg">Rupture</span>
+                              <span className="text-[10px] font-bold text-red-400 bg-spincut-bg/80 px-2 py-1 rounded-lg">Rupture</span>
                             </div>
                           )}
                           <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
                             className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
-                            style={{ background: anyFaved ? '#d4780f' : 'rgba(0,0,0,0.7)', border: `1px solid ${anyFaved ? '#d4780f' : '#2a2a2a'}` }}>
+                            style={{ background: anyFaved ? '#D4940A' : 'rgba(0,0,0,0.7)', border: `1px solid ${anyFaved ? '#D4940A' : '#2A2A3A'}` }}>
                             <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
@@ -907,8 +907,8 @@ export default function BoutiquePage() {
                         </div>
                         <div className="p-3" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
                           <p className="text-white text-xs font-bold truncate">{group.products[0].designation || group.products[0].famille || group.products[0].ref}</p>
-                          <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{group.products.length} variante{group.products.length > 1 ? 's' : ''}</p>
-                          {minPrix > 0 && <p className="text-[11px] font-bold mt-1" style={{ color: '#d4780f' }}>dès {minPrix.toFixed(2).replace('.', ',')} €</p>}
+                          <p className="text-[10px] mt-0.5" style={{ color: '#555566' }}>{group.products.length} variante{group.products.length > 1 ? 's' : ''}</p>
+                          {minPrix > 0 && <p className="text-[11px] font-bold mt-1" style={{ color: '#D4940A' }}>dès {minPrix.toFixed(2).replace('.', ',')} €</p>}
                         </div>
                       </div>
                     )
@@ -921,8 +921,8 @@ export default function BoutiquePage() {
             {searchResults.lamesRes.length > 0 && (
               <div className="mb-2">
                 <div className="px-4 py-2 flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#444' }}>Lames Carbure</span>
-                  <div className="flex-1 h-px" style={{ background: '#1e1e1e' }}/>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#555566' }}>Lames Carbure</span>
+                  <div className="flex-1 h-px" style={{ background: '#1A1A24' }}/>
                 </div>
                 <div className="px-4 grid grid-cols-2 gap-3">
                   {searchResults.lamesRes.map(group => {
@@ -935,19 +935,19 @@ export default function BoutiquePage() {
                       : group.photoUrl
                     return (
                       <div key={group.key} className="rounded-2xl overflow-hidden flex flex-col"
-                        style={{ background: '#111', border: '1px solid #1e1e1e' }}>
-                        <div className="relative aspect-square bg-[#0a0a0a]" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
+                        style={{ background: '#111118', border: '1px solid #2A2A3A' }}>
+                        <div className="relative aspect-square bg-spincut-bg" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
                           {photoSrc
                             ? <img src={photoSrc} alt="" className="w-full h-full object-contain p-3"/>
-                            : <div className="w-full h-full flex items-center justify-center text-[#2a2a2a] text-3xl font-black">LAME</div>}
+                            : <div className="w-full h-full flex items-center justify-center text-spincut-border text-3xl font-black">LAME</div>}
                           {!anyInStock && (
                             <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
-                              <span className="text-[10px] font-bold text-red-400 bg-black/80 px-2 py-1 rounded-lg">Rupture</span>
+                              <span className="text-[10px] font-bold text-red-400 bg-spincut-bg/80 px-2 py-1 rounded-lg">Rupture</span>
                             </div>
                           )}
                           <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
                             className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
-                            style={{ background: anyFaved ? '#d4780f' : 'rgba(0,0,0,0.7)', border: `1px solid ${anyFaved ? '#d4780f' : '#2a2a2a'}` }}>
+                            style={{ background: anyFaved ? '#D4940A' : 'rgba(0,0,0,0.7)', border: `1px solid ${anyFaved ? '#D4940A' : '#2A2A3A'}` }}>
                             <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
@@ -955,8 +955,8 @@ export default function BoutiquePage() {
                         </div>
                         <div className="p-3" onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null) }}>
                           <p className="text-white text-xs font-bold truncate">{group.products[0].designation || group.products[0].famille || group.products[0].ref}</p>
-                          <p className="text-[10px] mt-0.5" style={{ color: '#555' }}>{group.products.length} variante{group.products.length > 1 ? 's' : ''}</p>
-                          {minPrix > 0 && <p className="text-[11px] font-bold mt-1" style={{ color: '#d4780f' }}>dès {minPrix.toFixed(2).replace('.', ',')} €</p>}
+                          <p className="text-[10px] mt-0.5" style={{ color: '#555566' }}>{group.products.length} variante{group.products.length > 1 ? 's' : ''}</p>
+                          {minPrix > 0 && <p className="text-[11px] font-bold mt-1" style={{ color: '#D4940A' }}>dès {minPrix.toFixed(2).replace('.', ',')} €</p>}
                         </div>
                       </div>
                     )
@@ -975,17 +975,17 @@ export default function BoutiquePage() {
               <div className="px-4 pt-4 pb-1 flex items-center gap-2">
                 {usesCategories ? (
                   <button onClick={() => { setActiveCategory(null); resetFilters(); setFiltersOpen(false) }}
-                    className="flex items-center gap-1 text-xs text-[#555] hover:text-white transition-colors flex-1">
+                    className="flex items-center gap-1 text-xs text-spincut-subtle hover:text-white transition-colors flex-1">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     {activeCategory ? CATEGORY_META[activeCategory]?.label : ''}
                   </button>
                 ) : (
-                  <span className="flex-1 text-xs text-[#555]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
+                  <span className="flex-1 text-xs text-spincut-subtle">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>
                 )}
-                {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-[#555] hover:text-red-400 transition-colors">Effacer</button>}
-                {usesCategories && <span className="text-xs text-[#444]">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>}
+                {activeFilterCount > 0 && <button onClick={resetFilters} className="text-xs text-spincut-subtle hover:text-red-400 transition-colors">Effacer</button>}
+                {usesCategories && <span className="text-xs text-spincut-subtle">{filtered.length} produit{filtered.length !== 1 ? 's' : ''}</span>}
                 <button onClick={() => setFiltersOpen(o => !o)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'}`}>
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${activeFilterCount > 0 ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-muted'}`}>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M7 12h10M11 20h2"/></svg>
                   Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                 </button>
@@ -994,34 +994,34 @@ export default function BoutiquePage() {
 
             {/* Panneau filtres */}
             {(activeCategory || !usesCategories) && filtersOpen && (
-              <div className="border-t border-[#1a1a1a] bg-[#111]">
+              <div className="border-t border-spincut-border bg-spincut-surface">
                 <div className="max-w-2xl mx-auto px-4 py-3 space-y-2.5">
                   {diameters.length > 1 && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
+                      <span className="text-spincut-subtle text-[10px] font-bold uppercase tracking-wider w-6">Ø</span>
                       {diameters.map(d => (
                         <button key={d} onClick={() => setFilterDiam(p => p === d ? null : d)}
-                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDiam === d ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-subtle'}`}
                         >Ø{d}</button>
                       ))}
                     </div>
                   )}
                   {dentsValues.length > 1 && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
+                      <span className="text-spincut-subtle text-[10px] font-bold uppercase tracking-wider w-6">Z</span>
                       {dentsValues.map(d => (
                         <button key={d} onClick={() => setFilterDents(p => p === d ? null : d)}
-                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterDents === d ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-subtle'}`}
                         >Z{d}</button>
                       ))}
                     </div>
                   )}
                   {lcValues.length > 1 && (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[#555] text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
+                      <span className="text-spincut-subtle text-[10px] font-bold uppercase tracking-wider w-6">LC</span>
                       {lcValues.map(lc => (
                         <button key={lc} onClick={() => setFilterLC(p => p === lc ? null : lc)}
-                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-[#d4780f] border-[#d4780f] text-white' : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#666]'}`}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${filterLC === lc ? 'bg-spincut-gold border-spincut-gold text-black' : 'bg-spincut-card border-spincut-border text-spincut-subtle'}`}
                         >LC{lc}</button>
                       ))}
                     </div>
@@ -1031,7 +1031,7 @@ export default function BoutiquePage() {
             )}
 
             {catalogLoading && (
-              <div className="flex items-center justify-center py-20 gap-3 text-[#444]">
+              <div className="flex items-center justify-center py-20 gap-3 text-spincut-subtle">
                 <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -1052,39 +1052,38 @@ export default function BoutiquePage() {
                 {activeTabCatalog.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
                     <p className="text-white font-bold text-lg">Catalogue en cours de construction</p>
-                    <p className="text-[#555] text-sm max-w-xs">Les produits seront disponibles très prochainement.</p>
+                    <p className="text-spincut-subtle text-sm max-w-xs">Les produits seront disponibles très prochainement.</p>
                     <button
                       onClick={() => {
                         try { localStorage.removeItem('spincut_catalog_v3') } catch {}
                         window.location.reload()
                       }}
                       className="mt-1 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
-                      style={{ background: '#d4780f' }}
+                      style={{ background: '#D4940A' }}
                     >
                       Recharger le catalogue
                     </button>
                   </div>
                 ) : (
                   <>
-                    <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">Catégories</p>
+                    <p className="text-spincut-gold text-xs tracking-widest uppercase font-semibold mb-3">Catégories</p>
                     <div className="grid grid-cols-2 gap-3">
                       {tabs.map(([id, meta]) => {
                         const count = activeTabCatalog.filter(p => p.category === id).length
                         return (
                           <button key={id} onClick={() => selectCategory(id)}
-                            className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
-                            style={{ background: '#111', border: '1px solid #1e1e1e' }}
+                            className="bg-spincut-card rounded-2xl overflow-hidden text-left border border-spincut-border h-36 relative active:scale-[0.97] hover:border-spincut-gold/50 transition-all duration-200"
                           >
                             {/* Zone photo */}
-                            <CategoryImage category={id} shopTab={shopTab} className="rounded-t-2xl" style={{ height: '120px' }}/>
+                            <div className="absolute inset-0"><CategoryImage category={id} shopTab={shopTab} className="w-full h-full"/></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-spincut-bg via-spincut-bg/60 to-transparent"/>
+                            {/* Badge nombre de produits */}
+                            <span className="bg-spincut-gold text-black text-xs font-bold rounded-full px-2 py-0.5 absolute top-3 right-3">{count}</span>
                             {/* Zone texte */}
-                            <div className="px-3 py-2.5">
-                              <div className="flex items-start justify-between gap-1">
-                                <p className="text-white font-semibold text-sm leading-tight">{meta.label}</p>
-                                <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 mt-0.5">{count}</span>
-                              </div>
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                              <p className="text-white font-bold text-base leading-tight">{meta.label}</p>
                               {CATEGORY_DESC[id] && (
-                                <p className="text-[#555] text-[11px] mt-0.5 leading-tight">{CATEGORY_DESC[id]}</p>
+                                <p className="text-spincut-muted text-xs mt-0.5 leading-tight line-clamp-1">{CATEGORY_DESC[id]}</p>
                               )}
                             </div>
                           </button>
@@ -1099,7 +1098,7 @@ export default function BoutiquePage() {
             {/* ── Grille photos CMT ── */}
             {!catalogLoading && !catalogError && shopTab === 'cmt' && (
               <div className="px-4 pt-4 pb-4">
-                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">
+                <p className="text-spincut-subtle text-[10px] uppercase tracking-widest font-bold mb-3">
                   {cmtGroups.length} produit{cmtGroups.length > 1 ? 's' : ''}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -1116,7 +1115,7 @@ export default function BoutiquePage() {
                       <div
                         key={group.key}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
-                        style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                        style={{ background: '#111118', border: `1px solid ${totalQty > 0 ? '#D4940A' : '#2A2A3A'}` }}
                       >
                         {/* Photo */}
                         <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}
@@ -1130,15 +1129,15 @@ export default function BoutiquePage() {
                               })()
                             : <div className="absolute inset-0 flex items-center justify-center"
                                 style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
-                                <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+                                <span className="text-[#D4940A22] font-black text-4xl select-none">S</span>
                               </div>
                           }
                           <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
                           {totalQty > 0 && (
-                            <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>
+                            <span className="absolute top-2 right-2 bg-spincut-gold text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>
                           )}
                           {group.products.length > 1 && (
-                            <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                            <span className="absolute top-2 left-2 bg-spincut-bg/60 text-spincut-gold text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                               {group.products.length} dim.
                             </span>
                           )}
@@ -1148,7 +1147,7 @@ export default function BoutiquePage() {
                           </span>
                           <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
                             className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
-                            style={{ background: anyFaved ? '#e03c3c' : 'rgba(0,0,0,0.6)', border: `1px solid ${anyFaved ? '#e03c3c' : '#2a2a2a'}` }}>
+                            style={{ background: anyFaved ? '#e03c3c' : 'rgba(0,0,0,0.6)', border: `1px solid ${anyFaved ? '#e03c3c' : '#2A2A3A'}` }}>
                             <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
@@ -1159,8 +1158,8 @@ export default function BoutiquePage() {
                           <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
                           <div className="mt-1.5">
                             {minPrice > 0
-                              ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span>
-                              : <span className="text-[#444] text-[10px]">Sur devis</span>
+                              ? <span className="text-spincut-gold font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span>
+                              : <span className="text-spincut-subtle text-[10px]">Sur devis</span>
                             }
                           </div>
                         </div>
@@ -1174,7 +1173,7 @@ export default function BoutiquePage() {
             {/* ── Grille photos Lames ── */}
             {!catalogLoading && !catalogError && shopTab === 'lames' && (
               <div className="px-4 pt-4 pb-4">
-                <p className="text-[#444] text-[10px] uppercase tracking-widest font-bold mb-3">
+                <p className="text-spincut-subtle text-[10px] uppercase tracking-widest font-bold mb-3">
                   {lamesGroups.length} produit{lamesGroups.length > 1 ? 's' : ''}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -1191,7 +1190,7 @@ export default function BoutiquePage() {
                       <div
                         key={group.key}
                         className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all"
-                        style={{ background: '#111', border: `1px solid ${totalQty > 0 ? '#d4780f55' : '#1e1e1e'}` }}
+                        style={{ background: '#111118', border: `1px solid ${totalQty > 0 ? '#D4940A' : '#2A2A3A'}` }}
                       >
                         <div className="relative overflow-hidden" style={{ height: '140px', background: '#f5f5f5' }}
                           onClick={() => { setSelectedProduct(group.products[0]); setBsFilterØ(null); setBsFilterI(null); setBsFilterS(null); setPhotoIndex(0) }}>
@@ -1199,15 +1198,15 @@ export default function BoutiquePage() {
                             ? <AutoPhoto urls={[group.photoUrl, LAMES_PHOTO2_MAP[group.photoUrl]].filter(Boolean) as string[]} externalIdx={syncPhotoIdx} />
                             : <div className="absolute inset-0 flex items-center justify-center"
                                 style={{ background: 'linear-gradient(135deg, #1a0800 0%, #0a0500 100%)' }}>
-                                <span className="text-[#d4780f22] font-black text-4xl select-none">S</span>
+                                <span className="text-[#D4940A22] font-black text-4xl select-none">S</span>
                               </div>
                           }
                           <div className="absolute inset-x-0 bottom-0 h-8" style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))' }}/>
                           {totalQty > 0 && (
-                            <span className="absolute top-2 right-2 bg-[#d4780f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>
+                            <span className="absolute top-2 right-2 bg-spincut-gold text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">×{totalQty}</span>
                           )}
                           {group.products.length > 1 && (
-                            <span className="absolute top-2 left-2 bg-black/60 text-[#d4780f] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                            <span className="absolute top-2 left-2 bg-spincut-bg/60 text-spincut-gold text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                               {group.products.length} dim.
                             </span>
                           )}
@@ -1217,7 +1216,7 @@ export default function BoutiquePage() {
                           </span>
                           <button onClick={e => { e.stopPropagation(); toggleGroupFav(group.products) }}
                             className="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90"
-                            style={{ background: anyFaved ? '#e03c3c' : 'rgba(0,0,0,0.6)', border: `1px solid ${anyFaved ? '#e03c3c' : '#2a2a2a'}` }}>
+                            style={{ background: anyFaved ? '#e03c3c' : 'rgba(0,0,0,0.6)', border: `1px solid ${anyFaved ? '#e03c3c' : '#2A2A3A'}` }}>
                             <svg className="w-3.5 h-3.5" fill={anyFaved ? 'white' : 'none'} stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
@@ -1227,8 +1226,8 @@ export default function BoutiquePage() {
                           <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2">{groupName}</p>
                           <div className="mt-1.5">
                             {minPrice > 0
-                              ? <span className="text-[#d4780f] font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span>
-                              : <span className="text-[#444] text-[10px]">Sur devis</span>
+                              ? <span className="text-spincut-gold font-bold text-sm">{group.products.length > 1 ? 'Dès ' : ''}{fmt(minPrice)} €</span>
+                              : <span className="text-spincut-subtle text-[10px]">Sur devis</span>
                             }
                           </div>
                         </div>
@@ -1241,11 +1240,11 @@ export default function BoutiquePage() {
 
             {/* ── Liste produits (CNC + Lames sans photo) ── */}
             {!catalogLoading && !catalogError && shopTab !== 'cmt' && shopTab !== 'lames' && (activeCategory || !usesCategories) && (
-              <div className="divide-y divide-[#161616]">
+              <div className="divide-y divide-spincut-border">
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 gap-2">
-                    <p className="text-[#444] text-sm">Aucun produit pour ces filtres</p>
-                    {activeFilterCount > 0 && <button onClick={resetFilters} className="text-[#d4780f] text-xs underline">Effacer les filtres</button>}
+                    <p className="text-spincut-subtle text-sm">Aucun produit pour ces filtres</p>
+                    {activeFilterCount > 0 && <button onClick={resetFilters} className="text-spincut-gold text-xs underline">Effacer les filtres</button>}
                   </div>
                 ) : filtered.map(item => renderProductRow(item))}
               </div>
@@ -1265,7 +1264,7 @@ export default function BoutiquePage() {
         }}
       >
         <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl"
-          style={{ background: '#d4780f', color: '#fff', whiteSpace: 'nowrap' }}>
+          style={{ background: '#D4940A', color: '#fff', whiteSpace: 'nowrap' }}>
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
           </svg>
@@ -1284,7 +1283,7 @@ export default function BoutiquePage() {
         >
           <div
             className="w-full rounded-2xl overflow-hidden flex flex-col"
-            style={{ background: '#111', maxHeight: '92vh', maxWidth: '500px', border: '1px solid #2a2a2a' }}
+            style={{ background: '#111118', maxHeight: '92vh', maxWidth: '500px', border: '1px solid #2A2A3A' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Photo — sticky, does not scroll */}
@@ -1361,7 +1360,7 @@ export default function BoutiquePage() {
                     { label: currentLamesGroup ? 'Alésage' : 'S',  all: bsAllS, avail: bsAvailS, active: bsFilterS, set: setBsFilterS },
                   ] as const).filter(row => row.all.length > 0).map(row => (
                     <div key={row.label} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
-                      <span className="text-[#d4780f] text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
+                      <span className="text-spincut-gold text-[10px] font-bold flex-shrink-0 w-3">{row.label}</span>
                       {row.all.map(v => {
                         const isSelected = row.active === v
                         const isAvail = row.avail === null || row.avail.has(v)
@@ -1370,9 +1369,9 @@ export default function BoutiquePage() {
                             onClick={() => isAvail ? row.set(isSelected ? null : v) : undefined}
                             className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all"
                             style={{
-                              background: isSelected ? '#d4780f' : '#1a1a1a',
-                              color: isSelected ? 'white' : isAvail ? '#bbb' : '#333',
-                              border: `1px solid ${isSelected ? '#d4780f' : isAvail ? '#333' : '#1e1e1e'}`,
+                              background: isSelected ? '#D4940A' : '#1A1A24',
+                              color: isSelected ? 'white' : isAvail ? '#9999AA' : '#2A2A3A',
+                              border: `1px solid ${isSelected ? '#D4940A' : isAvail ? '#2A2A3A' : '#1A1A24'}`,
                               opacity: isAvail ? 1 : 0.4,
                               cursor: isAvail ? 'pointer' : 'default',
                             }}>
@@ -1395,10 +1394,10 @@ export default function BoutiquePage() {
                       const qty = quantities[key] || 0
                       return (
                         <div key={key} className="rounded-xl border border-[#252525] p-3 space-y-2"
-                          style={{ background: qty > 0 ? '#130e00' : '#1a1a1a' }}>
+                          style={{ background: qty > 0 ? '#130e00' : '#1A1A24' }}>
                           {/* Ref + specs */}
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[10px] text-[#555] bg-black/40 px-1.5 py-0.5 rounded">{v.ref}</span>
+                            <span className="font-mono text-[10px] text-spincut-subtle bg-spincut-bg/40 px-1.5 py-0.5 rounded">{v.ref}</span>
                             <StockBadge stock={v.stock}/>
                           </div>
                           <div className="flex gap-1.5">
@@ -1414,31 +1413,31 @@ export default function BoutiquePage() {
                               { l: 'L', val: v.lt },
                               { l: 'S', val: v.queue },
                             ]).filter(s => s.val && s.val !== '/').map(s => (
-                              <div key={s.l} className="flex-1 bg-[#111] rounded-lg py-1.5 text-center border border-[#2a2a2a]">
-                                <p className="text-[#d4780f] text-[9px] font-bold">{s.l}</p>
+                              <div key={s.l} className="flex-1 bg-spincut-surface rounded-lg py-1.5 text-center border border-spincut-border">
+                                <p className="text-spincut-gold text-[9px] font-bold">{s.l}</p>
                                 <p className="text-white font-mono font-semibold text-xs mt-0.5">{s.val}</p>
                               </div>
                             ))}
                           </div>
                           <div className="flex items-center justify-between">
                             {v.prix > 0
-                              ? <span className="text-[#d4780f] font-black text-lg">{fmt(v.prix)} €<span className="text-[#555] text-xs font-normal ml-1">HT</span></span>
-                              : <span className="text-[#444] text-xs">Sur devis</span>
+                              ? <span className="text-spincut-gold font-black text-lg">{fmt(v.prix)} €<span className="text-spincut-subtle text-xs font-normal ml-1">HT</span></span>
+                              : <span className="text-spincut-subtle text-xs">Sur devis</span>
                             }
                             {v.stock > 0 && v.prix > 0 && (
                               qty === 0 ? (
                                 <button onClick={() => setQty(key, 1, v.stock, 'Ajouté au panier')}
                                   className="px-4 py-2 rounded-xl text-sm font-bold text-white active:scale-95 transition-all"
-                                  style={{ background: '#d4780f' }}>
+                                  style={{ background: '#D4940A' }}>
                                   + Ajouter
                                 </button>
                               ) : (
                                 <div className="flex items-center gap-1.5">
                                   <button onClick={() => setQty(key, -1, v.stock)}
-                                    className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">−</button>
-                                  <span className="w-7 text-center text-[#d4780f] font-bold text-base">{qty}</span>
+                                    className="w-9 h-9 rounded-xl bg-spincut-gold flex items-center justify-center font-bold text-lg text-black">−</button>
+                                  <span className="w-7 text-center text-spincut-gold font-bold text-base">{qty}</span>
                                   <button onClick={() => setQty(key, +1, v.stock, 'Ajouté au panier')}
-                                    className="w-9 h-9 rounded-xl bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">+</button>
+                                    className="w-9 h-9 rounded-xl bg-spincut-gold flex items-center justify-center font-bold text-lg text-black">+</button>
                                 </div>
                               )
                             )}

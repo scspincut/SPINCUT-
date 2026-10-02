@@ -183,7 +183,7 @@ export default function OrderPage() {
     const lignesHtml = lastOrder.items.map(i =>
       `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.quantity}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;font-family:monospace">${i.ref}</td><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.designation}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(i.quantity * i.price)} €</td></tr>`
     ).join('')
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${lastOrder.blNumber || lastOrder.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#d4780f;margin-bottom:2px}.sub{font-size:10px;color:#aaa;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#444;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#d4780f;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #222;padding-top:12px;font-size:15px}.ttc td{color:#888;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${lastOrder.blNumber || lastOrder.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${today}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(lastOrder.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(lastOrder.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(lastOrder.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${lastOrder.blNumber || lastOrder.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111118;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#D4940A;margin-bottom:2px}.sub{font-size:10px;color:#9999AA;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#555566;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#D4940A;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#9999AA;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#9999AA;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #2A2A3A;padding-top:12px;font-size:15px}.ttc td{color:#9999AA;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#9999AA;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${lastOrder.blNumber || lastOrder.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${today}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(lastOrder.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(lastOrder.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(lastOrder.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
     const win = window.open('', '_blank')
     if (!win) return
     win.document.write(html)
@@ -195,7 +195,7 @@ export default function OrderPage() {
     const lignesHtml = entry.items.map(i =>
       `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.quantity}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;font-family:monospace">${i.ref}</td><td style="padding:8px 10px;border-bottom:1px solid #eee">${i.designation}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right">${fmt(i.quantity * i.price)} €</td></tr>`
     ).join('')
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${entry.blNumber || entry.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#d4780f;margin-bottom:2px}.sub{font-size:10px;color:#aaa;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#444;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#d4780f;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #222;padding-top:12px;font-size:15px}.ttc td{color:#888;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#bbb;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${entry.blNumber || entry.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${dateStr}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(entry.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(entry.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(entry.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>BC ${entry.blNumber || entry.orderId} — SPINCUT</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111118;padding:40px}.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#D4940A;margin-bottom:2px}.sub{font-size:10px;color:#9999AA;letter-spacing:2px;margin-bottom:32px}h1{font-size:16px;color:#555566;margin-bottom:8px}.ref{font-size:30px;font-weight:bold;color:#D4940A;font-family:monospace;margin-bottom:20px}.meta{display:flex;gap:40px;margin-bottom:28px;font-size:13px}.meta .lbl{font-size:10px;color:#9999AA;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:2px}table{width:100%;border-collapse:collapse}th{text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;color:#9999AA;border-bottom:2px solid #ddd}.tot td{font-weight:bold;border-top:2px solid #2A2A3A;padding-top:12px;font-size:15px}.ttc td{color:#9999AA;font-size:12px;padding-top:4px}.footer{margin-top:48px;font-size:11px;color:#9999AA;border-top:1px solid #eee;padding-top:16px}</style></head><body><div class="logo">SPINCUT</div><div class="sub">PRÉCISION · PERFORMANCE · INNOVATION</div><h1>Bon de commande</h1><div class="ref">${entry.blNumber || entry.orderId}</div><div class="meta"><div><span class="lbl">Client</span><strong>${clientName ?? '—'}</strong></div><div><span class="lbl">Date</span><span>${dateStr}</span></div></div><table><thead><tr><th>Qté</th><th>Référence</th><th>Désignation</th><th style="text-align:right">Montant HT</th></tr></thead><tbody>${lignesHtml}<tr class="tot"><td colspan="3">Total HT</td><td style="text-align:right">${fmt(entry.total)} €</td></tr><tr class="ttc"><td colspan="3">TVA 20 %</td><td style="text-align:right">${fmt(entry.total * 0.2)} €</td></tr><tr class="ttc"><td colspan="3">Total TTC</td><td style="text-align:right">${fmt(entry.total * 1.2)} €</td></tr></tbody></table><div class="footer"><p>SPINCUT — spincut.fr</p><p style="margin-top:4px">Récapitulatif de commande. La facture sera émise à la livraison.</p></div><script>window.onload=function(){window.print()}</script></body></html>`
     const win = window.open('', '_blank')
     if (!win) return
     win.document.write(html)
@@ -310,14 +310,14 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-spincut-bg text-white flex flex-col">
 
-      <div className="sticky top-0 z-30 bg-black">
-        <header className="border-b border-[#1a1a1a]">
+      <div className="sticky top-0 z-30 bg-spincut-bg">
+        <header className="border-b border-spincut-border">
           <div className="max-w-2xl mx-auto px-4 py-2 relative flex items-center justify-center">
             <img src="/logo-banniere.png" alt="SPINCUT" style={{ height: '60px', objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at 50% 50%, black 50%, transparent 100%)' }} />
             <button onClick={() => { logout(); navigate('/') }}
-              className="absolute right-4 flex items-center gap-1 text-[#555] hover:text-white text-xs transition-colors"
+              className="absolute right-4 flex items-center gap-1 text-spincut-subtle hover:text-white text-xs transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -353,7 +353,7 @@ export default function OrderPage() {
                 </div>
                 <p className="text-green-400 font-bold text-base">Commande confirmée ✓</p>
                 {lastOrder.blNumber && (
-                  <p className="font-mono font-bold text-2xl mt-2" style={{ color: '#d4780f' }}>{lastOrder.blNumber}</p>
+                  <p className="font-mono font-bold text-2xl mt-2" style={{ color: '#D4940A' }}>{lastOrder.blNumber}</p>
                 )}
                 <p className="text-[10px] mt-1" style={{ color: '#2a5a2a' }}>Numéro à communiquer à votre comptabilité</p>
               </div>
@@ -415,23 +415,23 @@ export default function OrderPage() {
 
           {hasItems ? (
             <div>
-              <div className="rounded-xl border border-[#2a2a2a] overflow-hidden divide-y divide-[#1e1e1e]">
+              <div className="rounded-2xl border border-spincut-border overflow-hidden divide-y divide-spincut-border">
                 {cartItems.map(item => {
                   const key = uid(item)
                   const qty = quantities[key] || 0
                   return (
-                    <div key={key} className="px-4 py-3 flex items-center gap-3 bg-[#111]">
+                    <div key={key} className="px-4 py-3 flex items-center gap-3 bg-spincut-card">
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-sm font-medium leading-snug truncate">{item.designation}</p>
-                        <p className="text-[#d4780f] text-xs font-medium mt-0.5">{fmt(qty * item.prix)} € HT</p>
+                        <p className="text-spincut-gold text-xs font-medium mt-0.5">{fmt(qty * item.prix)} € HT</p>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button onClick={() => setQty(key, -1, item.stock)} className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white">−</button>
+                        <button onClick={() => setQty(key, -1, item.stock)} className="w-8 h-8 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-lg text-black transition-all duration-200">−</button>
                         <input type="number" min={0} max={item.stock} value={qty}
                           onChange={e => setQtyDirect(key, e.target.value, item.stock)}
-                          className="w-9 text-center bg-transparent text-[#d4780f] font-bold text-sm outline-none"
+                          className="w-9 text-center bg-transparent text-spincut-gold font-bold text-sm outline-none"
                         />
-                        <button onClick={() => setQty(key, +1, item.stock)} className="w-8 h-8 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-lg text-white active:scale-95">+</button>
+                        <button onClick={() => setQty(key, +1, item.stock)} className="w-8 h-8 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-lg text-black transition-all duration-200 active:scale-95">+</button>
                       </div>
                     </div>
                   )
@@ -439,12 +439,12 @@ export default function OrderPage() {
               </div>
               <div className="mt-3 flex items-center justify-between px-1">
                 <div>
-                  <p className="text-[#555] text-xs">{itemCount} article{itemCount > 1 ? 's' : ''}</p>
-                  <p className="text-[#d4780f] font-bold text-xl">{fmt(total)} € HT</p>
-                  <p className="text-[#888] text-xs">{fmt(total * 1.2)} € TTC</p>
+                  <p className="text-spincut-subtle text-xs">{itemCount} article{itemCount > 1 ? 's' : ''}</p>
+                  <p className="text-spincut-gold font-bold text-xl">{fmt(total)} € HT</p>
+                  <p className="text-spincut-muted text-xs">{fmt(total * 1.2)} € TTC</p>
                 </div>
                 <button onClick={sendOrder} disabled={orderStatus === 'loading'}
-                  className="py-3 px-6 rounded-xl bg-[#d4780f] text-white text-sm font-bold active:scale-95 transition-all flex items-center gap-2 disabled:opacity-60"
+                  className="h-13 px-6 rounded-xl bg-gradient-to-r from-spincut-gold to-spincut-gold-light text-black font-bold text-sm active:scale-95 transition-all duration-200 flex items-center gap-2 disabled:opacity-60"
                 >
                   {orderStatus === 'loading'
                     ? <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Envoi…</>
@@ -454,17 +454,13 @@ export default function OrderPage() {
               </div>
             </div>
           ) : orderStatus !== 'success' ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#161616] border border-[#2a2a2a] flex items-center justify-center">
-                <svg className="w-7 h-7 text-[#333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-              </div>
-              <div>
-                <p className="text-white font-bold">Panier vide</p>
-                <p className="text-[#555] text-sm mt-1">Ajoutez des produits depuis la Boutique</p>
-              </div>
-              <button onClick={() => navigate('/boutique')} className="py-2.5 px-5 rounded-xl bg-[#d4780f] text-white text-sm font-bold active:scale-95 transition-all">
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <svg width="64" height="64" className="text-spincut-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              <p className="text-white text-lg font-semibold mt-3">Panier vide</p>
+              <p className="text-spincut-muted text-sm mt-1">Ajoutez des produits depuis la Boutique</p>
+              <button onClick={() => navigate('/boutique')} className="mt-4 h-13 px-6 rounded-xl bg-gradient-to-r from-spincut-gold to-spincut-gold-light text-black font-bold text-sm active:scale-95 transition-all duration-200">
                 Aller à la Boutique
               </button>
             </div>
@@ -473,23 +469,23 @@ export default function OrderPage() {
           {/* Habituels */}
           {habitualItems.length > 0 && (
             <div className="mt-4">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#555] mb-3">Mes derniers achats</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-spincut-gold mb-3">Mes derniers achats</p>
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
                 {habitualItems.map(p => {
                   const key = uid(p)
                   const qty = quantities[key] || 0
                   return (
-                    <div key={key} className="w-40 flex-shrink-0 bg-[#161616] rounded-xl border border-[#2a2a2a] p-3 flex flex-col gap-2">
+                    <div key={key} className="w-40 flex-shrink-0 bg-spincut-card rounded-xl border border-spincut-border p-4 flex flex-col gap-2">
                       <p className="text-white font-mono text-xs font-semibold leading-tight">{p.ref}</p>
-                      <p className="text-[#666] text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
-                      <p className="text-[#d4780f] font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
+                      <p className="text-spincut-subtle text-[11px] leading-tight line-clamp-2 flex-1">{p.designation}</p>
+                      <p className="text-spincut-gold font-bold text-sm">{p.prix.toFixed(2).replace('.', ',')} € HT</p>
                       {qty === 0 ? (
-                        <button onClick={() => setQty(key, 1, p.stock)} className="w-full py-2 rounded-lg text-xs font-bold text-center" style={{ background: '#2a1400', color: '#d4780f', border: '1px solid #d4780f33' }}>+ Ajouter</button>
+                        <button onClick={() => setQty(key, 1, p.stock)} className="w-full py-2 rounded-lg text-xs font-bold text-center" style={{ background: '#D4940A1A', color: '#D4940A', border: '1px solid #D4940A55' }}>+ Ajouter</button>
                       ) : (
                         <div className="flex items-center justify-between gap-1">
-                          <button onClick={() => setQty(key, -1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base">−</button>
-                          <span className="w-6 text-center text-[#d4780f] font-bold text-sm">{qty}</span>
-                          <button onClick={() => setQty(key, +1, p.stock)} className="flex-1 h-7 rounded-lg bg-[#d4780f] flex items-center justify-center font-bold text-white text-base active:scale-95">+</button>
+                          <button onClick={() => setQty(key, -1, p.stock)} className="flex-1 h-7 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-black text-base transition-all duration-200">−</button>
+                          <span className="w-6 text-center text-spincut-gold font-bold text-sm">{qty}</span>
+                          <button onClick={() => setQty(key, +1, p.stock)} className="flex-1 h-7 rounded-lg bg-spincut-gold flex items-center justify-center font-bold text-black text-base transition-all duration-200 active:scale-95">+</button>
                         </div>
                       )}
                     </div>
@@ -504,7 +500,11 @@ export default function OrderPage() {
         <section>
           <SectionTitle icon="clock" label="Commandes en cours" count={pendingEntries.length || undefined} />
           {pendingEntries.length === 0 ? (
-            <p className="text-[#444] text-sm text-center py-6">Aucune commande en cours</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <svg width="48" height="48" className="text-spincut-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={1.2}/><polyline points="12 6 12 12 16 14" strokeWidth={1.2}/></svg>
+              <p className="text-white text-lg font-semibold mt-3">Aucune commande en cours</p>
+              <p className="text-spincut-muted text-sm mt-1">Vos commandes apparaîtront ici</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {pendingEntries.map((entry, i) => <OrderCard key={i} entry={entry} onPrint={printEntry} />)}
@@ -516,7 +516,7 @@ export default function OrderPage() {
         <section>
           <button className="w-full flex items-center justify-between mb-3" onClick={() => setShowDelivered(v => !v)}>
             <SectionTitle icon="check" label="Commandes livrées" count={deliveredEntries.length || undefined} noMargin />
-            <svg className={`w-4 h-4 text-[#555] transition-transform flex-shrink-0 ${showDelivered ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 text-spincut-subtle transition-transform flex-shrink-0 ${showDelivered ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
@@ -524,7 +524,11 @@ export default function OrderPage() {
           {showDelivered && (
             <div className="space-y-2">
               {deliveredEntries.length === 0 && (
-                <p className="text-[#444] text-sm text-center py-6">Aucune commande livrée pour l'instant</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+              <svg width="48" height="48" className="text-spincut-subtle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <p className="text-white text-lg font-semibold mt-3">Aucune commande livrée</p>
+              <p className="text-spincut-muted text-sm mt-1">Vos commandes livrées apparaîtront ici</p>
+            </div>
               )}
               {deliveredEntries.map((entry, i) => <OrderCard key={i} entry={entry} delivered onReorder={reorder} onPrint={printEntry} />)}
               {orderHistory.length > 0 && (
@@ -534,7 +538,7 @@ export default function OrderPage() {
                     setOrderHistory([])
                     try { localStorage.removeItem(historyKey); localStorage.removeItem(bdcKey) } catch {}
                   }}
-                  className="w-full text-center text-[10px] text-[#333] hover:text-[#555] py-2 transition-colors"
+                  className="w-full text-center text-[10px] text-spincut-border hover:text-spincut-subtle py-2 transition-colors"
                 >
                   Effacer l'historique
                 </button>
@@ -558,61 +562,60 @@ function SectionTitle({ icon, label, count, noMargin }: { icon: 'cart' | 'clock'
   }
   return (
     <div className={`flex items-center gap-2 ${noMargin ? '' : 'mb-3'}`}>
-      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="#d4780f" strokeWidth="2" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="#D4940A" strokeWidth="2" viewBox="0 0 24 24">
         {icons[icon]}
       </svg>
-      <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#d4780f' }}>{label}</p>
+      <p className="text-spincut-gold text-xs uppercase tracking-widest font-semibold">{label}</p>
       {count !== undefined && (
-        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#2a1400', color: '#d4780f' }}>{count}</span>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-spincut-gold text-black">{count}</span>
       )}
     </div>
   )
 }
 
 function OrderCard({ entry, delivered, onReorder, onPrint }: { entry: OrderHistoryEntry; delivered?: boolean; onReorder?: (entry: OrderHistoryEntry) => void; onPrint?: (entry: OrderHistoryEntry) => void }) {
-  const borderColor  = delivered ? '#1a2a1a' : '#2a1a00'
   const statusStyle  = delivered
     ? { background: '#0d1a0d', color: '#4ade80' }
-    : { background: '#1a1000', color: '#d4780f' }
+    : { background: '#1a1000', color: '#D4940A' }
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${borderColor}` }}>
+    <div className="bg-spincut-card rounded-xl overflow-hidden border border-spincut-border" >
       <div className="px-4 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[9px] px-1.5 py-0.5 rounded font-bold" style={statusStyle}>
             {delivered ? 'Livré' : 'En cours'}
           </span>
-          <span className="text-[10px] text-[#444]">
+          <span className="text-[10px] text-spincut-subtle">
             {new Date(entry.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {onPrint && (
-            <button onClick={() => onPrint(entry)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }} title="Bon de commande">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="#888" strokeWidth={2} viewBox="0 0 24 24">
+            <button onClick={() => onPrint(entry)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#1A1A24', border: '1px solid #2A2A3A' }} title="Bon de commande">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="#9999AA" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
               </svg>
             </button>
           )}
           <div className="text-right">
-            <span className="text-sm font-bold text-white">{entry.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal text-[#555]">€ HT</span></span>
-            <p className="text-[10px] text-[#333]">{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
+            <span className="text-sm font-bold text-white">{entry.total.toFixed(2).replace('.', ',')} <span className="text-[10px] font-normal text-spincut-subtle">€ HT</span></span>
+            <p className="text-[10px] text-spincut-subtle">{(entry.total * 1.2).toFixed(2).replace('.', ',')} € TTC</p>
           </div>
         </div>
       </div>
-      <div className="px-4 pb-2.5 space-y-1" style={{ borderTop: '1px solid #161616' }}>
+      <div className="px-4 pb-2.5 space-y-1" style={{ borderTop: '1px solid #2A2A3A' }}>
         {entry.items.map((it, i) => (
           <div key={i} className="flex items-baseline justify-between gap-2">
-            <span className="text-[11px] text-[#555] truncate flex-1">{it.quantity}× <span className="font-mono text-[#777]">{it.ref}</span> {it.designation}</span>
-            <span className="text-[11px] font-mono flex-shrink-0" style={{ color: '#d4780f' }}>{(it.quantity * it.price).toFixed(2).replace('.', ',')} €</span>
+            <span className="text-[11px] text-spincut-subtle truncate flex-1">{it.quantity}× <span className="font-mono text-spincut-muted">{it.ref}</span> {it.designation}</span>
+            <span className="text-[11px] font-mono flex-shrink-0" style={{ color: '#D4940A' }}>{(it.quantity * it.price).toFixed(2).replace('.', ',')} €</span>
           </div>
         ))}
       </div>
       {onReorder && (
-        <div className="px-4 pb-3 pt-1" style={{ borderTop: '1px solid #161616' }}>
+        <div className="px-4 pb-3 pt-1" style={{ borderTop: '1px solid #2A2A3A' }}>
           <button
             onClick={() => onReorder(entry)}
             className="w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
-            style={{ background: '#1a1000', color: '#d4780f', border: '1px solid #2a1a00' }}
+            style={{ background: '#D4940A1A', color: '#D4940A', border: '1px solid #D4940A55' }}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
