@@ -349,13 +349,10 @@ export default function LoginPage() {
           <div aria-hidden className="pointer-events-none absolute -top-48 -right-24 w-[700px] h-[700px] rounded-full bg-spincut-gold/10 blur-3xl"/>
           <div aria-hidden className="pointer-events-none absolute top-1/2 -left-40 w-[420px] h-[420px] rounded-full bg-spincut-gold/5 blur-3xl"/>
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 sm:pt-12 lg:pt-10 lg:pb-20 lg:min-h-[calc(100vh-5rem)] grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            <Reveal className="lg:col-span-6">
-              <FullLogo className="-ml-[8%] w-[116%] max-w-[600px]" />
-              <h1 className="mt-2 sm:mt-4 text-4xl sm:text-5xl xl:text-6xl font-bold leading-[1.05] tracking-tight">
-                Les meilleurs ont leur code.
-                <span className="block text-spincut-gold mt-1">Et vous, vous l'avez ?</span>
-              </h1>
-              <div className="mt-8">
+            <Reveal className="lg:col-span-6 flex flex-col items-center text-center">
+              <h1 className="sr-only">SPINCUT Outils CNC — Précision · Performance · Innovation</h1>
+              <FullLogo className="w-[118%] max-w-[680px]" />
+              <div className="mt-4 sm:mt-6">
                 <button
                   onClick={() => scrollToSection('services')}
                   className="group h-13 px-7 rounded-xl font-bold whitespace-nowrap text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light shadow-lg shadow-spincut-gold/20 hover:brightness-110 active:scale-95 transition-all duration-200 inline-flex items-center gap-2"
@@ -506,7 +503,7 @@ export default function LoginPage() {
                     <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Votre code d'accès</p>
                     <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] tracking-tight">
                       Les meilleurs ont leur code.
-                      <span className="block text-spincut-gold">Il ne manque que le vôtre.</span>
+                      <span className="block text-spincut-gold">Et vous, vous l'avez ?</span>
                     </h2>
                     <p className="mt-5 text-spincut-muted text-base lg:text-lg leading-relaxed max-w-lg">
                       Chaque client SPINCUT dispose de son propre code. Il ouvre un espace pensé pour les ateliers :
