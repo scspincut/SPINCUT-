@@ -72,17 +72,17 @@ const I = {
 
 const SERVICES: { title: string; desc: string }[] = [
   { title: 'Machines à bois', desc: 'Machines à bois et CNC, sélectionnées pour votre production.' },
-  { title: 'Outillage CNC', desc: 'Carbure ou diamant, fraises à graver : tout l\'outillage CNC pour le bois, l\'aluminium et le plastique.' },
-  { title: 'Outillage bois', desc: 'Fraises, lames et outils pour tous les métiers du bois.' },
-  { title: 'Affûtage', desc: 'Tous vos outils coupants affûtés. Coupe nette, durée de vie prolongée.' },
+  { title: 'Outillage CNC', desc: 'Carbure ou diamant.' },
+  { title: 'Outillage bois', desc: 'Outillage pour tous les métiers du bois.' },
+  { title: 'Affûtage', desc: 'Pour tous vos outils coupants.' },
 ]
 
-const CNC_EXPERTISE: { title: string; icon: ReactNode; integrated?: boolean }[] = [
-  { title: 'Outillage', icon: I.cnc },
-  { title: 'Calculateur CNC', icon: I.calc, integrated: true },
-  { title: 'Gestion de stock', icon: I.stock, integrated: true },
-  { title: 'Conseil', icon: I.advice },
-  { title: 'Vente de machines CNC', icon: I.machine },
+const CNC_EXPERTISE: { title: string; integrated?: boolean }[] = [
+  { title: 'Outillage' },
+  { title: 'Calculateur CNC', integrated: true },
+  { title: 'Gestion de stock', integrated: true },
+  { title: 'Conseil' },
+  { title: 'Vente de machines CNC' },
 ]
 
 const TRUST: { label: string; icon: ReactNode }[] = [
@@ -355,10 +355,6 @@ export default function LoginPage() {
                 Les meilleurs ont leur code.
                 <span className="block text-spincut-gold mt-1">Et vous, vous l'avez ?</span>
               </h1>
-              <p className="mt-6 text-white/90 text-lg sm:text-xl max-w-xl leading-relaxed">
-                Machines, outillage CNC et bois, affûtage.
-                <span className="block text-spincut-muted">Tout pour votre atelier, chez un seul spécialiste.</span>
-              </p>
               <div className="mt-8">
                 <button
                   onClick={() => scrollToSection('services')}
@@ -368,10 +364,6 @@ export default function LoginPage() {
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" className="transition-transform duration-200 group-hover:translate-y-0.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                 </button>
               </div>
-              <p className="mt-5 flex items-center gap-2 text-xs text-spincut-subtle">
-                <span className="text-spincut-gold [&_svg]:w-4 [&_svg]:h-4">{I.key}</span>
-                Accès réservé aux professionnels · un code personnel par client
-              </p>
             </Reveal>
 
             {/* Visuel : emplacements photos outils */}
@@ -428,14 +420,13 @@ export default function LoginPage() {
                   <div className="max-w-2xl">
                     <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Notre spécialité</p>
                     <h3 className="mt-3 text-3xl lg:text-4xl font-bold text-white leading-tight">La CNC, c'est notre métier.</h3>
-                    <p className="mt-3 text-spincut-muted text-base lg:text-lg">L'outil, les réglages et la machine : un seul expert.</p>
+                    <p className="mt-3 text-spincut-muted text-base lg:text-lg">La machine, les outils et les réglages : un seul expert.</p>
                   </div>
                   <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
                     {CNC_EXPERTISE.map(e => (
                       <div key={e.title} className="rounded-2xl bg-spincut-bg/60 border border-spincut-border p-5 transition-all duration-200 hover:border-spincut-gold/40">
-                        <span className="text-spincut-gold [&_svg]:w-6 [&_svg]:h-6">{e.icon}</span>
-                        <p className="mt-3 font-bold text-white leading-snug">
-                          {e.title}{e.integrated && <span className="text-spincut-gold">*</span>}
+                        <p className="font-bold text-white leading-snug">
+                          {e.title}{e.integrated && <span className="text-spincut-gold"> *</span>}
                         </p>
                       </div>
                     ))}
