@@ -70,24 +70,25 @@ const I = {
   image: <svg {...ICON}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>,
 }
 
-const SERVICES: { title: string; desc: string; icon: ReactNode }[] = [
-  { title: 'Outillage CNC', icon: I.cnc, desc: 'Fraises carbure monobloc, à plaquettes et de gravure pour le bois, les panneaux, les plastiques et l\'aluminium.' },
-  { title: 'Outillage bois', icon: I.wood, desc: 'Fraises de défonceuse, lames de scie circulaire carbure et outils pour menuisiers, agenceurs et ébénistes.' },
-  { title: "Service d'affûtage", icon: I.sharpen, desc: 'Vos fraises et lames remises en état pour retrouver une coupe nette et prolonger leur durée de vie.' },
-  { title: 'Machines à bois', icon: I.machine, desc: 'Conseil et vente de machines pour équiper votre atelier, de la machine traditionnelle à la CNC.' },
+const SERVICES: { title: string; desc: string }[] = [
+  { title: 'Machines à bois', desc: 'Machines à bois et CNC, sélectionnées pour votre production.' },
+  { title: 'Outillage CNC', desc: 'Carbure ou diamant, fraises à graver : tout l\'outillage CNC pour le bois, l\'aluminium et le plastique.' },
+  { title: 'Outillage bois', desc: 'Fraises, lames et outils pour tous les métiers du bois.' },
+  { title: 'Affûtage', desc: 'Tous vos outils coupants affûtés. Coupe nette, durée de vie prolongée.' },
 ]
 
-const CNC_EXPERTISE: { title: string; desc: string; icon: ReactNode }[] = [
-  { title: 'Outillage CNC', icon: I.cnc, desc: 'Le bon outil pour chaque matière et chaque usinage.' },
-  { title: 'Calculateur CNC', icon: I.calc, desc: 'Vitesse de broche et avance calculées pour votre outil et votre machine.' },
-  { title: 'Conseils', icon: I.advice, desc: 'Un interlocuteur qui connaît la CNC et répond en moins d\'1h.' },
-  { title: 'Vente et formation', icon: I.training, desc: 'Machines CNC et formation de vos opérateurs.' },
+const CNC_EXPERTISE: { title: string; icon: ReactNode; integrated?: boolean }[] = [
+  { title: 'Outillage', icon: I.cnc },
+  { title: 'Calculateur CNC', icon: I.calc, integrated: true },
+  { title: 'Gestion de stock', icon: I.stock, integrated: true },
+  { title: 'Conseil', icon: I.advice },
+  { title: 'Vente de machines CNC', icon: I.machine },
 ]
 
 const TRUST: { label: string; icon: ReactNode }[] = [
   { label: 'Expédié sous 24h', icon: I.truck },
   { label: 'Qualité garantie', icon: I.shield },
-  { label: "Réponse en moins d'1h", icon: I.clock },
+  { label: 'Réponse < 1h', icon: I.clock },
   { label: 'Livraison en Île-de-France · Envoi dans toute la France', icon: I.pin },
 ]
 
@@ -103,22 +104,6 @@ const UNLOCKS: { title: string; desc: string; icon: ReactNode }[] = [
   { title: 'Gestion de stock outils', icon: I.stock, desc: 'Vos outils suivis, avec une alerte avant la rupture.' },
   { title: 'Suivi de vos commandes', icon: I.orders, desc: 'En cours, livrées, et recommande en un clic.' },
 ]
-
-// Logo SPINCUT recadré depuis la bannière (fond noir fondu via mix-blend-mode)
-function BrandLogo({ large = false }: { large?: boolean }) {
-  return (
-    <span
-      className={`relative block overflow-hidden ${large ? 'w-[180px] h-[60px]' : 'w-[132px] h-[44px] lg:w-[150px] lg:h-[50px]'}`}
-      style={{ mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 62% 58% at 50% 50%, black 60%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 62% 58% at 50% 50%, black 60%, transparent 100%)' }}
-    >
-      <img
-        src="/logo-banniere.png"
-        alt="SPINCUT Outils CNC"
-        className={`absolute max-w-none ${large ? 'w-[384px] -left-[100px] -top-[22px]' : 'w-[282px] -left-[73px] -top-[16px] lg:w-[320px] lg:-left-[83px] lg:-top-[18px]'}`}
-      />
-    </span>
-  )
-}
 
 // Logo complet avec sa signature « Précision · Performance · Innovation »
 function FullLogo({ className = '' }: { className?: string }) {
@@ -309,9 +294,20 @@ export default function LoginPage() {
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-40 bg-spincut-bg/80 backdrop-blur-md border-b border-spincut-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 lg:h-20 flex items-center justify-between gap-4">
-          <a href="#accueil" onClick={e => { e.preventDefault(); scrollToSection('accueil') }} aria-label="SPINCUT — accueil">
-            <BrandLogo />
-          </a>
+          <div className="flex-1 lg:hidden">
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              className="w-10 h-10 rounded-xl border border-spincut-border flex items-center justify-center text-white"
+              aria-label="Menu" aria-expanded={menuOpen}
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+                {menuOpen
+                  ? <path d="M6 6l12 12M18 6L6 18"/>
+                  : <path d="M4 7h16M4 12h16M4 17h16"/>}
+              </svg>
+            </button>
+          </div>
+          <div aria-hidden className="hidden lg:block flex-1"/>
 
           <nav className="hidden lg:flex items-center gap-10">
             {NAV_LINKS.map(l => (
@@ -322,23 +318,12 @@ export default function LoginPage() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center justify-end">
             <button
               onClick={openLogin}
               className="h-10 lg:h-11 px-4 lg:px-6 rounded-xl text-sm font-bold text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light hover:brightness-110 active:scale-95 transition-all duration-200"
             >
               Espace client
-            </button>
-            <button
-              onClick={() => setMenuOpen(o => !o)}
-              className="lg:hidden w-10 h-10 rounded-xl border border-spincut-border flex items-center justify-center text-white"
-              aria-label="Menu" aria-expanded={menuOpen}
-            >
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
-                {menuOpen
-                  ? <path d="M6 6l12 12M18 6L6 18"/>
-                  : <path d="M4 7h16M4 12h16M4 17h16"/>}
-              </svg>
             </button>
           </div>
         </div>
@@ -370,22 +355,17 @@ export default function LoginPage() {
                 Les meilleurs ont leur code.
                 <span className="block text-spincut-gold mt-1">Et vous, vous l'avez ?</span>
               </h1>
-              <p className="mt-6 text-spincut-muted text-base sm:text-lg max-w-xl leading-relaxed">
-                Spécialiste de la CNC, SPINCUT réunit outillage CNC et bois, affûtage et machines à bois.
-                Avec votre code personnel, commandez en ligne 24h/24, calculez vos paramètres de coupe et gérez votre stock d'outils.
+              <p className="mt-6 text-white/90 text-lg sm:text-xl max-w-xl leading-relaxed">
+                Machines, outillage CNC et bois, affûtage.
+                <span className="block text-spincut-muted">Tout pour votre atelier, chez un seul spécialiste.</span>
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={requestAccess}
-                  className="h-13 px-7 rounded-xl font-bold whitespace-nowrap text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light shadow-lg shadow-spincut-gold/20 hover:brightness-110 active:scale-95 transition-all duration-200"
-                >
-                  Demander mon code d'accès
-                </button>
+              <div className="mt-8">
                 <button
                   onClick={() => scrollToSection('services')}
-                  className="h-13 px-7 rounded-xl font-bold whitespace-nowrap border border-spincut-gold text-spincut-gold hover:bg-spincut-gold/10 active:scale-95 transition-all duration-200"
+                  className="group h-13 px-7 rounded-xl font-bold whitespace-nowrap text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light shadow-lg shadow-spincut-gold/20 hover:brightness-110 active:scale-95 transition-all duration-200 inline-flex items-center gap-2"
                 >
                   Découvrir nos services
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" className="transition-transform duration-200 group-hover:translate-y-0.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                 </button>
               </div>
               <p className="mt-5 flex items-center gap-2 text-xs text-spincut-subtle">
@@ -423,7 +403,7 @@ export default function LoginPage() {
             <SectionHeading
               kicker="Nos services"
               title="De l'outil à la machine, un seul interlocuteur."
-              subtitle="Outillage, affûtage, machines et accompagnement : tout ce dont votre atelier a besoin, réuni au même endroit."
+              subtitle="Machines, outils, affûtage et accompagnement : tout ce dont vous avez besoin."
             />
 
             <div className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
@@ -432,11 +412,7 @@ export default function LoginPage() {
                   <article className="group h-full flex flex-col bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50 hover:shadow-2xl hover:shadow-black/40">
                     <PhotoSlot slot={SERVICE_IMAGES[i]} className="aspect-[16/9] sm:aspect-[4/3] border-b border-spincut-border"/>
                     <div className="p-6 flex-1 flex flex-col">
-                      <div className="flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-xl bg-spincut-gold/10 border border-spincut-gold/30 flex items-center justify-center text-spincut-gold [&_svg]:w-5 [&_svg]:h-5">{s.icon}</span>
-                        <span className="text-spincut-subtle text-xs font-bold tracking-widest">0{i + 1}</span>
-                      </div>
-                      <h3 className="mt-4 text-lg font-bold text-white">{s.title}</h3>
+                      <h3 className="text-xl font-bold text-white">{s.title}</h3>
                       <p className="mt-2 text-spincut-muted text-sm leading-relaxed">{s.desc}</p>
                     </div>
                   </article>
@@ -448,31 +424,23 @@ export default function LoginPage() {
             <Reveal className="mt-8 lg:mt-10">
               <div className="relative overflow-hidden rounded-3xl border border-spincut-gold/30 bg-gradient-to-br from-spincut-card via-spincut-surface to-spincut-bg p-6 sm:p-10 lg:p-12">
                 <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-spincut-gold/10 blur-3xl"/>
-                <div className="relative grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-                  <div className="lg:col-span-5">
+                <div className="relative">
+                  <div className="max-w-2xl">
                     <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Notre spécialité</p>
-                    <h3 className="mt-3 text-3xl lg:text-4xl font-bold text-white leading-tight">La CNC, de A à Z.</h3>
-                    <p className="mt-4 text-spincut-muted leading-relaxed">
-                      Du choix de l'outil aux paramètres de coupe, jusqu'à la formation de vos opérateurs :
-                      nous accompagnons votre atelier à chaque étape.
-                    </p>
-                    <div className="mt-6 inline-flex items-center gap-3 rounded-xl border border-spincut-gold/30 bg-spincut-gold/10 px-4 py-3">
-                      <span className="text-spincut-gold [&_svg]:w-5 [&_svg]:h-5">{I.key}</span>
-                      <span className="text-sm text-white">
-                        <span className="font-semibold">Intégrés à votre espace client :</span>{' '}
-                        <span className="text-spincut-muted">calculateur CNC et gestion de stock</span>
-                      </span>
-                    </div>
+                    <h3 className="mt-3 text-3xl lg:text-4xl font-bold text-white leading-tight">La CNC, c'est notre métier.</h3>
+                    <p className="mt-3 text-spincut-muted text-base lg:text-lg">L'outil, les réglages et la machine : un seul expert.</p>
                   </div>
-                  <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                  <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
                     {CNC_EXPERTISE.map(e => (
                       <div key={e.title} className="rounded-2xl bg-spincut-bg/60 border border-spincut-border p-5 transition-all duration-200 hover:border-spincut-gold/40">
                         <span className="text-spincut-gold [&_svg]:w-6 [&_svg]:h-6">{e.icon}</span>
-                        <p className="mt-3 font-bold text-white">{e.title}</p>
-                        <p className="mt-1 text-sm text-spincut-muted leading-relaxed">{e.desc}</p>
+                        <p className="mt-3 font-bold text-white leading-snug">
+                          {e.title}{e.integrated && <span className="text-spincut-gold">*</span>}
+                        </p>
                       </div>
                     ))}
                   </div>
+                  <p className="mt-5 text-xs text-spincut-muted"><span className="text-spincut-gold">*</span> Intégré à votre espace client.</p>
                 </div>
               </div>
             </Reveal>
@@ -577,24 +545,8 @@ export default function LoginPage() {
                     </ol>
                   </div>
 
-                  {/* Droite : carte d'accès + formulaire */}
-                  <div className="lg:col-span-6 flex flex-col gap-6">
-                    <div className="relative mx-auto w-full max-w-md aspect-[1.6/1] rounded-2xl p-6 sm:p-7 overflow-hidden shadow-2xl shadow-spincut-gold/10 border border-spincut-gold/40 bg-gradient-to-br from-[#2A2213] via-spincut-card to-spincut-bg">
-                      <div aria-hidden className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-spincut-gold/20 blur-2xl"/>
-                      <div aria-hidden className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'repeating-linear-gradient(135deg, #D4940A 0 1px, transparent 1px 10px)' }}/>
-                      <div className="relative h-full flex flex-col justify-between">
-                        <div className="flex items-start justify-between">
-                          <BrandLogo />
-                          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-spincut-gold border border-spincut-gold/40 rounded-full px-2.5 py-1">Client</span>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-[0.3em] text-spincut-muted">Code d'accès</p>
-                          <p className="mt-1 font-mono text-2xl sm:text-3xl tracking-[0.3em] text-white">•••• ••••</p>
-                        </div>
-                        <p className="text-xs text-spincut-muted">Votre nom ici</p>
-                      </div>
-                    </div>
-
+                  {/* Droite : formulaire de demande */}
+                  <div className="lg:col-span-6 flex flex-col justify-center gap-6">
                     <div className="relative bg-spincut-bg/70 backdrop-blur rounded-2xl border border-spincut-border p-5 sm:p-6">
                       <button
                         onClick={() => setShowForm(v => !v)}
@@ -603,7 +555,7 @@ export default function LoginPage() {
                         {showForm ? 'Annuler' : 'Demander mon accès gratuit →'}
                       </button>
                       {!showForm && (
-                        <p className="mt-3 text-center text-xs text-spincut-subtle">Gratuit et sans engagement · réponse en moins d'1h</p>
+                        <p className="mt-3 text-center text-xs text-spincut-subtle">Gratuit et sans engagement · réponse &lt; 1h</p>
                       )}
 
                       {/* Formulaire — visible uniquement après clic */}
@@ -684,23 +636,16 @@ export default function LoginPage() {
 
       {/* ════════ CONTACT ════════ */}
       <footer id="contact" className="scroll-mt-20 border-t border-spincut-border bg-spincut-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 grid gap-10 md:grid-cols-3 items-center">
-          <div className="flex justify-center md:justify-start">
-            <BrandLogo large />
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center">
             <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Contact</p>
             <p className="mt-4 text-lg font-bold text-white tracking-wide">MOGANE RADJI Johan</p>
             <a href="tel:+33767739561" className="mt-2 block text-white hover:text-spincut-gold transition-all duration-200">07 67 73 95 61</a>
             <a href="mailto:scspincut@gmail.com" className="mt-1 block text-spincut-muted hover:text-spincut-gold transition-all duration-200">scspincut@gmail.com</a>
           </div>
-          <div aria-hidden className="hidden md:block"/>
         </div>
         <div className="border-t border-spincut-border/60">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-spincut-subtle text-center sm:text-left">
-              © SPINCUT — Ces valeurs sont des recommandations standards. Un test avant production est conseillé.
-            </p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-center">
             <Link to="/admin" className="text-xs text-spincut-subtle hover:text-spincut-gold transition-all duration-200">
               Administration
             </Link>

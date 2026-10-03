@@ -14,10 +14,10 @@ export const HERO_IMAGES: ImageSlot[] = [
   { label: 'Machines à bois' },
 ]
 
-// Une photo par carte service, dans l'ordre : Outillage CNC, Outillage bois, Affûtage, Machines à bois
+// Une photo par carte service, dans l'ordre : Machines à bois, Outillage CNC, Outillage bois, Affûtage
 export const SERVICE_IMAGES: ImageSlot[] = [
+  { label: 'Machines à bois' },
   { label: 'Outillage CNC' },
   { label: 'Outillage bois' },
-  { label: "Service d'affûtage" },
-  { label: 'Machines à bois' },
+  { label: 'Affûtage' },
 ]
