@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, FormEvent, ReactNode } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useClientAuth } from '../hooks/useAuth'
-import { PARTNERS } from '../data/partners'
+import { PARTNERS, CATALOGUES, type Catalogue } from '../data/partners'
 import { HERO_IMAGES, SERVICE_IMAGES, type ImageSlot } from '../data/siteImages'
 
 function AppleMailIcon() {
@@ -42,6 +42,9 @@ function OutlookIcon() {
 
 const WHATSAPP_PATH = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
 
+// Espace insécable, avant « : » et « ? » (typographie française)
+const NB = '\u00A0'
+
 const NAV_LINKS = [
   { id: 'accueil', label: 'Accueil' },
   { id: 'services', label: 'Nos services' },
@@ -71,8 +74,8 @@ const I = {
 }
 
 const SERVICES: { title: string; desc: string }[] = [
-  { title: 'Machines à bois', desc: 'Machines à bois et CNC, sélectionnées pour votre production.' },
-  { title: 'Outillage CNC', desc: 'Carbure ou diamant.' },
+  { title: 'Machines à bois', desc: 'Machines neuves ou d\'occasion.' },
+  { title: 'Outillage CNC', desc: `Carbure ou diamant${NB}: l'outil adapté à chaque matériau.` },
   { title: 'Outillage bois', desc: 'Outillage pour tous les métiers du bois.' },
   { title: 'Affûtage', desc: 'Pour tous vos outils coupants.' },
 ]
@@ -86,23 +89,16 @@ const CNC_EXPERTISE: { title: string; integrated?: boolean }[] = [
 ]
 
 const TRUST: { label: string; icon: ReactNode }[] = [
-  { label: 'Expédié sous 24h', icon: I.truck },
+  { label: `Expédié sous 24${NB}h`, icon: I.truck },
   { label: 'Qualité garantie', icon: I.shield },
-  { label: 'Réponse < 1h', icon: I.clock },
+  { label: `Réponse < 1${NB}h`, icon: I.clock },
   { label: 'Livraison en Île-de-France · Envoi dans toute la France', icon: I.pin },
 ]
 
 const STEPS = [
   { n: '01', title: 'Demandez votre accès', desc: 'Quelques informations suffisent, en moins d\'une minute.' },
   { n: '02', title: 'Recevez votre code', desc: 'Un code personnel, envoyé dès la création de votre fiche client.' },
-  { n: '03', title: 'Entrez dans votre espace', desc: 'Commandez, calculez et gérez votre stock, 24h/24.' },
-]
-
-const UNLOCKS: { title: string; desc: string; icon: ReactNode }[] = [
-  { title: 'Boutique en ligne 24h/24', icon: I.shop, desc: 'Tout le catalogue, avec le stock en temps réel.' },
-  { title: 'Calculateur CNC intégré', icon: I.calc, desc: 'Vos paramètres de coupe en quelques secondes.' },
-  { title: 'Gestion de stock outils', icon: I.stock, desc: 'Vos outils suivis, avec une alerte avant la rupture.' },
-  { title: 'Suivi de vos commandes', icon: I.orders, desc: 'En cours, livrées, et recommande en un clic.' },
+  { n: '03', title: 'Entrez dans votre espace', desc: `Commandez, calculez et gérez votre stock, 24${NB}h/24.` },
 ]
 
 // Logo complet avec sa signature « Précision · Performance · Innovation »
@@ -129,7 +125,7 @@ function PhotoSlot({ slot, className = '' }: { slot: ImageSlot; className?: stri
           <span aria-hidden className="absolute -right-4 -bottom-10 text-[11rem] leading-none font-black text-spincut-gold/[0.06] select-none">S</span>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-spincut-subtle">
             <span className="w-11 h-11 rounded-full border border-spincut-border flex items-center justify-center">{I.image}</span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">{slot.label}</span>
+            <span className="px-2 text-center text-[10px] sm:text-[11px] leading-tight font-semibold uppercase tracking-[0.15em]">{slot.label}</span>
           </div>
         </>
       )}
@@ -180,6 +176,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [prospectName, setProspectName] = useState('')
+  const [prospectFirstname, setProspectFirstname] = useState('')
+  const [prospectPosition, setProspectPosition] = useState('')
   const [prospectPhone, setProspectPhone] = useState('')
   const [prospectEmail, setProspectEmail] = useState('')
   const [prospectCompany, setProspectCompany] = useState('')
@@ -194,11 +192,12 @@ export default function LoginPage() {
   const [showLogin, setShowLogin] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [lightbox, setLightbox] = useState<number | null>(null)
+  const [viewer, setViewer] = useState<Catalogue | null>(null)
 
   // Échap ferme les fenêtres ouvertes ; flèches dans la galerie
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setShowLogin(false); setLightbox(null); setMenuOpen(false) }
+      if (e.key === 'Escape') { setShowLogin(false); setLightbox(null); setMenuOpen(false); setViewer(null) }
       if (lightbox !== null && e.key === 'ArrowRight') setLightbox(i => i === null ? null : (i + 1) % photos.length)
       if (lightbox !== null && e.key === 'ArrowLeft') setLightbox(i => i === null ? null : (i - 1 + photos.length) % photos.length)
     }
@@ -208,28 +207,33 @@ export default function LoginPage() {
 
   // Bloque le scroll de la page derrière une fenêtre ouverte
   useEffect(() => {
-    const locked = showLogin || lightbox !== null
+    const locked = showLogin || lightbox !== null || viewer !== null
     document.body.style.overflow = locked ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
-  }, [showLogin, lightbox])
+  }, [showLogin, lightbox, viewer])
 
   if (isAuthenticated) {
     navigate('/boutique', { replace: true })
     return null
   }
 
+  // Champs obligatoires pour toute demande (le téléphone n'est requis que pour WhatsApp)
+  const requiredFilled = [prospectName, prospectFirstname, prospectPosition, prospectCompany, prospectEmail].every(v => v.trim())
+
   const buildMessage = () => [
     `🆕 Nouvelle demande d'accès SPINCUT`,
     ``,
     `Nom : ${prospectName.trim()}`,
-    prospectCompany.trim() ? `Société : ${prospectCompany.trim()}` : '',
+    `Prénom : ${prospectFirstname.trim()}`,
+    `Poste : ${prospectPosition.trim()}`,
+    `Société : ${prospectCompany.trim()}`,
     `Email : ${prospectEmail.trim()}`,
     prospectPhone.trim() ? `Téléphone : ${prospectPhone.trim()}` : '',
   ].filter(Boolean).join('\n')
 
   const handleWhatsApp = () => {
-    if (!prospectName.trim() || !prospectPhone.trim()) {
-      setSendError('Veuillez renseigner votre nom et votre numéro de téléphone pour envoyer via WhatsApp.')
+    if (!requiredFilled || !prospectPhone.trim()) {
+      setSendError('Pour un envoi via WhatsApp, renseignez tous les champs, téléphone compris.')
       return
     }
     setSendError('')
@@ -237,8 +241,8 @@ export default function LoginPage() {
   }
 
   const handleEmail = async () => {
-    if (!prospectName.trim() || !prospectEmail.trim()) {
-      setSendError('Veuillez renseigner votre nom et votre email pour envoyer par email.')
+    if (!requiredFilled) {
+      setSendError('Renseignez votre nom, prénom, poste, société et email.')
       return
     }
     setSendError('')
@@ -247,7 +251,14 @@ export default function LoginPage() {
       const r = await fetch('/api/prospect-contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: prospectName.trim(), email: prospectEmail.trim(), phone: prospectPhone.trim() || undefined, company: prospectCompany.trim() || undefined }),
+        body: JSON.stringify({
+          name: prospectName.trim(),
+          firstname: prospectFirstname.trim(),
+          position: prospectPosition.trim(),
+          company: prospectCompany.trim(),
+          email: prospectEmail.trim(),
+          phone: prospectPhone.trim() || undefined,
+        }),
       })
       if (r.ok) {
         setEmailSent(true)
@@ -273,6 +284,11 @@ export default function LoginPage() {
     } else {
       setError(result.error ?? 'Code invalide. Contactez SPINCUT pour obtenir votre accès.')
     }
+  }
+
+  const openCatalogue = (c: Catalogue) => {
+    if (window.matchMedia('(max-width: 767px)').matches) window.open(c.file, '_blank', 'noopener')
+    else setViewer(c)
   }
 
   const openLogin = () => { setMenuOpen(false); setShowLogin(true) }
@@ -348,15 +364,15 @@ export default function LoginPage() {
         <section id="accueil" className="scroll-mt-20 relative overflow-hidden">
           <div aria-hidden className="pointer-events-none absolute -top-48 -right-24 w-[700px] h-[700px] rounded-full bg-spincut-gold/10 blur-3xl"/>
           <div aria-hidden className="pointer-events-none absolute top-1/2 -left-40 w-[420px] h-[420px] rounded-full bg-spincut-gold/5 blur-3xl"/>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 sm:pt-12 lg:pt-10 lg:pb-20 lg:min-h-[calc(100vh-5rem)] grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            <Reveal className="lg:col-span-6 flex flex-col items-center text-center">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 sm:pt-12 lg:pt-14 lg:pb-20">
+            <Reveal className="flex flex-col items-center text-center">
               <h1 className="sr-only">SPINCUT Outils CNC — Précision · Performance · Innovation</h1>
-              <FullLogo className="w-[118%] max-w-[680px]" />
-              <p className="mt-2 sm:mt-4 text-3xl sm:text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-white">
+              <FullLogo className="w-[118%] max-w-[640px]" />
+              <p className="mt-2 sm:mt-3 text-3xl sm:text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-white">
                 Pensé par des pros, <span className="text-spincut-gold">pour les pros.</span>
               </p>
-              <p className="mt-4 text-spincut-muted text-base sm:text-lg">
-                Machines, outillage, affûtage, conseil : découvrez tout ce qu'on fait pour votre atelier.
+              <p className="mt-4 max-w-2xl text-spincut-muted text-base sm:text-lg">
+                Machines, outils, affûtage, conseil et accompagnement{NB}: tout ce dont vous avez besoin.
               </p>
               <div className="mt-8">
                 <button
@@ -369,14 +385,25 @@ export default function LoginPage() {
               </div>
             </Reveal>
 
-            {/* Visuel : emplacements photos outils */}
-            <Reveal delay={150} className="lg:col-span-6">
-              <div className="grid grid-cols-2 grid-rows-2 gap-3 sm:gap-4 h-[340px] sm:h-[460px] lg:h-[540px]">
-                <PhotoSlot slot={HERO_IMAGES[0]} className="row-span-2 rounded-3xl border border-spincut-border shadow-2xl shadow-black/50"/>
-                <PhotoSlot slot={HERO_IMAGES[1]} className="rounded-3xl border border-spincut-border"/>
-                <PhotoSlot slot={HERO_IMAGES[2]} className="rounded-3xl border border-spincut-border"/>
-              </div>
-            </Reveal>
+            {/* 7 photos de même format : 3 par ligne (mobile), 4 (tablette), 7 en ligne (ordinateur) */}
+            <div className="mt-12 lg:mt-16 flex flex-wrap justify-center gap-3 lg:gap-4">
+              {HERO_IMAGES.map((img, i) => (
+                <Reveal
+                  key={img.label}
+                  delay={i * 70}
+                  className="w-[calc((100%-1.5rem)/3)] sm:w-[calc((100%-2.25rem)/4)] lg:w-[calc((100%-6rem)/7)]"
+                >
+                  <figure className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-spincut-border transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50">
+                    <PhotoSlot slot={img} className="w-full h-full transition-transform duration-500 group-hover:scale-105"/>
+                    {img.src && (
+                      <figcaption className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/80 to-transparent text-xs font-semibold uppercase tracking-widest text-white">
+                        {img.label}
+                      </figcaption>
+                    )}
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
           </div>
 
           {/* Bandeau de réassurance */}
@@ -398,7 +425,6 @@ export default function LoginPage() {
             <SectionHeading
               kicker="Nos services"
               title="De l'outil à la machine, un seul interlocuteur."
-              subtitle="Machines, outils, affûtage et accompagnement : tout ce dont vous avez besoin."
             />
 
             <div className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
@@ -406,7 +432,7 @@ export default function LoginPage() {
                 <Reveal key={s.title} delay={i * 90}>
                   <article className="group h-full flex flex-col bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50 hover:shadow-2xl hover:shadow-black/40">
                     <PhotoSlot slot={SERVICE_IMAGES[i]} className="aspect-[16/9] sm:aspect-[4/3] border-b border-spincut-border"/>
-                    <div className="p-6 flex-1 flex flex-col">
+                    <div className="p-6 flex-1 flex flex-col items-center text-center">
                       <h3 className="text-xl font-bold text-white">{s.title}</h3>
                       <p className="mt-2 text-spincut-muted text-sm leading-relaxed">{s.desc}</p>
                     </div>
@@ -419,17 +445,17 @@ export default function LoginPage() {
             <Reveal className="mt-8 lg:mt-10">
               <div className="relative overflow-hidden rounded-3xl border border-spincut-gold/30 bg-gradient-to-br from-spincut-card via-spincut-surface to-spincut-bg p-6 sm:p-10 lg:p-12">
                 <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-spincut-gold/10 blur-3xl"/>
-                <div className="relative">
-                  <div className="max-w-2xl">
+                <div className="relative text-center">
+                  <div className="max-w-2xl mx-auto">
                     <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Notre spécialité</p>
                     <h3 className="mt-3 text-3xl lg:text-4xl font-bold text-white leading-tight">La CNC, c'est notre métier.</h3>
-                    <p className="mt-3 text-spincut-muted text-base lg:text-lg">La machine, les outils et les réglages : un seul expert.</p>
+                    <p className="mt-3 text-spincut-muted text-base lg:text-lg">La machine, les outils et les réglages{NB}: un seul expert.</p>
                   </div>
                   <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
                     {CNC_EXPERTISE.map(e => (
-                      <div key={e.title} className="rounded-2xl bg-spincut-bg/60 border border-spincut-border p-5 transition-all duration-200 hover:border-spincut-gold/40">
+                      <div key={e.title} className="rounded-2xl bg-spincut-bg/60 border border-spincut-border p-5 flex items-center justify-center text-center transition-all duration-200 hover:border-spincut-gold/40">
                         <p className="font-bold text-white leading-snug">
-                          {e.title}{e.integrated && <span className="text-spincut-gold"> *</span>}
+                          {e.title}{e.integrated && <span className="text-spincut-gold">{NB}*</span>}
                         </p>
                       </div>
                     ))}
@@ -447,7 +473,6 @@ export default function LoginPage() {
             <SectionHeading
               kicker="Réalisations"
               title="Vos réalisations avec nos outils"
-              subtitle="Gravure, usinage, découpe : quelques pièces sorties des ateliers de nos clients."
             />
             <div className="mt-12 lg:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
               {photos.map((src, i) => (
@@ -477,14 +502,25 @@ export default function LoginPage() {
               title="Nos marques et fournisseurs"
               subtitle="Des fabricants reconnus, sélectionnés pour la qualité de leurs outils et de leurs machines."
             />
-            <div className="mt-12 lg:mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
+            <div className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
               {PARTNERS.map((p, i) => {
-                const inner = p.logo
-                  ? <img src={p.logo} alt={p.name} className="max-h-12 max-w-[80%] object-contain grayscale opacity-70 transition-all duration-300 group-hover:grayscale-0 group-hover:opacity-100"/>
-                  : <span className="text-sm font-semibold text-spincut-subtle text-center px-2 transition-all duration-200 group-hover:text-spincut-muted">{p.name}</span>
-                const cls = 'group h-24 rounded-2xl bg-spincut-card border border-spincut-border flex items-center justify-center transition-all duration-200 hover:border-spincut-gold/40'
+                const inner = (
+                  <>
+                    <div className="relative aspect-[16/10] bg-gradient-to-br from-spincut-surface to-spincut-bg border-b border-spincut-border flex items-center justify-center overflow-hidden">
+                      {p.photo && <img src={p.photo} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover opacity-60 transition-all duration-500 group-hover:opacity-90 group-hover:scale-105"/>}
+                      {p.logo
+                        ? <img src={p.logo} alt={p.name} className={`relative max-h-20 max-w-[60%] object-contain transition-all duration-300 ${p.photo ? 'drop-shadow-xl' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}/>
+                        : !p.photo && <span className="relative w-12 h-12 rounded-full border border-spincut-border flex items-center justify-center text-spincut-subtle transition-all duration-200 group-hover:text-spincut-muted">{I.image}</span>}
+                    </div>
+                    <div className="p-5 text-center">
+                      <p className="font-bold text-white">{p.name}</p>
+                      {p.description && <p className="mt-1 text-sm text-spincut-muted">{p.description}</p>}
+                    </div>
+                  </>
+                )
+                const cls = 'group block h-full bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/40'
                 return (
-                  <Reveal key={`${p.name}-${i}`} delay={i * 60}>
+                  <Reveal key={`${p.name}-${i}`} delay={(i % 3) * 80}>
                     {p.url
                       ? <a href={p.url} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
                       : <div className={cls}>{inner}</div>}
@@ -492,6 +528,42 @@ export default function LoginPage() {
                 )
               })}
             </div>
+
+            {/* Catalogues et documentation */}
+            <Reveal className="mt-14 lg:mt-20">
+              <div className="text-center">
+                <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Documentation</p>
+                <h3 className="mt-3 text-2xl lg:text-3xl font-bold text-white">Catalogues et flyers</h3>
+                <p className="mt-2 text-spincut-muted">À consulter en ligne ou à télécharger.</p>
+              </div>
+              {CATALOGUES.length === 0 ? (
+                <div className="mt-8 mx-auto max-w-xl rounded-2xl border border-dashed border-spincut-border bg-spincut-card/50 px-6 py-10 text-center">
+                  <span className="mx-auto w-12 h-12 rounded-full border border-spincut-border flex items-center justify-center text-spincut-gold [&_svg]:w-5 [&_svg]:h-5">{I.orders}</span>
+                  <p className="mt-4 font-semibold text-white">Catalogues bientôt disponibles</p>
+                  <p className="mt-1 text-sm text-spincut-muted">Les catalogues de nos marques seront consultables ici.</p>
+                </div>
+              ) : (
+                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {CATALOGUES.map(c => (
+                    <div key={c.file} className="flex flex-col bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden">
+                      <button onClick={() => openCatalogue(c)} className="group relative aspect-[3/4] bg-gradient-to-br from-spincut-surface to-spincut-bg overflow-hidden" aria-label={`Consulter ${c.title}`}>
+                        {c.cover
+                          ? <img src={c.cover} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/>
+                          : <span className="absolute inset-0 flex items-center justify-center text-spincut-gold/40 text-5xl font-black">PDF</span>}
+                      </button>
+                      <div className="p-4 flex-1 flex flex-col text-center">
+                        {c.brand && <p className="text-[11px] font-semibold uppercase tracking-widest text-spincut-gold">{c.brand}</p>}
+                        <p className="mt-1 font-semibold text-white leading-snug">{c.title}</p>
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <button onClick={() => openCatalogue(c)} className="h-10 rounded-xl text-sm font-bold text-black bg-gradient-to-r from-spincut-gold to-spincut-gold-light hover:brightness-110 transition-all duration-200">Consulter</button>
+                          <a href={c.file} download className="h-10 rounded-xl text-sm font-semibold text-white border border-spincut-border hover:border-spincut-gold flex items-center justify-center transition-all duration-200">Télécharger</a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Reveal>
           </div>
         </section>
 
@@ -509,22 +581,11 @@ export default function LoginPage() {
                     <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Votre code d'accès</p>
                     <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] tracking-tight">
                       Les meilleurs ont leur code.
-                      <span className="block text-spincut-gold">Et vous, vous l'avez ?</span>
+                      <span className="block text-spincut-gold">Et vous, vous l'avez{NB}?</span>
                     </h2>
                     <p className="mt-5 text-spincut-muted text-base lg:text-lg leading-relaxed max-w-lg">
-                      Chaque client SPINCUT dispose de son propre code. Il ouvre un espace pensé pour les ateliers :
+                      Chaque client SPINCUT dispose de son propre code.
                     </p>
-                    <ul className="mt-6 grid sm:grid-cols-2 gap-3">
-                      {UNLOCKS.map(u => (
-                        <li key={u.title} className="flex gap-3 rounded-2xl bg-spincut-bg/50 border border-spincut-border p-4">
-                          <span className="flex-shrink-0 text-spincut-gold [&_svg]:w-5 [&_svg]:h-5 mt-0.5">{u.icon}</span>
-                          <span>
-                            <span className="block text-sm font-semibold text-white">{u.title}</span>
-                            <span className="block text-xs text-spincut-muted mt-0.5 leading-relaxed">{u.desc}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
 
                     <ol className="mt-10 space-y-5">
                       {STEPS.map(s => (
@@ -549,26 +610,29 @@ export default function LoginPage() {
                         {showForm ? 'Annuler' : 'Demander mon accès gratuit →'}
                       </button>
                       {!showForm && (
-                        <p className="mt-3 text-center text-xs text-spincut-subtle">Gratuit et sans engagement · réponse &lt; 1h</p>
+                        <p className="mt-3 text-center text-xs text-spincut-subtle">Gratuit et sans engagement</p>
                       )}
 
                       {/* Formulaire — visible uniquement après clic */}
                       {showForm && (
                         <div className="mt-5 space-y-3 border-t border-spincut-border pt-5">
                           <p className="text-xs font-semibold text-spincut-gold">
-                            Une fois votre fiche client créée, vous recevez automatiquement votre code.
+                            Une fois votre fiche client créée, nous vous envoyons votre code.
                           </p>
                           <div className="grid sm:grid-cols-2 gap-3">
                             {[
-                              { label: 'Nom complet *', value: prospectName, set: setProspectName, placeholder: 'Jean Dupont' },
-                              { label: 'Société', value: prospectCompany, set: setProspectCompany, placeholder: 'Dupont SARL' },
-                              { label: 'Email * (requis pour envoyer par email)', value: prospectEmail, set: setProspectEmail, placeholder: 'jean@exemple.com' },
-                              { label: 'Téléphone * (requis pour WhatsApp)', value: prospectPhone, set: setProspectPhone, placeholder: '06 12 34 56 78' },
+                              { label: 'Nom *', value: prospectName, set: setProspectName, placeholder: 'Dupont', type: 'text', auto: 'family-name' },
+                              { label: 'Prénom *', value: prospectFirstname, set: setProspectFirstname, placeholder: 'Jean', type: 'text', auto: 'given-name' },
+                              { label: 'Poste *', value: prospectPosition, set: setProspectPosition, placeholder: 'Gérant, responsable atelier…', type: 'text', auto: 'organization-title' },
+                              { label: 'Société *', value: prospectCompany, set: setProspectCompany, placeholder: 'Dupont Menuiserie', type: 'text', auto: 'organization' },
+                              { label: 'Email *', value: prospectEmail, set: setProspectEmail, placeholder: 'jean@exemple.com', type: 'email', auto: 'email' },
+                              { label: 'Téléphone (pour WhatsApp)', value: prospectPhone, set: setProspectPhone, placeholder: '06 12 34 56 78', type: 'tel', auto: 'tel' },
                             ].map(f => (
                               <div key={f.label}>
                                 <label className="block text-spincut-muted text-xs uppercase tracking-wide mb-1">{f.label}</label>
                                 <input
-                                  type="text"
+                                  type={f.type}
+                                  autoComplete={f.auto}
                                   value={f.value}
                                   onChange={e => f.set(e.target.value)}
                                   placeholder={f.placeholder}
@@ -577,13 +641,14 @@ export default function LoginPage() {
                               </div>
                             ))}
                           </div>
+                          <p className="text-[11px] text-spincut-subtle">* Champs obligatoires</p>
                           <div className="space-y-2 pt-1">
                             <p className="text-[11px] text-center text-spincut-subtle">Choisissez comment envoyer votre demande</p>
                             <div className="grid sm:grid-cols-2 gap-2">
                               <button
                                 onClick={handleWhatsApp}
                                 className="w-full h-12 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-500 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
-                                style={{ opacity: (!prospectName.trim() || !prospectPhone.trim()) ? 0.4 : 1 }}
+                                style={{ opacity: (!requiredFilled || !prospectPhone.trim()) ? 0.4 : 1 }}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                   <path d={WHATSAPP_PATH}/>
@@ -599,7 +664,7 @@ export default function LoginPage() {
                                   onClick={handleEmail}
                                   disabled={emailSending}
                                   className="w-full h-12 rounded-xl text-sm font-semibold text-white bg-spincut-card border border-spincut-border hover:border-spincut-gold transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
-                                  style={{ opacity: (!prospectName.trim() || !prospectEmail.trim()) ? 0.4 : 1 }}
+                                  style={{ opacity: !requiredFilled ? 0.4 : 1 }}
                                 >
                                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
@@ -617,7 +682,7 @@ export default function LoginPage() {
                     </div>
 
                     <p className="text-center text-sm text-spincut-muted">
-                      Déjà client ?{' '}
+                      Déjà client{NB}?{' '}
                       <button onClick={openLogin} className="font-semibold text-spincut-gold hover:underline">Entrer mon code</button>
                     </p>
                   </div>
@@ -667,7 +732,7 @@ export default function LoginPage() {
             </button>
             <div className="flex flex-col items-center gap-2 text-center">
               <p className="text-spincut-gold text-xs font-semibold uppercase tracking-widest">Espace client</p>
-              <h2 id="login-title" className="text-xl font-bold text-white">Entrer votre code d'accès Spincut</h2>
+              <h2 id="login-title" className="text-xl font-bold text-white">Entrez votre code d'accès SPINCUT</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -698,7 +763,7 @@ export default function LoginPage() {
             </form>
 
             <p className="text-center text-xs text-spincut-muted">
-              Pas encore de code ?{' '}
+              Pas encore de code{NB}?{' '}
               <button onClick={requestAccess} className="text-spincut-gold hover:underline">Demander mon accès</button>
             </p>
           </div>
@@ -723,6 +788,25 @@ export default function LoginPage() {
             className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white text-2xl flex items-center justify-center">‹</button>
           <button onClick={e => { e.stopPropagation(); setLightbox(i => i === null ? null : (i + 1) % photos.length) }} aria-label="Photo suivante"
             className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white text-2xl flex items-center justify-center">›</button>
+        </div>
+      )}
+
+      {/* ── Visionneuse de catalogue (PDF) ── */}
+      {viewer && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col" onClick={() => setViewer(null)}>
+          <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-b border-spincut-border bg-spincut-bg" onClick={e => e.stopPropagation()}>
+            <div className="min-w-0">
+              {viewer.brand && <p className="text-[11px] font-semibold uppercase tracking-widest text-spincut-gold">{viewer.brand}</p>}
+              <p className="font-semibold text-white truncate">{viewer.title}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <a href={viewer.file} download className="h-10 px-4 rounded-xl text-sm font-semibold text-white border border-spincut-border hover:border-spincut-gold flex items-center transition-all duration-200">Télécharger</a>
+              <button onClick={() => setViewer(null)} aria-label="Fermer" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white text-2xl flex items-center justify-center">×</button>
+            </div>
+          </div>
+          <div className="flex-1 p-2 sm:p-4" onClick={e => e.stopPropagation()}>
+            <iframe src={viewer.file} title={viewer.title} className="w-full h-full rounded-xl bg-white"/>
+          </div>
         </div>
       )}
 
