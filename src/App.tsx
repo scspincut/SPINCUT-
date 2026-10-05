@@ -8,6 +8,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage'
 import OrderPage from './pages/OrderPage'
 import ProfilePage from './pages/ProfilePage'
 import StockPage from './pages/StockPage'
+import LegalPage from './pages/LegalPage'
 import { getAccessCodes, saveAccessCodes } from './hooks/useAuth'
 
 // Activate a code from ?activate=XXX URL param
@@ -48,6 +49,8 @@ export default function App() {
         <Route path="/commande" element={<OrderPage />} />
         <Route path="/stock" element={<StockPage />} />
         <Route path="/profil" element={<ProfilePage />} />
+        <Route path="/mentions-legales" element={<LegalPage page="mentions" />} />
+        <Route path="/confidentialite" element={<LegalPage page="confidentialite" />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -653,7 +653,10 @@ export default function LoginPage() {
                               </div>
                             ))}
                           </div>
-                          <p className="text-[11px] text-spincut-subtle">* Champs obligatoires</p>
+                          <p className="text-[11px] text-spincut-subtle">
+                            * Champs obligatoires. Vos informations servent uniquement à traiter votre demande d'accès{NB}:{' '}
+                            <Link to="/confidentialite" className="underline hover:text-spincut-gold">politique de confidentialité</Link>.
+                          </p>
                           <div className="space-y-2 pt-1">
                             <p className="text-[11px] text-center text-spincut-subtle">Choisissez comment envoyer votre demande</p>
                             <div className="grid sm:grid-cols-2 gap-2">
@@ -716,7 +719,13 @@ export default function LoginPage() {
           </div>
         </div>
         <div className="border-t border-spincut-border/60">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <Link to="/mentions-legales" className="text-xs text-spincut-subtle hover:text-spincut-gold transition-all duration-200">
+              Mentions légales
+            </Link>
+            <Link to="/confidentialite" className="text-xs text-spincut-subtle hover:text-spincut-gold transition-all duration-200">
+              Politique de confidentialité
+            </Link>
             <Link to="/admin" className="text-xs text-spincut-subtle hover:text-spincut-gold transition-all duration-200">
               Administration
             </Link>
