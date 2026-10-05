@@ -73,19 +73,27 @@ const I = {
   image: <svg {...ICON}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>,
 }
 
-const SERVICES: { title: string; desc: string; target: 'catalogues' | 'acces' }[] = [
+// Destination d'un clic sur une carte : catalogues, contact ou demande d'accès
+type Target = 'catalogues' | 'contact' | 'acces'
+const TARGET_LABEL: Record<Target, string> = {
+  catalogues: 'Voir les catalogues →',
+  contact: 'Nous contacter →',
+  acces: 'Demander mon accès →',
+}
+
+const SERVICES: { title: string; desc: string; target: Target }[] = [
   { title: 'Machines à bois', desc: 'Machines neuves ou d\'occasion.', target: 'catalogues' },
   { title: 'Outillage CNC', desc: `Carbure ou diamant${NB}: l'outil adapté à chaque matériau.`, target: 'acces' },
-  { title: 'Outillage bois', desc: 'Outillage pour tous les métiers du bois.', target: 'acces' },
-  { title: 'Affûtage', desc: 'Pour tous vos outils coupants.', target: 'acces' },
+  { title: 'Outillages bois', desc: 'Outillages pour tous les métiers du bois.', target: 'acces' },
+  { title: 'Affûtage', desc: 'Pour tous vos outils coupants.', target: 'contact' },
 ]
 
-const CNC_EXPERTISE: { title: string; integrated?: boolean }[] = [
-  { title: 'Outillage' },
-  { title: 'Calculateur CNC', integrated: true },
-  { title: 'Gestion de stock', integrated: true },
-  { title: 'Conseils' },
-  { title: 'Vente de machines CNC' },
+const CNC_EXPERTISE: { title: string; integrated?: boolean; target: Target }[] = [
+  { title: 'Outillage', target: 'acces' },
+  { title: 'Calculateur CNC', integrated: true, target: 'acces' },
+  { title: 'Gestion de stock', integrated: true, target: 'acces' },
+  { title: 'Conseils', target: 'contact' },
+  { title: 'Vente de machines CNC', target: 'catalogues' },
 ]
 
 const TRUST: { label: string; icon: ReactNode }[] = [
@@ -295,6 +303,8 @@ export default function LoginPage() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  const goTo = (target: Target) => target === 'acces' ? requestAccess() : scrollToSection(target)
+
   const requestAccess = () => {
     setShowLogin(false)
     setShowForm(true)
@@ -426,7 +436,7 @@ export default function LoginPage() {
               {SERVICES.map((s, i) => (
                 <Reveal key={s.title} delay={i * 90}>
                   <button
-                    onClick={() => s.target === 'catalogues' ? scrollToSection('catalogues') : requestAccess()}
+                    onClick={() => goTo(s.target)}
                     className="group w-full h-full flex flex-col text-left bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50 hover:shadow-2xl hover:shadow-black/40"
                   >
                     <PhotoSlot slot={SERVICE_IMAGES[i]} className="w-full aspect-[16/9] sm:aspect-[4/3] border-b border-spincut-border"/>
@@ -434,7 +444,7 @@ export default function LoginPage() {
                       <h3 className="text-xl font-bold text-white">{s.title}</h3>
                       <p className="mt-2 text-spincut-muted text-sm leading-relaxed">{s.desc}</p>
                       <span className="mt-auto pt-4 text-sm font-semibold text-spincut-gold transition-transform duration-200 group-hover:translate-x-1">
-                        {s.target === 'catalogues' ? 'Voir les catalogues →' : 'Demander mon accès →'}
+                        {TARGET_LABEL[s.target]}
                       </span>
                     </div>
                   </button>
@@ -453,7 +463,7 @@ export default function LoginPage() {
                   </div>
                   <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
                     {CNC_EXPERTISE.map(e => (
-                      <button key={e.title} onClick={requestAccess} className="rounded-2xl bg-spincut-card border border-spincut-border p-5 flex items-center justify-center text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-spincut-gold/50">
+                      <button key={e.title} onClick={() => goTo(e.target)} className="rounded-2xl bg-spincut-card border border-spincut-border p-5 flex items-center justify-center text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-spincut-gold/50">
                         <span className="font-bold text-white leading-snug">
                           {e.title}{e.integrated && <span className="text-spincut-gold">{NB}*</span>}
                         </span>
