@@ -73,18 +73,18 @@ const I = {
   image: <svg {...ICON}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>,
 }
 
-const SERVICES: { title: string; desc: string }[] = [
-  { title: 'Machines à bois', desc: 'Machines neuves ou d\'occasion.' },
-  { title: 'Outillage CNC', desc: `Carbure ou diamant${NB}: l'outil adapté à chaque matériau.` },
-  { title: 'Outillage bois', desc: 'Outillage pour tous les métiers du bois.' },
-  { title: 'Affûtage', desc: 'Pour tous vos outils coupants.' },
+const SERVICES: { title: string; desc: string; target: 'catalogues' | 'acces' }[] = [
+  { title: 'Machines à bois', desc: 'Machines neuves ou d\'occasion.', target: 'catalogues' },
+  { title: 'Outillage CNC', desc: `Carbure ou diamant${NB}: l'outil adapté à chaque matériau.`, target: 'acces' },
+  { title: 'Outillage bois', desc: 'Outillage pour tous les métiers du bois.', target: 'acces' },
+  { title: 'Affûtage', desc: 'Pour tous vos outils coupants.', target: 'acces' },
 ]
 
 const CNC_EXPERTISE: { title: string; integrated?: boolean }[] = [
   { title: 'Outillage' },
   { title: 'Calculateur CNC', integrated: true },
   { title: 'Gestion de stock', integrated: true },
-  { title: 'Conseil' },
+  { title: 'Conseils' },
   { title: 'Vente de machines CNC' },
 ]
 
@@ -108,7 +108,7 @@ function FullLogo({ className = '' }: { className?: string }) {
       src="/logo-banniere.png"
       alt="SPINCUT Outils CNC — Précision · Performance · Innovation"
       className={`block w-full object-contain ${className}`}
-      style={{ mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse 58% 52% at 50% 52%, black 55%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 58% 52% at 50% 52%, black 55%, transparent 100%)' }}
+      style={{ mixBlendMode: 'screen', filter: 'contrast(1.45) brightness(0.92)', maskImage: 'radial-gradient(ellipse 58% 52% at 50% 52%, black 55%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse 58% 52% at 50% 52%, black 55%, transparent 100%)' }}
     />
   )
 }
@@ -358,18 +358,16 @@ export default function LoginPage() {
 
       <main>
         {/* ════════ ACCUEIL ════════ */}
-        <section id="accueil" className="scroll-mt-20 relative overflow-hidden">
-          <div aria-hidden className="pointer-events-none absolute -top-48 -right-24 w-[700px] h-[700px] rounded-full bg-spincut-gold/10 blur-3xl"/>
-          <div aria-hidden className="pointer-events-none absolute top-1/2 -left-40 w-[420px] h-[420px] rounded-full bg-spincut-gold/5 blur-3xl"/>
+        <section id="accueil" className="scroll-mt-20 relative overflow-hidden bg-black">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-14 sm:pt-12 lg:pt-14 lg:pb-20">
             <Reveal className="flex flex-col items-center text-center">
               <h1 className="sr-only">SPINCUT Outils CNC — Précision · Performance · Innovation</h1>
               <FullLogo className="w-[118%] max-w-[640px]" />
               <p className="mt-2 sm:mt-3 text-3xl sm:text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-white">
-                Pensé par des pros, <span className="text-spincut-gold">pour les pros.</span>
+                Conçu par des pros, <span className="text-spincut-gold">pour les pros.</span>
               </p>
               <p className="mt-4 max-w-2xl text-spincut-muted text-base sm:text-lg">
-                Machines, outils, affûtage, conseil et accompagnement{NB}: tout ce dont vous avez besoin.
+                Machines, outils, affûtage, conseils et accompagnement{NB}: tout ce dont vous avez besoin.
               </p>
               <div className="mt-8">
                 <button
@@ -427,21 +425,26 @@ export default function LoginPage() {
             <div className="mt-12 lg:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
               {SERVICES.map((s, i) => (
                 <Reveal key={s.title} delay={i * 90}>
-                  <article className="group h-full flex flex-col bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50 hover:shadow-2xl hover:shadow-black/40">
-                    <PhotoSlot slot={SERVICE_IMAGES[i]} className="aspect-[16/9] sm:aspect-[4/3] border-b border-spincut-border"/>
-                    <div className="p-6 flex-1 flex flex-col items-center text-center">
+                  <button
+                    onClick={() => s.target === 'catalogues' ? scrollToSection('catalogues') : requestAccess()}
+                    className="group w-full h-full flex flex-col text-left bg-spincut-card rounded-2xl border border-spincut-border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50 hover:shadow-2xl hover:shadow-black/40"
+                  >
+                    <PhotoSlot slot={SERVICE_IMAGES[i]} className="w-full aspect-[16/9] sm:aspect-[4/3] border-b border-spincut-border"/>
+                    <div className="w-full p-6 flex-1 flex flex-col items-center text-center">
                       <h3 className="text-xl font-bold text-white">{s.title}</h3>
                       <p className="mt-2 text-spincut-muted text-sm leading-relaxed">{s.desc}</p>
+                      <span className="mt-auto pt-4 text-sm font-semibold text-spincut-gold transition-transform duration-200 group-hover:translate-x-1">
+                        {s.target === 'catalogues' ? 'Voir les catalogues →' : 'Demander mon accès →'}
+                      </span>
                     </div>
-                  </article>
+                  </button>
                 </Reveal>
               ))}
             </div>
 
             {/* Spécialité CNC */}
             <Reveal className="mt-8 lg:mt-10">
-              <div className="relative overflow-hidden rounded-3xl border border-spincut-gold/30 bg-gradient-to-br from-spincut-card via-spincut-surface to-spincut-bg p-6 sm:p-10 lg:p-12">
-                <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-spincut-gold/10 blur-3xl"/>
+              <div className="relative overflow-hidden rounded-3xl border border-spincut-border bg-spincut-bg p-6 sm:p-10 lg:p-12">
                 <div className="relative text-center">
                   <div className="max-w-2xl mx-auto">
                     <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Notre spécialité</p>
@@ -450,14 +453,15 @@ export default function LoginPage() {
                   </div>
                   <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
                     {CNC_EXPERTISE.map(e => (
-                      <div key={e.title} className="rounded-2xl bg-spincut-bg/60 border border-spincut-border p-5 flex items-center justify-center text-center transition-all duration-200 hover:border-spincut-gold/40">
-                        <p className="font-bold text-white leading-snug">
+                      <button key={e.title} onClick={requestAccess} className="rounded-2xl bg-spincut-card border border-spincut-border p-5 flex items-center justify-center text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-spincut-gold/50">
+                        <span className="font-bold text-white leading-snug">
                           {e.title}{e.integrated && <span className="text-spincut-gold">{NB}*</span>}
-                        </p>
-                      </div>
+                        </span>
+                      </button>
                     ))}
                   </div>
                   <p className="mt-5 text-xs text-spincut-muted"><span className="text-spincut-gold">*</span> Intégré à votre espace client.</p>
+                  <button onClick={requestAccess} className="mt-6 text-sm font-semibold text-spincut-gold hover:underline">Demander mon accès →</button>
                 </div>
               </div>
             </Reveal>
@@ -527,7 +531,8 @@ export default function LoginPage() {
             </div>
 
             {/* Catalogues et documentation */}
-            <Reveal className="mt-14 lg:mt-20">
+            <div id="catalogues" className="scroll-mt-20 pt-14 lg:pt-20" />
+            <Reveal>
               <div className="text-center">
                 <p className="text-spincut-gold text-xs font-semibold uppercase tracking-[0.3em]">Documentation</p>
                 <h3 className="mt-3 text-2xl lg:text-3xl font-bold text-white">Catalogues et flyers</h3>
