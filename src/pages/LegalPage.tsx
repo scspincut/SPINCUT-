@@ -155,7 +155,9 @@ export default function LegalPage({ page }: { page: keyof typeof PAGES }) {
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    const previous = document.title
     document.title = `${title} — ${LEGAL.tradeName}`
+    return () => { document.title = previous }
   }, [title])
 
   return (
