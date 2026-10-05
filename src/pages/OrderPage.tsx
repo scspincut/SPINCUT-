@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, getClientCode, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
 import TestModeBanner from '../components/TestModeBanner'
@@ -172,7 +172,7 @@ export default function OrderPage() {
     return { pendingEntries, deliveredEntries }
   }, [orderHistory, pendingOrders, deliveredOrders])
 
-  if (!isAuthenticated) { navigate('/'); return null }
+  if (!isAuthenticated) return <Navigate to="/" replace />
   localStorage.setItem('spincut_last_section', '/commande')
 
   const commPref = (() => { try { return localStorage.getItem(`spincut_comm_pref_${clientCode ?? 'guest'}`) ?? 'email' } catch { return 'email' } })()

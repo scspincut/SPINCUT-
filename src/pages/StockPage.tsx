@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useClientAuth, getClientCode, getAccessCodes, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
 import TestModeBanner from '../components/TestModeBanner'
@@ -68,7 +68,7 @@ export default function StockPage() {
     }
   }, [tools, stockKey])
 
-  if (!isAuthenticated) { navigate('/'); return null }
+  if (!isAuthenticated) return <Navigate to="/" replace />
   localStorage.setItem('spincut_last_section', '/stock')
 
   const setField = (k: keyof typeof EMPTY_FORM, v: string | boolean) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, FormEvent, ReactNode } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import { useClientAuth } from '../hooks/useAuth'
 import { PARTNERS, CATALOGUES, type Catalogue } from '../data/partners'
 import { HERO_IMAGES, SERVICE_IMAGES, type ImageSlot } from '../data/siteImages'
@@ -212,10 +212,7 @@ export default function LoginPage() {
     return () => { document.body.style.overflow = '' }
   }, [showLogin, lightbox, viewer])
 
-  if (isAuthenticated) {
-    navigate('/boutique', { replace: true })
-    return null
-  }
+  if (isAuthenticated) return <Navigate to="/boutique" replace />
 
   // Champs obligatoires pour toute demande (le téléphone n'est requis que pour WhatsApp)
   const requiredFilled = [prospectName, prospectFirstname, prospectPosition, prospectCompany, prospectEmail].every(v => v.trim())

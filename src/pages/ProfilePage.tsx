@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useClientAuth, getAccessCodes, saveAccessCodes, getClientCode, isTestMode } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
 import TestModeBanner from '../components/TestModeBanner'
@@ -167,7 +167,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (!isAuthenticated) { navigate('/'); return null }
+  if (!isAuthenticated) return <Navigate to="/" replace />
 
   return (
     <div className="min-h-screen bg-spincut-bg text-white flex flex-col">

@@ -5,6 +5,22 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Calculateur CNC Pro - SPINCUT</title>
+    <script>
+      // Si un fichier du site ne se charge pas (ancienne version gardée en cache par le téléphone),
+      // on recharge la page une seule fois pour récupérer la version à jour.
+      window.addEventListener('error', function (e) {
+        var t = e.target
+        if (!t || (t.tagName !== 'SCRIPT' && t.tagName !== 'LINK')) return
+        try {
+          if (sessionStorage.getItem('spincut_reloaded')) return
+          sessionStorage.setItem('spincut_reloaded', '1')
+        } catch (_) { return }
+        location.reload()
+      }, true)
+      window.addEventListener('load', function () {
+        setTimeout(function () { try { sessionStorage.removeItem('spincut_reloaded') } catch (_) {} }, 5000)
+      })
+    </script>
   </head>
   <body>
     <div id="root"></div>

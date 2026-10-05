@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useClientAuth, getClientCode, getAccessCodes } from '../hooks/useAuth'
 import BottomNav from '../components/BottomNav'
 
@@ -502,7 +502,7 @@ export default function BoutiquePage() {
   const enterTab = (tab: 'cnc' | 'cmt' | 'lames') => { setHomeView(false); setFavsView(false); setShopTab(tab); setActiveCategory(null); resetFilters() }
   const enterFavs = () => { setHomeView(false); setFavsView(true); setActiveCategory(null); resetFilters() }
 
-  if (!isAuthenticated) { navigate('/'); return null }
+  if (!isAuthenticated) return <Navigate to="/" replace />
 
   // ── Product row (shared between product list + favs) ──────────────────────
   const renderProductRow = (item: CatalogProduct) => {
