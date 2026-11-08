@@ -400,11 +400,6 @@ export default function LoginPage() {
                 >
                   <figure className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-spincut-border transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50">
                     <PhotoSlot slot={img} className="w-full h-full transition-transform duration-500 group-hover:scale-105"/>
-                    {img.src && (
-                      <figcaption className="absolute inset-x-0 bottom-0 px-2 pb-2 pt-8 sm:p-3 sm:pt-10 bg-gradient-to-t from-black/85 to-transparent text-[9px] sm:text-xs leading-tight font-semibold uppercase tracking-wider sm:tracking-widest text-white">
-                        {img.label}
-                      </figcaption>
-                    )}
                   </figure>
                 </Reveal>
               ))}
