@@ -18,6 +18,6 @@ export const HERO_IMAGES: ImageSlot[] = [
 export const SERVICE_IMAGES: ImageSlot[] = [
   { label: 'Machines à bois', src: '/site/machine-striebig.jpg' },
   { label: 'Outillage CNC' },
-  { label: 'Outillages bois' },
+  { label: 'Outillages bois', src: '/site/lame-freud.jpg' },
   { label: 'Affûtage', src: '/site/affutage-machine.jpg' },
 ]
