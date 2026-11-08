@@ -391,12 +391,12 @@ export default function LoginPage() {
             </Reveal>
 
             {/* Vitrine : 3 photos produits de même format, côte à côte */}
-            <div className="mt-12 lg:mt-16 mx-auto max-w-4xl flex flex-wrap justify-center gap-3 sm:gap-5 lg:gap-6">
+            <div className="mt-12 lg:mt-16 mx-auto max-w-sm sm:max-w-xl lg:max-w-3xl flex flex-wrap justify-center gap-3 sm:gap-4 lg:gap-5">
               {HERO_IMAGES.map((img, i) => (
                 <Reveal
                   key={img.label}
                   delay={i * 70}
-                  className="w-[calc((100%-1.5rem)/3)] sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-3rem)/3)]"
+                  className="w-[calc((100%-1.5rem)/3)] sm:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-2.5rem)/3)]"
                 >
                   <figure className="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-spincut-border transition-all duration-300 hover:-translate-y-1 hover:border-spincut-gold/50">
                     <PhotoSlot slot={img} className="w-full h-full transition-transform duration-500 group-hover:scale-105"/>
