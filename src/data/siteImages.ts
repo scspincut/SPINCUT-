@@ -10,7 +10,7 @@ export interface ImageSlot {
 // Haut de page : 7 photos de même format, affichées côte à côte
 export const HERO_IMAGES: ImageSlot[] = [
   { label: 'Fraises carbure', src: '/site/fraise-carbure.jpg' },
-  { label: 'Fraises diamant' },
+  { label: 'Fraises diamant', src: '/site/fraise-diamant.jpg' },
   { label: 'Lames carbure' },
   { label: 'Affûtage', src: '/site/affutage-meule.jpg' },
   { label: 'Machine 1' },
