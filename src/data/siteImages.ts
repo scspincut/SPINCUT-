@@ -12,16 +12,16 @@ export const HERO_IMAGES: ImageSlot[] = [
   { label: 'Fraises carbure' },
   { label: 'Fraises diamant' },
   { label: 'Lames carbure' },
-  { label: 'Affûtage' },
+  { label: 'Affûtage', src: '/site/affutage-meule.jpg' },
   { label: 'Machine 1' },
   { label: 'Machine 2' },
   { label: 'Machine 3' },
 ]
 
-// Une photo par carte service, dans l'ordre : Machines à bois, Outillage CNC, Outillage bois, Affûtage
+// Une photo par carte service, dans l'ordre : Machines à bois, Outillage CNC, Outillages bois, Affûtage
 export const SERVICE_IMAGES: ImageSlot[] = [
   { label: 'Machines à bois' },
   { label: 'Outillage CNC' },
-  { label: 'Outillage bois' },
-  { label: 'Affûtage' },
+  { label: 'Outillages bois' },
+  { label: 'Affûtage', src: '/site/affutage-machine.jpg' },
 ]
