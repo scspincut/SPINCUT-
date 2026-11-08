@@ -7,15 +7,11 @@ export interface ImageSlot {
   src?: string
 }
 
-// Haut de page : 7 photos de même format, affichées côte à côte
+// Haut de page : vitrine de 3 produits (photos studio), affichées côte à côte
 export const HERO_IMAGES: ImageSlot[] = [
   { label: 'Fraises carbure', src: '/site/fraise-carbure.jpg' },
   { label: 'Fraises diamant', src: '/site/fraise-diamant.jpg' },
-  { label: 'Lames carbure' },
-  { label: 'Affûtage', src: '/site/affutage-meule.jpg' },
-  { label: 'Machine 1' },
-  { label: 'Machine 2' },
-  { label: 'Machine 3' },
+  { label: "Fraises d'ébauche", src: '/site/fraise-ebauche.jpg' },
 ]
 
 // Une photo par carte service, dans l'ordre : Machines à bois, Outillage CNC, Outillages bois, Affûtage
