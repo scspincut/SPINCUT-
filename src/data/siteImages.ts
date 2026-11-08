@@ -16,7 +16,7 @@ export const HERO_IMAGES: ImageSlot[] = [
 
 // Une photo par carte service, dans l'ordre : Machines à bois, Outillage CNC, Outillages bois, Affûtage
 export const SERVICE_IMAGES: ImageSlot[] = [
-  { label: 'Machines à bois' },
+  { label: 'Machines à bois', src: '/site/machine-striebig.jpg' },
   { label: 'Outillage CNC' },
   { label: 'Outillages bois' },
   { label: 'Affûtage', src: '/site/affutage-machine.jpg' },
